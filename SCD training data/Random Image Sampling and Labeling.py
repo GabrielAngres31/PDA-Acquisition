@@ -120,8 +120,7 @@ class SAMPLER_IMAGE:
           isQualifiedChunk = True
       else:
         raise Exception("Invalid Chunktype")
-    
-        #image_mean_yellow = self.grabChunk(
+
   def imagePrepare(self):
 
     self.drawBoxes()
@@ -180,13 +179,13 @@ FRAME_actionButtons.pack(side = BOTTOM, fill = X, expand = False, pady = 12)
 SUBFRAME_baseImage = Frame(FRAME_imageComparison, bg = "blue")
 SUBFRAME_baseImage.pack(side = LEFT, fill = X, expand = False)
 
-CANVAS_BASE = Canvas(SUBFRAME_baseImage, width = IMAGE_OBJECT.segment_size+2*IMAGE_OBJECT.buffer_size, height = IMAGE_OBJECT.segment_size+2*IMAGE_OBJECT.buffer_size)
+CANVAS_BASE = Canvas(SUBFRAME_baseImage, width = IMAGE_OBJECT.segment_size+2*IMAGE_OBJECT.buffer_size, height = IMAGE_OBJECT.segment_size+2*IMAGE_OBJECT.buffer_size, background = "black")
 CANVAS_BASE.pack(side=TOP)
 
 SUBFRAME_annoImage = Frame(FRAME_imageComparison, bg = "orange")
 SUBFRAME_annoImage.pack(side = RIGHT, fill = X, expand = False)
 
-CANVAS_ANNO = Canvas(SUBFRAME_annoImage, width = IMAGE_OBJECT.segment_size+2*IMAGE_OBJECT.buffer_size, height = IMAGE_OBJECT.segment_size+2*IMAGE_OBJECT.buffer_size)
+CANVAS_ANNO = Canvas(SUBFRAME_annoImage, width = IMAGE_OBJECT.segment_size+2*IMAGE_OBJECT.buffer_size, height = IMAGE_OBJECT.segment_size+2*IMAGE_OBJECT.buffer_size, background = "black")
 CANVAS_ANNO.pack(side=TOP)
 
 SUBFRAME_generatorButtons = Frame(FRAME_actionButtons)
@@ -205,12 +204,23 @@ BUTTON_selectAnno.pack(side=BOTTOM, fill = X)
 
 # Make Image generation button/s
 
+base_img = Image.open("C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD training data\\temp_files\\IMG_1058.jpg")
+anno_img = Image.open("C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD training data\\temp_files\\IMG_1058.jpg")
+
+base_box = ImageTk.PhotoImage(base_img)
+anno_box = ImageTk.PhotoImage(anno_img)
+
 def reloadImages():
   global CANVAS_BASE
   global CANVAS_ANNO
   #global label_base
   #global label_anno
   global window
+
+  global base_img
+  global anno_img
+  global base_box
+  global anno_box
 
   #CANVAS_BASE.delete()
   #CANVAS_BASE.update_idletasks()
@@ -234,7 +244,7 @@ def reloadImages():
   print(anno_inst)
   #CANVAS_ANNO.update_idletasks()
   #label_anno.config(image=anno_box)
-  window.update_idletasks()
+  #window.update_idletasks()
 
 
 ### Unbiased Random
@@ -258,7 +268,7 @@ BUTTON_filteredTarget = Button(SUBFRAME_generatorButtons, text = "Annotated Sect
                                command = lambda: [IMAGE_OBJECT.chunkSearcher("Filtered Target"),
                                                   IMAGE_OBJECT.imagePrepare(),
                                                   reloadImages(),
-                                                  print("AS:")])
+                                                  print("AS")])
 BUTTON_filteredTarget.pack(side=TOP, fill = X)
 
 
@@ -300,12 +310,8 @@ def selectFile():
 def setChoice():
   pass
 
-# TODO:
-# FIGURE OUT WHY YOUR PROGRAM ISN'T RETURNING A TIMELY RESULT
-# AND THEN FIGURE OUT WHAT THE HELL CHUNK SEARCHER IS DOING
 
-
-
+mainloop()
 
 
 
