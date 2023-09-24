@@ -59,6 +59,12 @@ def timer_func(func):
 def monoToRGB(img):
   return np.array([[[i, i, i] for i in j] for j in img])
 
+
+def npToTKImg(img):
+  width, height = img.size
+  data = f'P5 {width} {height} 255 '.encode() + img.astype(np.uint8).tobytes()
+  return ImageTk.PhotoImage(width=width, height=height, data=data, format='PPM')
+
 ###--------------
 #
 # SAMPLE_IMAGE Class
@@ -171,7 +177,7 @@ class SAMPLER_IMAGE:
   @timer_func
   def imagePrepare(self):
 
-    self.drawBoxes()
+    #self.drawBoxes()
     
     imwrite(os.path.join(TEMP_DIR,"temp_base.jpg"), self.grabChunk("BASE_box", buffer = 0))
     imwrite(os.path.join(TEMP_DIR,"temp_anno.jpg"), self.grabChunk("MASK_box", buffer = 0))
@@ -264,7 +270,7 @@ anno_img = Image.open(os.path.join(TEMP_DIR, "IMG_1058.jpg"))
 base_box = ImageTk.PhotoImage(base_img)
 anno_box = ImageTk.PhotoImage(anno_img)
 
-def reloadImages():
+def reloadPreviews(img):
   global CANVAS_BASE
   global CANVAS_ANNO
   #global label_base
@@ -281,45 +287,43 @@ def reloadImages():
   #CANVAS_ANNO.delete()
   #CANVAS_ANNO.update_idletasks()
 
-  base_img = Image.open(os.path.join(TEMP_DIR, "temp_base_box.jpg"))
-  base_box = ImageTk.PhotoImage(base_img)
+  CANVAS_BASE.delete('all')
+  CANVAS_ANNO.delete('all')
   #CANVAS_BASE.create_image(0, 0, anchor=NW, image=base_box)
-  base_inst = CANVAS_BASE.create_image(0, 0, anchor=NW, image=base_box)
+  CANVAS_BASE.create_line(0, 0, 60, 40, fill="blue")
+  base_inst = CANVAS_BASE.create_image(-1500, -1500, anchor=NW, image=ImageTk.PhotoImage(Image.fromarray(img.BASE)))
   
   #CANVAS_BASE.update_idletasks()
   #label_base.config(image=base_box)
-
-  anno_img = Image.open(os.path.join(TEMP_DIR, "temp_anno_box.jpg"))
-  anno_box = ImageTk.PhotoImage(anno_img)
   
   #CANVAS_ANNO.create_image(0, 0, anchor=NW, image=anno_box)
-  anno_inst = CANVAS_ANNO.create_image(0, 0, anchor=NW, image=anno_box)
+  anno_inst = CANVAS_ANNO.create_image(-img.cornerInit[0], -img.cornerInit[1], anchor=NW, image=ImageTk.PhotoImage(Image.fromarray(img.MASK)))
   
   
   #CANVAS_ANNO.update_idletasks()
   #label_anno.config(image=anno_box)
-  #window.update_idletasks()
+  #CANVAS_BASE.update_idletasks()
 
 
 ### Unbiased Random
 BUTTON_unbiasedRandom = Button(SUBFRAME_generatorButtons, text = "Random Image", fg = "black",
                                command = lambda: [IMAGE_OBJECT.chunkSearcher("Unbiased Random"),
                                                   IMAGE_OBJECT.imagePrepare(),
-                                                  reloadImages()])
+                                                  reloadPreviews(IMAGE_OBJECT)])
 BUTTON_unbiasedRandom.pack(side=TOP, fill = X)
 
 ### Filtered Random (avoids totally blank spaces)
 BUTTON_filteredRandom = Button(SUBFRAME_generatorButtons, text = "Useful Region", fg = "black",
                                command = lambda: [IMAGE_OBJECT.chunkSearcher("Filtered Random"),
                                                   IMAGE_OBJECT.imagePrepare(),
-                                                  reloadImages()])
+                                                  reloadPreviews(IMAGE_OBJECT)])
 BUTTON_filteredRandom.pack(side=TOP, fill = X)
 
 ### Filtered Target (Looks for sections with annotations)
 BUTTON_filteredTarget = Button(SUBFRAME_generatorButtons, text = "Annotated Section", fg = "black",
                                command = lambda: [IMAGE_OBJECT.chunkSearcher("Filtered Target"),
                                                   IMAGE_OBJECT.imagePrepare(),
-                                                  reloadImages()])
+                                                  reloadPreviews(IMAGE_OBJECT)])
 BUTTON_filteredTarget.pack(side=TOP, fill = X)
 
 
