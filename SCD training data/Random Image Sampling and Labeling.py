@@ -14,7 +14,9 @@ from PIL import Image
 
 from tifffile import imread, imwrite
 
-#import os
+import os
+CWD = os.getcwd()
+TEMP_DIR = os.path.join(CWD, "SCD training data/temp_files")
 
 import numpy as np
 
@@ -25,6 +27,8 @@ from PIL import Image, ImageTk
 import copy
 
 import time
+
+
 
 print("Imported Packages")
 
@@ -169,11 +173,11 @@ class SAMPLER_IMAGE:
 
     self.drawBoxes()
     
-    imwrite(f"temp_files/temp_base.jpg", self.grabChunk("BASE_box", buffer = 0))
-    imwrite(f"temp_files/temp_anno.jpg", self.grabChunk("MASK_box", buffer = 0))
+    imwrite(os.path.join(TEMP_DIR,"temp_base.jpg"), self.grabChunk("BASE_box", buffer = 0))
+    imwrite(os.path.join(TEMP_DIR,"temp_anno.jpg"), self.grabChunk("MASK_box", buffer = 0))
 
-    imwrite(f"temp_files/temp_base_box.jpg", self.grabChunk("BASE_box", buffer = self.buffer_size))
-    imwrite(f"temp_files/temp_anno_box.jpg", self.grabChunk("MASK_box", buffer = self.buffer_size))
+    imwrite(os.path.join(TEMP_DIR,"temp_base_box.jpg"), self.grabChunk("BASE_box", buffer = self.buffer_size))
+    imwrite(os.path.join(TEMP_DIR,"temp_anno_box.jpg"), self.grabChunk("MASK_box", buffer = self.buffer_size))
 
   @timer_func
   def saveClassifiedImage(self, source_tag, category_tag):
@@ -252,9 +256,9 @@ BUTTON_selectAnno = Button(SUBFRAME_annoImage, text = "Open Annotation", fg = "b
 BUTTON_selectAnno.pack(side=BOTTOM, fill = X)
 
 # Make Image generation button/s
-
-base_img = Image.open("C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD training data\\temp_files\\IMG_1058.jpg")
-anno_img = Image.open("C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD training data\\temp_files\\IMG_1058.jpg")
+print(CWD)
+base_img = Image.open(os.path.join(TEMP_DIR, "IMG_1058.jpg"))
+anno_img = Image.open(os.path.join(TEMP_DIR, "IMG_1058.jpg"))
 # Default values ^^ are a picture of my cat
 
 base_box = ImageTk.PhotoImage(base_img)
@@ -277,7 +281,7 @@ def reloadImages():
   #CANVAS_ANNO.delete()
   #CANVAS_ANNO.update_idletasks()
 
-  base_img = Image.open("C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD training data\\temp_files\\temp_base_box.jpg")
+  base_img = Image.open(os.path.join(TEMP_DIR, "temp_base_box.jpg"))
   base_box = ImageTk.PhotoImage(base_img)
   #CANVAS_BASE.create_image(0, 0, anchor=NW, image=base_box)
   base_inst = CANVAS_BASE.create_image(0, 0, anchor=NW, image=base_box)
@@ -285,7 +289,7 @@ def reloadImages():
   #CANVAS_BASE.update_idletasks()
   #label_base.config(image=base_box)
 
-  anno_img = Image.open("C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD training data\\temp_files\\temp_anno_box.jpg")
+  anno_img = Image.open(os.path.join(TEMP_DIR, "temp_anno_box.jpg"))
   anno_box = ImageTk.PhotoImage(anno_img)
   
   #CANVAS_ANNO.create_image(0, 0, anchor=NW, image=anno_box)
