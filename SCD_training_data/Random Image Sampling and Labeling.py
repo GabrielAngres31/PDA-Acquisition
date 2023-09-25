@@ -291,7 +291,7 @@ def reloadPreviews(img):
   CANVAS_ANNO.delete('all')
   #CANVAS_BASE.create_image(0, 0, anchor=NW, image=base_box)
   CANVAS_BASE.create_line(0, 0, 60, 40, fill="blue")
-  base_inst = CANVAS_BASE.create_image(-1500, -1500, anchor=NW, image=ImageTk.PhotoImage(Image.fromarray(img.BASE)))
+  base_inst = CANVAS_BASE.create_image(1500, 1500, anchor=NW, image=ImageTk.PhotoImage(Image.fromarray(img.BASE)))
   
   #CANVAS_BASE.update_idletasks()
   #label_base.config(image=base_box)
