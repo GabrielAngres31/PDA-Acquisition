@@ -2,14 +2,11 @@ from random import randint
 from PIL import Image
 from tifffile import imread, imwrite
 import os
-#CWD = os.getcwd()
-#TEMP_DIR = os.path.join(CWD, "temp_files")
 import numpy as np
 from tkinter import *
 from tkinter import filedialog as fd
 from PIL import Image, ImageTk
-import copy
-import time
+
 
 DIR_CWD = os.path.join(os.getcwd(), "SCD_training_data")
 DIR_TEMP = os.path.join(DIR_CWD, "temp_images")
@@ -26,6 +23,45 @@ Image_ANNO_Tiff = None
 Image_BASE_size = None
 Image_ANNO_size = None
 
+image_base_filepath = None
+image_anno_filepath = None
+
+def setImagesBase():
+    global image_base_filepath
+    image_base_filepath = fd.askopenfilename(title = "Select a BASE Image", initialdir = DIR_BASE, 
+                                             initialfile="C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\BASE\\cot1.tif")
+
+    global Image_BASE
+    Image_BASE = ImageTk.PhotoImage(Image.open(image_base_filepath))
+
+    global Image_BASE_size
+    Image_BASE_size = [Image_BASE.width(), Image_BASE.height()]
+    print(image_base_filepath)
+    print(Image_BASE_size)
+
+    global Image_BASE_Tiff
+    Image_BASE_Tiff = imread(image_base_filepath)
+
+def setImagesAnno():
+    global image_anno_filepath
+    image_anno_filepath = fd.askopenfilename(title = "Select a ANNO Image", initialdir = DIR_ANNO)
+
+    global Image_ANNO
+    Image_ANNO = ImageTk.PhotoImage(Image.open(image_anno_filepath))
+
+    global Image_ANNO_size
+    Image_ANNO_size = [Image_ANNO.width(), Image_ANNO.height()]
+    print(image_anno_filepath)
+    print(Image_ANNO_size)
+
+    global Image_ANNO_Tiff
+    Image_ANNO_Tiff = imread(image_anno_filepath)
+
+def saveChunk(x0, y0, x1, y1, target_folder):
+    print("Saving Chunk...")
+    chunk = Image_BASE_Tiff[y0:y1, 
+                            x0:x1]
+    imwrite(f"C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\generated\\{target_folder}\\{target_folder}-{x0}x-{y0}y.jpg", chunk)
 
 window = Tk()
 window.title("Stomata Image Classifier")
@@ -70,10 +106,10 @@ FRAME_decideButtons.pack(side = RIGHT, fill = BOTH, expand = False)
 
 # Button that opens file browser and allows you to select two images to use for selection
 
-BUTTON_selectBase = Button(FRAME_baseImage, text = "Open Base Image", fg = "black", command = None)
+BUTTON_selectBase = Button(FRAME_baseImage, text = "Open Base Image", fg = "black", command = lambda: setImagesBase())
 BUTTON_selectBase.pack(side=BOTTOM, fill = X)
 
-BUTTON_selectAnno = Button(FRAME_annoImage, text = "Open Annotation", fg = "black", command = None)
+BUTTON_selectAnno = Button(FRAME_annoImage, text = "Open Annotation", fg = "black", command = lambda: setImagesAnno())
 BUTTON_selectAnno.pack(side=BOTTOM, fill = X)
 
 
@@ -95,67 +131,35 @@ BUTTON_generateFilteredRandom.pack(side=TOP, fill = X)
 BUTTON_generateFilteredTarget = Button(FRAME_generateButtons, text = "Annotated Section", fg = "black",
                                command = lambda: [
                                    getValidBoxCoords("Filtered Target"),
-                                   update_canvases(-x_pos_0, -y_pos_0)])
+                                   update_canvases(-(x_pos_0-buffers_dimension), -(y_pos_0-buffers_dimension))])
 BUTTON_generateFilteredTarget.pack(side=TOP, fill = X)
 
-# BUTTON_generateEnclosedTarget = Button(FRAME_generateButtons, text = "Enclosed Annotation", fg = "black",
-#                                command = lambda: [
-#                                    getValidBoxCoords("Filtered Target"),
-#                                    update_canvases(-x_pos_0, -y_pos_0)])
-# BUTTON_generateEnclosedTarget.pack(side=TOP, fill = X)
+BUTTON_generateEnclosedTarget = Button(FRAME_generateButtons, text = "Enclosed Annotation", fg = "black",
+                                command = lambda: [
+                                    getValidBoxCoords("Enclosed Target"),
+                                    update_canvases(-(x_pos_0-buffers_dimension), -(y_pos_0-buffers_dimension))])
+BUTTON_generateEnclosedTarget.pack(side=TOP, fill = X)
 
 
 # On Image Generation, provide buttons for classification
 BUTTON_decidePresentWithPore = Button(FRAME_decideButtons, text = "Stomata\n(VISIBLE Pore)", fg = "black",
-                                command = None)
+                                command = lambda: saveChunk(x_pos_0, y_pos_0, x_pos_1, y_pos_1, "stomata_pore"))
 BUTTON_decidePresentWithPore.pack(side=TOP, fill = X)
 
 BUTTON_decidePresentWithoutPore = Button(FRAME_decideButtons, text = "Stomata\nNOT Visible Pore", fg = "black",
-                                command = None)
+                                command = lambda: saveChunk(x_pos_0, y_pos_0, x_pos_1, y_pos_1, "stomata_without"))
 BUTTON_decidePresentWithoutPore.pack(side=TOP, fill = X)
 
 BUTTON_decidePresentPartial = Button(FRAME_decideButtons, text = "PARTIAL Stomata", fg = "black",
-                                command = None)
+                                command = lambda: saveChunk(x_pos_0, y_pos_0, x_pos_1, y_pos_1, "partial_stomama"))
 BUTTON_decidePresentPartial.pack(side=TOP, fill = X)
 
 BUTTON_decideNotPresent = Button(FRAME_decideButtons, text = "NOT PRESENT", fg = "black",
-                                command = None)
+                                command = lambda: saveChunk(x_pos_0, y_pos_0, x_pos_1, y_pos_1, "no_stomata"))
 BUTTON_decideNotPresent.pack(side=TOP, fill = X)
 
 
-image_base_filepath = None
-image_anno_filepath = None
 
-def setImages():
-    global image_base_filepath
-    image_base_filepath = fd.askopenfilename(title = "Select a BASE Image", initialdir = DIR_BASE)
-
-    global Image_BASE
-    Image_BASE = ImageTk.PhotoImage(Image.open(image_base_filepath))
-
-    global Image_BASE_size
-    Image_BASE_size = [Image_BASE.width(), Image_BASE.height()]
-    print(image_base_filepath)
-    print(Image_BASE_size)
-
-    global Image_BASE_Tiff
-    Image_BASE_Tiff = imread(image_base_filepath)
-
-    global image_anno_filepath
-    image_anno_filepath = fd.askopenfilename(title = "Select a ANNO Image", initialdir = DIR_ANNO)
-
-    global Image_ANNO
-    Image_ANNO = ImageTk.PhotoImage(Image.open(image_anno_filepath))
-
-    global Image_ANNO_size
-    Image_ANNO_size = [Image_ANNO.width(), Image_ANNO.height()]
-    print(image_anno_filepath)
-    print(Image_ANNO_size)
-
-    global Image_ANNO_Tiff
-    Image_ANNO_Tiff = imread(image_anno_filepath)
-
-setImages()
 
 def getValidBoxCoords(choice="Unbiased Random"):
     global Image_BASE_size
@@ -172,7 +176,6 @@ def getValidBoxCoords(choice="Unbiased Random"):
     global Image_BASE_Tiff
     global Image_ANNO_Tiff
 
-    # TODO: Put global chunklet variables here
     # TODO: Finalize the saving and storing buttons
 
     assert Image_BASE_size[0] == Image_ANNO_size[0]
@@ -185,31 +188,56 @@ def getValidBoxCoords(choice="Unbiased Random"):
 
     isQualifiedChunk = False
     while not isQualifiedChunk:
-        x0 = randint(0, width  - segment_dimension - 1)
-        y0 = randint(0, height - segment_dimension - 1)
+        print("Looking")
+        x0 = randint(0, width  - segment_dimension + 1)
+        y0 = randint(0, height - segment_dimension + 1)
 
         x1 = x0 + segment_dimension - 1
         y1 = y0 + segment_dimension - 1 
 
         if choice == "Unbiased Random":
+            print("lol")
             isQualifiedChunk = True
         elif choice == "Filtered Random":
+            print("thinking")
             basechunk = Image_BASE_Tiff[(y0-buffers_dimension):(y1+buffers_dimension+1), 
                                         (x0-buffers_dimension):(x1+buffers_dimension+1)]
-            base_image_mean = basechunk.mean()
+            base_image_mean = np.mean(basechunk)
             if base_image_mean > 25: # THIS VALUE WAS OBTAINED BY MANUAL TESTING
                 isQualifiedChunk = True
         elif choice == "Filtered Target":
-            annochunk = Image_ANNO_Tiff[(y0+buffers_dimension):(y1-buffers_dimension+1), 
-                                        (x0+buffers_dimension):(x1-buffers_dimension+1)]
-            anno_image_mean = annochunk.mean()
-            if anno_image_mean > 15:
+            
+            annochunk = Image_ANNO_Tiff[(y0):(y1), 
+                                        (x0):(x1)]
+            # THIS SHOULDN'T WORK THE WAY IT DOES, BECAUSE IT WOULD DEFINE A 24x24 square
+            # BUT setting it to y0:y1+1 and x0:x1+1 sometimes generates sections that have 
+            #   annotations in the buffer area but not the inspection area.
+            # IT'S WEIRD.
+            #print(annochunk)
+            anno_image_mean = np.mean(annochunk)
+            print(anno_image_mean)
+            if anno_image_mean > 0:
                 isQualifiedChunk = True
+        elif choice == "Enclosed Target":
+            print("Welp")
+            annochunk = Image_ANNO_Tiff[y0:(y1+1), 
+                                        x0:(x1+1)]
+            
+            anno_image_mean = np.mean(annochunk)
+            if anno_image_mean > 0:
+                print(annochunk)
+                isQualifiedChunk = True
+                for n in list(range(0, segment_dimension-1)):
+                    if not(isQualifiedChunk):
+                        break
+                    if (annochunk[0][n]) or annochunk[n][segment_dimension-1] or annochunk[segment_dimension-1][segment_dimension-n-1] or annochunk[segment_dimension-n-1][0]:
+                        isQualifiedChunk = False
+                        break
         else:
             raise Exception("Invalid Chunktype")
 
     x_pos_0, y_pos_0, x_pos_1, y_pos_1 = x0, y0, x1, y1
-    print(x_pos_0, y_pos_0)
+    #print(x_pos_0, y_pos_0)
 
 def drawBox(canvas_obj, size, buffer, color="blue"):
 
@@ -219,8 +247,8 @@ def drawBox(canvas_obj, size, buffer, color="blue"):
     canvas_obj.create_line(buffer,      buffer+size, buffer+size, buffer+size, fill = color)
 
 def update_canvases(x_pos, y_pos):
-    CANVAS_BASE.delete()
-    CANVAS_ANNO.delete()
+    CANVAS_BASE.delete("all")
+    CANVAS_ANNO.delete("all")
 
     CANVAS_BASE.create_image(x_pos, y_pos, anchor = NW, image = Image_BASE)
     CANVAS_ANNO.create_image(x_pos, y_pos, anchor = NW, image = Image_ANNO)
@@ -228,4 +256,6 @@ def update_canvases(x_pos, y_pos):
     drawBox(CANVAS_BASE, segment_dimension, buffers_dimension)
     drawBox(CANVAS_ANNO, segment_dimension, buffers_dimension)
 
+
 mainloop()
+
