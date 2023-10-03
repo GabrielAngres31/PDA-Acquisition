@@ -29,20 +29,29 @@ def timer_func(func):
 def timeTaker(searchfile, maskedfile, print_it = False):
     SEARCH_FILE = imread(searchfile)
     MASKED_FILE = imread(maskedfile)
-   
+
+    print(MASKED_FILE.shape)
+    if MASKED_FILE.shape[2] == 4:
+        
+        MASKED_FILE = MASKED_FILE[:,:,:3]
+
+    assert MASKED_FILE.shape[2] == 3
+    print(MASKED_FILE.shape)
+    
     height, width = SEARCH_FILE.shape[0], SEARCH_FILE.shape[1]
     segment_size = 64
     trial = 0
     section_counts = [0,0,0]
     sample_interval = 8
-   
+    
     for x in list(range(0, width, sample_interval)):
         for y in list(range(0, height, sample_interval)):
-            if trial == 80:
-                break
-
+            #if trial == 50000:
+            #    break
+            #print(trial)
             chunk = SEARCH_FILE[y:y+segment_size,
                                 x:x+segment_size]
+            #print(chunk.size)
             #print(chunk.size)
             if chunk.size != 4096:
                 break
@@ -50,30 +59,44 @@ def timeTaker(searchfile, maskedfile, print_it = False):
             #if np.all(chunk[0, :] == 0) and np.all(chunk[:, 0] == 0) and np.all(chunk[:, segment_size-1] == 0) and np.all(chunk[segment_size-1, :] == 0):
             #    pass
             #else:
-            chunk_mask = MASKED_FILE[y:y+segment_size,
+            chunk_mask = MASKED_FILE[y:y+segment_size, 
                                      x:x+segment_size]
             label_string = ""
-
             # TODO: TROUBLESHOOT THIS!!!
+            #print(f"{x} {y}")
             if np.all(chunk_mask == 0): # If no annotation is present in the cell
+                #print("for")
+                #print(chunk_mask)
+                #print("-----")
+                #print(chunk)
+                #print(np.all(chunk<12))
+                #assert 1 == 0
                 if np.all(chunk < 12): # If the cell is mostly or all black, hop out of the loop
-                    break
+                    #print(f"INVALID #{trial}")
+                    pass
                 else: # Else, mark it as ABSENT (plant part that has no stomatal features)
                     label_string = "ABSENT"
             elif np.all(chunk_mask[0, :] == 0) and np.all(chunk_mask[:, 0] == 0) and np.all(chunk_mask[:, segment_size-1] == 0) and np.all(chunk_mask[segment_size-1, :] == 0):
+                #print("ever")
+                #print(chunk_mask[0, :])
+                #print(chunk_mask[:, 0])
+                #print(chunk_mask[:, segment_size-1])
+                #print(chunk_mask[segment_size-1, :])
                 # If annotation is present in the cell and there's no annotation content on the cell borders, then a stomata is wholly enclosed
                 label_string = "WHOLE"
             else: # Otherwise it is not.
+                #assert 1 == 0
                 label_string = "PARTIAL"
-            imwrite(os.path.join(DIR_SOURCE, f"generated\\test\\{label_string}\\COT1_{label_string}_({x}, {y}).tif"), chunk)
+            if label_string:
+                imwrite(os.path.join(DIR_SOURCE, f"generated\\test\\{label_string}\\COT1_{label_string}_({x}, {y}).tif"), chunk)
             trial += 1
-            if trial % 40000 == 0:
+            if trial % 4000 == 0:
                 print(f"{trial/1000}k images stored!")
             #print(f"Loop #{trial}")
 
 
-    print(f"{trial} images stored!")
-    print(f'Empty Sections:{section_counts[0]}\nNon-Empty Sections:{section_counts[1]}\nAnnotated Sections:{section_counts[2]}')
+    print(f"{trial/1000}k images stored!")
+    #print(f'Empty Sections:{section_counts[0]}\nNon-Empty Sections:{section_counts[1]}\nAnnotated Sections:{section_counts[2]}')
 
 def file_iterator():
 
