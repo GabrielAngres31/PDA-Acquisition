@@ -26,7 +26,7 @@ def timer_func(func):
 #MASK_FILE = imread(os.path.join(DIR_SOURCE, "ANNOTATION\\cot1_STOMATA_MASKS.tiff"))
 
 @timer_func
-def timeTaker(searchfile, maskedfile, print_it = False):
+def timeTaker(searchfile, maskedfile, number, print_it = False):
     SEARCH_FILE = imread(searchfile)
     MASKED_FILE = imread(maskedfile)
 
@@ -88,7 +88,7 @@ def timeTaker(searchfile, maskedfile, print_it = False):
                 #assert 1 == 0
                 label_string = "PARTIAL"
             if label_string:
-                imwrite(os.path.join(DIR_SOURCE, f"generated\\test\\{label_string}\\COT1_{label_string}_({x}, {y}).tif"), chunk)
+                imwrite(os.path.join(DIR_SOURCE, f"generated\\{label_string}\\COT{number}_{x}x_{y}y.png"), chunk)
             trial += 1
             if trial % 4000 == 0:
                 print(f"{trial/1000}k images stored!")
@@ -103,7 +103,7 @@ def file_iterator():
     for i in list(range(1, 5)):
         searchfile_name = os.path.join(DIR_BASE, f"cot{i}.tif")
         maskedfile_name = os.path.join(DIR_ANNO, f"cot{i}_STOMATA_MASKS.tiff")
-        timeTaker(searchfile_name, maskedfile_name, print_it = True)
+        timeTaker(searchfile_name, maskedfile_name, i, print_it = True)
     print("There was an attempt!")
 
 file_iterator()

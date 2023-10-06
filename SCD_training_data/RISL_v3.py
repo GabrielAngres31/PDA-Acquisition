@@ -56,6 +56,8 @@ def setImagesAnno():
 
     global Image_ANNO_Tiff
     Image_ANNO_Tiff = imread(image_anno_filepath)
+    if Image_ANNO_Tiff.shape[2] == 4:
+        Image_ANNO_Tiff = Image_ANNO_Tiff[:,:,:3]
 
 def saveChunk(x0, y0, x1, y1, target_folder):
     print("Saving Chunk...")
@@ -65,7 +67,7 @@ def saveChunk(x0, y0, x1, y1, target_folder):
 
 window = Tk()
 window.title("Stomata Image Classifier")
-window.geometry("300x400")
+window.geometry("500x500")
 
 window.resizable(width=False, height=False)
 
@@ -98,6 +100,12 @@ FRAME_annoImage.pack(side = RIGHT, fill = X, expand = False)
 CANVAS_ANNO = Canvas(FRAME_annoImage, width = squares_dimension, height = squares_dimension, background = "black")
 CANVAS_ANNO.pack(side=TOP)
 
+FRAME_freqImage = Frame(FRAME_imageComparison, bg = "green")
+FRAME_freqImage.pack(side = LEFT, fill = X, expand = False)
+
+CANVAS_FREQ = Canvas(FRAME_freqImage, width = squares_dimension, height = squares_dimension, background = "black")
+CANVAS_FREQ.pack(side=TOP)
+
 FRAME_generateButtons = Frame(FRAME_actionButtons)
 FRAME_generateButtons.pack(side = LEFT, fill = BOTH, expand = False)
 
@@ -112,19 +120,21 @@ BUTTON_selectBase.pack(side=BOTTOM, fill = X)
 BUTTON_selectAnno = Button(FRAME_annoImage, text = "Open Annotation", fg = "black", command = lambda: setImagesAnno())
 BUTTON_selectAnno.pack(side=BOTTOM, fill = X)
 
+BUTTON_no_freqing = Button(FRAME_freqImage, text = "", fg = "black", default = DISABLED, command = None)
+BUTTON_no_freqing.pack(side=BOTTOM, fill = X)
 
 ### Unbiased Random
 BUTTON_generateUnbiasedRandom = Button(FRAME_generateButtons, text = "Random Image", fg = "black",
                                command = lambda: [
                                    getValidBoxCoords("Unbiased Random"),
-                                   update_canvases(-x_pos_0, -y_pos_0)])
+                                   update_canvases(-x_pos_0-buffers_dimension, -y_pos_0-buffers_dimension)])
 BUTTON_generateUnbiasedRandom.pack(side=TOP, fill = X)
 
 ### Filtered Random (avoids totally blank spaces)
 BUTTON_generateFilteredRandom = Button(FRAME_generateButtons, text = "Useful Region", fg = "black",
                                command = lambda: [
                                    getValidBoxCoords("Filtered Random"),
-                                   update_canvases(-x_pos_0, -y_pos_0)])
+                                   update_canvases(-x_pos_0-buffers_dimension, -y_pos_0-buffers_dimension)])
 BUTTON_generateFilteredRandom.pack(side=TOP, fill = X)
 
 ### Filtered Target (Looks for sections with annotations)
@@ -159,7 +169,28 @@ BUTTON_decideNotPresent = Button(FRAME_decideButtons, text = "NOT PRESENT", fg =
 BUTTON_decideNotPresent.pack(side=TOP, fill = X)
 
 
+def freqmapper():
+    global Image_BASE_Tiff
 
+    global x_pos_0
+    global y_pos_0
+    global x_pos_1
+    global y_pos_1
+
+    x0, x1, y0, y1 = x_pos_0, y_pos_0, x_pos_1, y_pos_1
+
+    basechunk_array = Image_BASE_Tiff[y0:y1, 
+                                      x0:x1]
+    
+    array_out = np.zeros(shape = (basechunk_array.shape[0], basechunk_array.shape[1]))
+    unique, counts = np.unique(basechunk_array, return_counts = True)
+    counts = ((counts/np.max(counts)*255)).astype(int)
+    re_map = dict(zip(unique, counts))
+    for y in range(basechunk_array.shape[0]):
+        for x in range(basechunk_array.shape[1]):
+            array_out[y][x] = re_map[basechunk_array[y][x]]
+
+    return array_out
 
 def getValidBoxCoords(choice="Unbiased Random"):
     global Image_BASE_size
@@ -206,7 +237,8 @@ def getValidBoxCoords(choice="Unbiased Random"):
             if base_image_mean > 25: # THIS VALUE WAS OBTAINED BY MANUAL TESTING
                 isQualifiedChunk = True
         elif choice == "Filtered Target":
-            
+            basechunk = Image_BASE_Tiff[y0:(y1+1), 
+                                        x0:(x1+1)]            
             annochunk = Image_ANNO_Tiff[(y0):(y1), 
                                         (x0):(x1)]
             # THIS SHOULDN'T WORK THE WAY IT DOES, BECAUSE IT WOULD DEFINE A 24x24 square
@@ -215,24 +247,24 @@ def getValidBoxCoords(choice="Unbiased Random"):
             # IT'S WEIRD.
             #print(annochunk)
             anno_image_mean = np.mean(annochunk)
+            base_image_mean = np.mean(basechunk)
             print(anno_image_mean)
-            if anno_image_mean > 0:
+            if anno_image_mean > 0 and base_image_mean > 25:
                 isQualifiedChunk = True
         elif choice == "Enclosed Target":
             print("Welp")
+            basechunk = Image_BASE_Tiff[y0:(y1+1), 
+                                        x0:(x1+1)]
             annochunk = Image_ANNO_Tiff[y0:(y1+1), 
                                         x0:(x1+1)]
             
             anno_image_mean = np.mean(annochunk)
-            if anno_image_mean > 0:
+            base_image_mean = np.mean(basechunk)
+
+            if anno_image_mean > 0 and base_image_mean > 25:
                 print(annochunk)
-                isQualifiedChunk = True
-                for n in list(range(0, segment_dimension-1)):
-                    if not(isQualifiedChunk):
-                        break
-                    if (annochunk[0][n]) or annochunk[n][segment_dimension-1] or annochunk[segment_dimension-1][segment_dimension-n-1] or annochunk[segment_dimension-n-1][0]:
-                        isQualifiedChunk = False
-                        break
+                if np.all(annochunk[0, :] == 0) and np.all(annochunk[:, 0] == 0) and np.all(annochunk[:, segment_dimension-1] == 0) and np.all(annochunk[segment_dimension-1, :] == 0):
+                    isQualifiedChunk = True
         else:
             raise Exception("Invalid Chunktype")
 
@@ -249,12 +281,15 @@ def drawBox(canvas_obj, size, buffer, color="blue"):
 def update_canvases(x_pos, y_pos):
     CANVAS_BASE.delete("all")
     CANVAS_ANNO.delete("all")
-
+    #CANVAS_FREQ.delete("all")
+    Image.fromarray(freqmapper()).show()
     CANVAS_BASE.create_image(x_pos, y_pos, anchor = NW, image = Image_BASE)
     CANVAS_ANNO.create_image(x_pos, y_pos, anchor = NW, image = Image_ANNO)
+    #CANVAS_FREQ.create_image(0, 0, anchor = NW, image = ImageTk.PhotoImage(Image.fromarray(freqmapper())))
 
     drawBox(CANVAS_BASE, segment_dimension, buffers_dimension)
     drawBox(CANVAS_ANNO, segment_dimension, buffers_dimension)
+    #drawBox(CANVAS_FREQ, segment_dimension, buffers_dimension)
 
 
 mainloop()

@@ -16,7 +16,7 @@ from tifffile import imread, imwrite
 
 import os
 CWD = os.getcwd()
-TEMP_DIR = os.path.join(CWD, "temp_files")
+TEMP_DIR = os.path.join(CWD, "temp_images")
 
 import numpy as np
 

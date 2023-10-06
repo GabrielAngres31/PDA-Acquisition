@@ -1,2 +1,5 @@
 SCD\ training\ data/**/*.jpg
 **/generated/**/*.tif
+*.png
+*.png
+*.png
