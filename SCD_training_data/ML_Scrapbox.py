@@ -6,7 +6,6 @@ import sys
 from tifffile import imread, imwrite
 from PIL import Image as im
 
-
 DIR_CWD = os.getcwd()
 DIR_SOURCE = os.path.join(DIR_CWD, "source_images")
 DIR_IMAGESET = os.path.join(DIR_SOURCE, "generated")

@@ -99,26 +99,7 @@ coords_TEST = [*pos0_TEST, *pos1_TEST]
 
 
 # C:\Users\gjang\Pictures
-DIR_MAIN = os.getcwd()
-DIR_TEST_IMAGE = os.path.join(DIR_MAIN, "TEST_IMAGES")
-im_in = imread(os.path.join(DIR_TEST_IMAGE, "TESTING.tiff"))
-im_in_part = imread(os.path.join(DIR_TEST_IMAGE, "TEST_PART.tiff"))
-im_in_non = imread(os.path.join(DIR_TEST_IMAGE, "TEST_NON.tiff"))
-im_in_scr = imread(os.path.join(DIR_TEST_IMAGE, "scrunch.tiff"))
-im_in_edge = imread(os.path.join(DIR_TEST_IMAGE, "EDGE.tiff"))
 
-im_in_stem = imread(os.path.join(DIR_TEST_IMAGE, "STEM.tiff"))
-im_in_crowd = imread(os.path.join(DIR_TEST_IMAGE, "CROWD.tiff"))
-
-
-im_in = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in]])
-im_in_part = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_part]])
-im_in_non = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_non]])
-im_in_scr = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_scr]])
-im_in_edge = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_edge]])
-
-im_in_stem = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_stem]])
-im_in_crowd = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_crowd]])
 #print(im_in)
 
 def coord_to_position(x, y, width):
@@ -173,8 +154,8 @@ def remap_radial_kernel(arr, val = 0, remove_axes = False):
     arr_out = np.reshape(arr_out_flat, arr.shape)
 
     if remove_axes:
-        arr_out = np.delete(arr_out, 25, 1)
-        arr_out = np.delete(arr_out, 25, 0)
+        arr_out = np.delete(arr_out, center, 1)
+        arr_out = np.delete(arr_out, center, 0)
 
     return arr_out
 #im_out = np.asarray([[[value, value, value] for value in line] for line in im_out])
@@ -295,7 +276,18 @@ def filter_proportion_threshold(arr, threshold, highpass = True):
     thresh_int = int(np.quantile(arr_flat, threshold))
     return pass_filter(arr, thresh_int, highpass)
 
-
+def norm_brighten(arr, factor = 4):
+    # minimum = np.min(arr)
+    # maximum = np.max(arr)
+    # if minimum == maximum:
+    #     return np.full(arr.shape, 0)
+    # else:
+    #     delta = maximum-minimum
+    #     return factor*255*np.subtract(arr, minimum)/np.subtract(maximum, minimum)
+    
+    multed = np.multiply(np.subtract(arr, 16), factor)
+    np.place(multed, multed > 255, 255)
+    return multed
 
 
 arr_test = np.arange(81).reshape((9,9))
@@ -305,6 +297,26 @@ print(pass_filter(arr_test, 25))
 
 
 def UNIT_TEST_plotter():
+    DIR_MAIN = os.getcwd()
+    DIR_TEST_IMAGE = os.path.join(DIR_MAIN, "TEST_IMAGES")
+    im_in = imread(os.path.join(DIR_TEST_IMAGE, "TESTING.tiff"))
+    im_in_part = imread(os.path.join(DIR_TEST_IMAGE, "TEST_PART.tiff"))
+    im_in_non = imread(os.path.join(DIR_TEST_IMAGE, "TEST_NON.tiff"))
+    im_in_scr = imread(os.path.join(DIR_TEST_IMAGE, "scrunch.tiff"))
+    im_in_edge = imread(os.path.join(DIR_TEST_IMAGE, "EDGE.tiff"))
+
+    im_in_stem = imread(os.path.join(DIR_TEST_IMAGE, "STEM.tiff"))
+    im_in_crowd = imread(os.path.join(DIR_TEST_IMAGE, "CROWD.tiff"))
+
+
+    im_in = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in]])
+    im_in_part = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_part]])
+    im_in_non = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_non]])
+    im_in_scr = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_scr]])
+    im_in_edge = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_edge]])
+
+    im_in_stem = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_stem]])
+    im_in_crowd = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_crowd]])
     removeaxes = True
     files = (im_in, im_in_non, im_in_part, im_in_scr, im_in_edge, im_in_stem, im_in_crowd)
     plt.figure(1)
@@ -325,9 +337,137 @@ def UNIT_TEST_plotter():
         p = len(plot_objects)
         for j,plot_obj in enumerate(plot_objects):
             plt.subplot(p, f, i+f*j+1)
-            plt.imshow(plot_obj, cmap='gray')
+            plt.imshow(plot_obj, cmap='gray', vmin = 0, vmax = 255)
 
     plt.show()
+
+def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "cot1_STOMATA_MASKS.tiff"):
+    source_path = "C:\\Users\\Muroyama lab\\Documents\\Muroyama Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
+    file_path = os.path.join(source_path, "BASE", pool_path)
+    mask_path = os.path.join(source_path, "ANNOTATION", mask_pool_path)
+    file_array = imread(file_path)
+    mask_array = imread(mask_path)
+    #removeaxes = True
+
+    def select_section(x, y, size):
+        return file_array[y:y+size, x:x+size]
+    
+    """def processed__img(img):
+        base = remap_radial_kernel(img, 0, removeaxes)
+        symm = symmetry_remap(base)
+        diff = floor_subtractive_convolve_remap(4*base, symm)
+        cutt = pass_filter(diff, 64)
+        return cutt"""
+    
+    def section_generator(num, arr, size = size):
+        i = 0
+        w = arr.shape[1]
+        h = arr.shape[0]
+        while i <= num:
+            interesting = False
+            tries = 0
+            while not(interesting):
+                x, y = np.random.randint(w-size), np.random.randint(h-size)
+                if np.mean(select_section(x, y, size)) > 4:
+                   interesting = True
+                # x, y = np.random.randint(w-size), np.random.randint(h-size)
+                # print(mask_array[y+size//2, x+size//2])
+                # if not(np.any(mask_array[y+size//2, x+size//2][0] == 0)):
+                #    interesting = True
+                #print(interesting)
+                tries += 1
+                if tries % 10000 == 0:
+                    print(tries)
+            yield select_section(x, y, size)
+            i += 1
+    plt.figure(1)
+    files = [i for i in section_generator(num, file_array)]
+    f = len(files)
+    for i,file in enumerate(files):
+        #print(file)
+        #print(i)
+        base = remap_radial_kernel(file, 0, True)
+        brht = norm_brighten(base, factor = 2)
+        invt = invert(brht)
+
+
+        symm = symmetry_remap(invt)
+        flrd = floor_subtractive_convolve_remap(brht, invt)
+
+        center = size//2
+
+        bse_ = np.delete(np.delete(file, 32, 0), 32, 1)
+
+
+        overlay = np.add(bse_, flrd)
+        #cutt = pass_filter(diff, 64)
+        plot_objects = (file, base, brht, invt, symm, flrd, overlay)
+    
+        p = len(plot_objects)
+        for j,plot_obj in enumerate(plot_objects):
+            plt.subplot(p, f, i+f*j+1)
+            plt.imshow(plot_obj, cmap='gray', vmin = 0, vmax = 255)
+    plt.show()
+
+RANDOM_SAMPLE_plotter(64, 8)
+
+
+def spiral_array(shape):
+    width, height = shape[1], shape[0]
+    arr_out = np.full(shape, 0)
+    iter_width, iter_height = width, height
+    while not(iter_height == iter_width == 0):
+        pass
+
+TEST_IMAGE_SPIRAL = np.full((16,16), 0)
+TEST_IMAGE_SPIRAL[   0,0:16] =    np.arange( 0, 16) #16
+TEST_IMAGE_SPIRAL[1:16,  -1] =  np.arange(16, 31)   #15
+TEST_IMAGE_SPIRAL[  -1,0:15] = np.arange(31, 46)[::-1] #15
+TEST_IMAGE_SPIRAL[1:15,   0] = np.arange(46, 60)[::-1] #14
+
+TEST_IMAGE_SPIRAL[   1,1:15] = np.arange(60, 74) #13
+TEST_IMAGE_SPIRAL[2:15,  -2] = np.arange(74, 87) #12
+TEST_IMAGE_SPIRAL[  -2,1:14] = np.arange(87, 100)[::-1] #12
+TEST_IMAGE_SPIRAL[2:14,   1] = np.arange(100,112)[::-1] #11
+
+TEST_IMAGE_SPIRAL[   2,2:14] = np.arange(112,124) 
+TEST_IMAGE_SPIRAL[3:14,  -3] = np.arange(124,135)
+TEST_IMAGE_SPIRAL[  -3,2:13] = np.arange(135,146)[::-1]
+TEST_IMAGE_SPIRAL[3:13,   2] = np.arange(146,156)[::-1]
+
+TEST_IMAGE_SPIRAL[   3,3:13] = np.arange(156,166)
+TEST_IMAGE_SPIRAL[4:13,  -4] = np.arange(166,175)
+TEST_IMAGE_SPIRAL[  -4,3:12] = np.arange(175,184)[::-1]
+TEST_IMAGE_SPIRAL[4:12,   3] = np.arange(184,192)[::-1]
+
+TEST_IMAGE_SPIRAL[   4,4:12] = np.arange(192,200)
+TEST_IMAGE_SPIRAL[5:12,  -5] = np.arange(200,207)
+TEST_IMAGE_SPIRAL[  -5,4:11] = np.arange(207,214)[::-1]
+TEST_IMAGE_SPIRAL[5:11,   4] = np.arange(214,220)[::-1]
+
+TEST_IMAGE_SPIRAL[   5,5:11] = np.arange(220,226)
+TEST_IMAGE_SPIRAL[6:11,  -6] = np.arange(226,231)
+TEST_IMAGE_SPIRAL[  -6,5:10] = np.arange(231,236)[::-1]
+TEST_IMAGE_SPIRAL[6:10,   5] = np.arange(236,240)[::-1]
+
+TEST_IMAGE_SPIRAL[   6,6:10] = np.arange(240,244)
+TEST_IMAGE_SPIRAL[7:10,  -7] = np.arange(244,247)
+TEST_IMAGE_SPIRAL[  -7,6:9 ] = np.arange(247,250)[::-1]
+TEST_IMAGE_SPIRAL[7:9 ,   6] = np.arange(250,252)[::-1]
+
+TEST_IMAGE_SPIRAL[   7,7:9 ] = np.arange(252,254)
+TEST_IMAGE_SPIRAL[8:9 ,  -8] = np.arange(254,255)
+TEST_IMAGE_SPIRAL[  -8,7:8 ] = np.arange(255,256)[::-1]
+
+        
+
+#TEST_IMAGE_SPIRAL[]
+#print(TEST_IMAGE_SPIRAL)
+#plt.imshow(TEST_IMAGE_SPIRAL, cmap = 'gray')
+#plt.show()
+#plt.imshow(TEST_IMAGE_SPIRAL, cmap = 'gray', vmin = 0, vmax = 255)
+#plt.imshow(symmetry_remap(TEST_IMAGE_SPIRAL), cmap = 'gray', vmin = 0, vmax=255)
+#plt.show()
 
 def IMAGE_PROCESSOR(path, num_range, kernel_size = 64):
     im_in = imread(path)
@@ -343,7 +483,7 @@ def IMAGE_PROCESSOR(path, num_range, kernel_size = 64):
         section = im_in[h:h+kernel_size, w:w+kernel_size]
         base_radial_kernel = remap_radial_kernel(section, 0, True)
         symm_radial_kernel = symmetry_remap(base_radial_kernel)
-        diff_radial_kernel = floor_subtractive_convolve_remap(4*base_radial_kernel, symm_radial_kernel)
+        diff_radial_kernel = floor_subtractive_convolve_remap(1.3*base_radial_kernel, symm_radial_kernel)
 
         #print(diff_radial_kernel)
         yield(diff_radial_kernel.shape)
@@ -351,7 +491,7 @@ def IMAGE_PROCESSOR(path, num_range, kernel_size = 64):
         location += 1
     pbar.close()
             
-print(list(IMAGE_PROCESSOR("C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\BASE\\cot1.tif", [0,1000])))
+#print(list(IMAGE_PROCESSOR("C:\\Users\\Muroyama lab\\Documents\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\BASE\\cot1.tif", [0,1000])))
 #UNIT_TEST_plotter()
 
 def RADIAL_CONTRAST_TALLY(image_path, size):
