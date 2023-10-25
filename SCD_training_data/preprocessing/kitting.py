@@ -127,8 +127,18 @@ def remap_radial_kernel(arr, val = 0, remove_axes = False):
     def linechecker(arr_in, pos):
         interpolation = int(np.mean(arr_in))
         coord = position_to_coord(pos, width)
-        if coord[0] == center[0] or coord[1] == center[1]:
-            return interpolation
+        if coord[0] == center[0] and coord[1] == center[1]:
+            return arr_in[center[1], center[0]]
+        elif coord[0] == center[0]:
+            #return max((lambda r, a_b, c: r[min(a_b):max(a_b), c])(arr_in, [center[1], coord[1]], center[0]))
+            #return arr_in[coord[1], coord[0]]
+            return 64
+        elif coord[1] == center[1]:
+            #return max((lambda r, a_b, c: r[c, min(a_b):max(a_b)])(arr_in, [center[0], coord[0]], center[1]))
+            #return arr_in[coord[1], coord[0]]
+            return 192
+        #elif coord[0] == center[0] or coord[1] == center[1]:
+        #    return 0
         else:
             endpoints = [*center, coord[0], coord[1]]
             
@@ -320,20 +330,20 @@ def UNIT_TEST_plotter():
 
     im_in_stem = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_stem]])
     im_in_crowd = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_crowd]])
-    removeaxes = True
+    removeaxes = False
     files = (im_in, im_in_non, im_in_part, im_in_scr, im_in_edge, im_in_stem, im_in_crowd)
     plt.figure(1)
     f = len(files)
     for i,file in enumerate(files):
         
-        base_radial_kernel = remap_radial_kernel(file, 0, removeaxes)
+        base_radial_kernel = remap_radial_kernel(file, 0, removeaxes) if removeaxes else remap_radial_kernel(file, 0, removeaxes)[1:, 1:]
         symm_radial_kernel = symmetry_remap(base_radial_kernel)
         diff_radial_kernel = floor_subtractive_convolve_remap(4*base_radial_kernel, symm_radial_kernel)
         crck_radial_kernel = floor_subtractive_convolve_remap(base_radial_kernel, diff_radial_kernel)
         threshold_r_kernel = filter_proportion_threshold(diff_radial_kernel, 0.15)
         abs__thresh_kernel = pass_filter(diff_radial_kernel, 64)
         prop_thresh_kernel = filter_proportion_threshold(abs__thresh_kernel, 0.6)
-        maxd_cnvlve_kernel = Pool_Manual_2x2(diff_radial_kernel[1:, 1:], np.max)
+        maxd_cnvlve_kernel = Pool_Manual_2x2(diff_radial_kernel if removeaxes else diff_radial_kernel [1:, 1:], np.max)
         doub_cnvlve_kernel = Pool_Manual_2x2(maxd_cnvlve_kernel, np.max)
 
         plot_objects = (file, base_radial_kernel, symm_radial_kernel, diff_radial_kernel, maxd_cnvlve_kernel, doub_cnvlve_kernel)
@@ -344,8 +354,13 @@ def UNIT_TEST_plotter():
 
     plt.show()
 
+UNIT_TEST_plotter()
+
+
+
 def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "cot1_STOMATA_MASKS.tiff"):
-    source_path = "C:\\Users\\Muroyama lab\\Documents\\Muroyama Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
+    #source_path = "C:\\Users\\Muroyama lab\\Documents\\Muroyama Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
+    source_path = "C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
     file_path = os.path.join(source_path, "BASE", pool_path)
     mask_path = os.path.join(source_path, "ANNOTATION", mask_pool_path)
     file_array = imread(file_path)
@@ -412,57 +427,10 @@ def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "c
             plt.imshow(plot_obj, cmap='gray', vmin = 0, vmax = 255)
     plt.show()
 
-RANDOM_SAMPLE_plotter(64, 8)
+#RANDOM_SAMPLE_plotter(64, 8)
 
 
-def spiral_array(shape):
-    width, height = shape[1], shape[0]
-    arr_out = np.full(shape, 0)
-    iter_width, iter_height = width, height
-    while not(iter_height == iter_width == 0):
-        pass
-
-TEST_IMAGE_SPIRAL = np.full((16,16), 0)
-TEST_IMAGE_SPIRAL[   0,0:16] =    np.arange( 0, 16) #16
-TEST_IMAGE_SPIRAL[1:16,  -1] =  np.arange(16, 31)   #15
-TEST_IMAGE_SPIRAL[  -1,0:15] = np.arange(31, 46)[::-1] #15
-TEST_IMAGE_SPIRAL[1:15,   0] = np.arange(46, 60)[::-1] #14
-
-TEST_IMAGE_SPIRAL[   1,1:15] = np.arange(60, 74) #13
-TEST_IMAGE_SPIRAL[2:15,  -2] = np.arange(74, 87) #12
-TEST_IMAGE_SPIRAL[  -2,1:14] = np.arange(87, 100)[::-1] #12
-TEST_IMAGE_SPIRAL[2:14,   1] = np.arange(100,112)[::-1] #11
-
-TEST_IMAGE_SPIRAL[   2,2:14] = np.arange(112,124) 
-TEST_IMAGE_SPIRAL[3:14,  -3] = np.arange(124,135)
-TEST_IMAGE_SPIRAL[  -3,2:13] = np.arange(135,146)[::-1]
-TEST_IMAGE_SPIRAL[3:13,   2] = np.arange(146,156)[::-1]
-
-TEST_IMAGE_SPIRAL[   3,3:13] = np.arange(156,166)
-TEST_IMAGE_SPIRAL[4:13,  -4] = np.arange(166,175)
-TEST_IMAGE_SPIRAL[  -4,3:12] = np.arange(175,184)[::-1]
-TEST_IMAGE_SPIRAL[4:12,   3] = np.arange(184,192)[::-1]
-
-TEST_IMAGE_SPIRAL[   4,4:12] = np.arange(192,200)
-TEST_IMAGE_SPIRAL[5:12,  -5] = np.arange(200,207)
-TEST_IMAGE_SPIRAL[  -5,4:11] = np.arange(207,214)[::-1]
-TEST_IMAGE_SPIRAL[5:11,   4] = np.arange(214,220)[::-1]
-
-TEST_IMAGE_SPIRAL[   5,5:11] = np.arange(220,226)
-TEST_IMAGE_SPIRAL[6:11,  -6] = np.arange(226,231)
-TEST_IMAGE_SPIRAL[  -6,5:10] = np.arange(231,236)[::-1]
-TEST_IMAGE_SPIRAL[6:10,   5] = np.arange(236,240)[::-1]
-
-TEST_IMAGE_SPIRAL[   6,6:10] = np.arange(240,244)
-TEST_IMAGE_SPIRAL[7:10,  -7] = np.arange(244,247)
-TEST_IMAGE_SPIRAL[  -7,6:9 ] = np.arange(247,250)[::-1]
-TEST_IMAGE_SPIRAL[7:9 ,   6] = np.arange(250,252)[::-1]
-
-TEST_IMAGE_SPIRAL[   7,7:9 ] = np.arange(252,254)
-TEST_IMAGE_SPIRAL[8:9 ,  -8] = np.arange(254,255)
-TEST_IMAGE_SPIRAL[  -8,7:8 ] = np.arange(255,256)[::-1]
-
-        
+      
 
 #TEST_IMAGE_SPIRAL[]
 #print(TEST_IMAGE_SPIRAL)
@@ -495,7 +463,7 @@ def IMAGE_PROCESSOR(path, num_range, kernel_size = 64):
     pbar.close()
             
 #print(list(IMAGE_PROCESSOR("C:\\Users\\Muroyama lab\\Documents\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\BASE\\cot1.tif", [0,1000])))
-#UNIT_TEST_plotter()
+
 
 def RADIAL_CONTRAST_TALLY(image_path, size):
     
