@@ -32,10 +32,13 @@ def lattice_contacts(x0, y0, x1, y1):
         #print(f"x: {x}")
         #print(((x0+x)*1.0, m*x + y0))
         contacts.append((x, m*(x-x0)+y0))
+        
     for y in range(y0, y1+ys, ys):
         #print(f"y: {y}")
         #print(((y+y0)/m, (y+y0)*1.0))
         contacts.append(((y-y0)/m+x0, y))
+
+    #contacts = [(x, m*(x-x0)+y0) for x in range(x0, x1+xs, xs)] + [((y-y0)/m+x0, y) for y in range(y0, y1+ys, ys)]
 
     ###
     # print(contacts)
