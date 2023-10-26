@@ -8,7 +8,13 @@ import matplotlib.pyplot as plt
 import os
 import tqdm
 
+import sys
+
 from multiprocessing import Pool
+
+
+np.set_printoptions(threshold=sys.maxsize)
+
 
 def quickdistance(x0, y0, x1, y1):
     return np.sqrt((x1-x0)**2+(y1-y0)**2)
@@ -123,45 +129,80 @@ def remap_radial_kernel(arr, val = 0, remove_axes = False):
     #print(arr_out)
 
     center = [width//2, height//2]
+    recode_center = center[::-1]
     
     def linechecker(arr_in, pos):
-        interpolation = int(np.mean(arr_in))
-        coord = position_to_coord(pos, width)
-        if coord[0] == center[0] and coord[1] == center[1]:
-            return arr_in[center[1], center[0]]
-        elif coord[0] == center[0]:
-            #return max((lambda r, a_b, c: r[min(a_b):max(a_b), c])(arr_in, [center[1], coord[1]], center[0]))
-            #return arr_in[coord[1], coord[0]]
-            return 64
-        elif coord[1] == center[1]:
-            #return max((lambda r, a_b, c: r[c, min(a_b):max(a_b)])(arr_in, [center[0], coord[0]], center[1]))
-            #return arr_in[coord[1], coord[0]]
-            return 192
-        #elif coord[0] == center[0] or coord[1] == center[1]:
-        #    return 0
-        else:
-            endpoints = [*center, coord[0], coord[1]]
-            
-            contacts = lattice_contacts(*endpoints)
-            
-            pixels = contacted_pixels(contacts)
-            #assert not(any(x>arr_in.shape[0] for x in pixels))
-            #assert len(pixels) == len(contacts) - 1, f"Mismatch between pixel list length {len(pixels)} and contact list length {len(contacts)}, which should be greater by 1."
-            portions = line_portions(contacts, pixels)
-            values = [arr_in[px[1], px[0]] for px in pixels]
-            assert len(values) == len(portions), f"Mismatch between pixel list length {len(values)} and portion list length {len(portions)}, which should be equal."
+        
+        coord = list(position_to_coord(pos, width))
+        recode_coord = coord[::-1]
 
-            contributions = [v*p for v,p in zip(values, portions)]
-            #print(int(np.floor(np.mean(contributions))))
-            #arr_out[h, w] = int(np.floor(np.mean(contributions)))
-            #print(max(values))
-            #arr_out[h, w] = max(values)
-            #print("Giges")
-            return [max(values), min(values), int(np.mean(contributions))][val]
-            #print( return_val )
+        func = max
+
+        index_vert = lambda a, r0, r1, c: a[   r0:r1:np.sign(r1-r0), c]
+        index_horz = lambda a, c0, c1, r: a[r, c0:c1:np.sign(c1-c0)   ]
+
+        y, x  = recode_coord[0], recode_coord[1]
+        yc, xc = recode_center[0], recode_center[1]
+        if not(recode_coord[0] == recode_center[0]):
+            if not(recode_coord[1] == recode_center[1]):
+                endpoints = [*center, coord[0], coord[1]]
             
-            #print(arr_out[h,w])
-            #print(arr_out)
+                contacts = lattice_contacts(*endpoints)
+                
+                pixels = contacted_pixels(contacts)
+
+                portions = line_portions(contacts, pixels)
+                values = [arr_in[px[1], px[0]] for px in pixels]
+                assert len(values) == len(portions), f"Mismatch between pixel list length {len(values)} and portion list length {len(portions)}, which should be equal."
+
+                contributions = [v*p for v,p in zip(values, portions)]
+
+                #return func(values)
+                return int([max(values), min(values), int(np.mean(contributions))][val])
+            else:
+                #return int(np.mean(arr_in))
+                #print(func(arr_in[:][x]))
+                #return func(arr_in[:][x])
+                #return int(arr_in[recode_coord[0], recode_coord[1]])
+                return int(func([arr_in[k][x] for k in range(min(y, yc), max(y, yc)+1)]))
+                
+        else:
+            #return int(np.mean(arr_in))
+            #return func(arr_in[y][:])
+            #to_return = int(arr_in[recode_coord[0], recode_coord[1]])
+            #print(type(to_return))
+            #return to_return
+            return int(func([arr_in[y][k] for k in range(min(x, xc), max(x, xc)+1)]))
+
+        # if recode_coord[0] == recode_center[0] and recode_coord[1] == recode_center[1]:
+        #     print(arr_in[recode_center[0], recode_center[1]])
+        #     return 255
+        #     return arr_in[recode_center[0], recode_center[1]]
+        # elif recode_coord[0] == recode_center[0]:
+        #     print("-")
+        #     print(arr_in[recode_center[0], recode_center[1]])
+        #     print(index_horz(arr_in, recode_coord[1], recode_center[1], recode_coord[0]))
+        #     return max(index_horz(arr_in, recode_coord[1], recode_center[1], recode_coord[0]))
+        #     return 64
+        # elif recode_coord[1] == recode_center[1]:
+        #     print("|")
+        #     print(index_vert(arr_in, recode_coord[0], recode_center[0], recode_coord[1]))
+        #     return max(index_vert(arr_in, recode_coord[0], recode_center[0], recode_coord[1]))
+        #     return 192
+        # else:
+        #     endpoints = [*center, coord[0], coord[1]]
+            
+        #     contacts = lattice_contacts(*endpoints)
+            
+        #     pixels = contacted_pixels(contacts)
+
+        #     portions = line_portions(contacts, pixels)
+        #     values = [arr_in[px[1], px[0]] for px in pixels]
+        #     assert len(values) == len(portions), f"Mismatch between pixel list length {len(values)} and portion list length {len(portions)}, which should be equal."
+
+        #     contributions = [v*p for v,p in zip(values, portions)]
+
+        #     return [max(values), min(values), int(np.mean(contributions))][val]
 
     arr_out_flat = [linechecker(arr, pos) for pos in range(arr.size)]
     arr_out = np.reshape(arr_out_flat, arr.shape)
@@ -170,6 +211,9 @@ def remap_radial_kernel(arr, val = 0, remove_axes = False):
         arr_out = np.delete(arr_out, center, 1)
         arr_out = np.delete(arr_out, center, 0)
 
+    assert np.all(arr_out >= 0) and np.all(arr_out <= 255)
+    assert not(np.any(arr == None))
+    np.clip(arr_out, 0, 255)
     return arr_out
 #im_out = np.asarray([[[value, value, value] for value in line] for line in im_out])
 
@@ -199,19 +243,15 @@ def Pool_Manual_2x2(arr, func):
 #assert 1 == 0
 #imwrite("C:\\Users\\gjang\\Pictures\\RESULT.tiff", im_out, photometric = 'grayscale')
 
-def symmetry_remap(arr, func = lambda x: np.subtract(255, np.abs(x - np.flip(x)))):
+def symmetry_remap(arr, func = lambda x: 255 - np.abs(x - np.flip(x))):
     assert arr.shape[0] == arr.shape[1]
+    np.clip(arr, 0, 255, out = arr)
+    assert np.all(arr >= 0) and np.all(arr <= 255), f"{arr}"
     parity = arr.size % 2
     center = arr.shape[0]//2
     arr_out = np.full(arr.shape, 0)
-    #for i in range(arr.shape[0]):
-    #    for j in range(arr.shape[1]):
-            #print(i, j)
-    #        if i == j == center and parity:
-    #            continue
-            #print(255-abs(arr[i,j] - arr[-i-1,-j-1]))
-            #arr_out[i, j] = 255-int(abs(arr[i,j] - arr[-i-1,-j-1]))
 
+    #print(f"Parity _{parity}_ || Center _{center}_")
     
     arr_out = func(arr)
     
@@ -267,6 +307,7 @@ def abs_subtractive_convolve_remap(arr_base, arr_mask):
 def floor_subtractive_convolve_remap(arr_base, arr_mask):
     assert arr_base.shape == arr_mask.shape
     arr_out = np.subtract(arr_mask, arr_base)
+    #assert np.all(len(arr_out) == 1), f"{arr_out}"
     np.place(arr_out, arr_out<0, 0)
     return arr_out
 
@@ -275,6 +316,7 @@ def invert(arr):
 
 def pass_filter(arr, threshold, highpass = True):
     
+    arr = arr.astype("int")
     arr_out = np.full(arr.shape, 0)
 
     if highpass:
@@ -289,7 +331,7 @@ def filter_proportion_threshold(arr, threshold, highpass = True):
     thresh_int = int(np.quantile(arr_flat, threshold))
     return pass_filter(arr, thresh_int, highpass)
 
-def norm_brighten(arr, factor = 4):
+def norm_brighten(arr):
     # minimum = np.min(arr)
     # maximum = np.max(arr)
     # if minimum == maximum:
@@ -297,15 +339,16 @@ def norm_brighten(arr, factor = 4):
     # else:
     #     delta = maximum-minimum
     #     return factor*255*np.subtract(arr, minimum)/np.subtract(maximum, minimum)
-    
-    multed = np.multiply(np.subtract(arr, 16), factor)
-    np.place(multed, multed > 255, 255)
-    return multed
+    range_old = np.max(arr) - np.min(arr)
+    arr_out = ((arr - np.min(arr)) * 255 / range_old)
+    #multed = np.multiply(np.subtract(arr, 16), factor)
+    #np.place(multed, multed > 255, 255)
+    return arr_out
 
 
 arr_test = np.arange(81).reshape((9,9))
-print(arr_test)
-print(pass_filter(arr_test, 25))
+#print(arr_test)
+#print(pass_filter(arr_test, 25))
 
 
 
@@ -336,17 +379,25 @@ def UNIT_TEST_plotter():
     f = len(files)
     for i,file in enumerate(files):
         
-        base_radial_kernel = remap_radial_kernel(file, 0, removeaxes) if removeaxes else remap_radial_kernel(file, 0, removeaxes)[1:, 1:]
+        base_radial_kernel = remap_radial_kernel(file, 0, removeaxes)
         symm_radial_kernel = symmetry_remap(base_radial_kernel)
         diff_radial_kernel = floor_subtractive_convolve_remap(4*base_radial_kernel, symm_radial_kernel)
         crck_radial_kernel = floor_subtractive_convolve_remap(base_radial_kernel, diff_radial_kernel)
         threshold_r_kernel = filter_proportion_threshold(diff_radial_kernel, 0.15)
         abs__thresh_kernel = pass_filter(diff_radial_kernel, 64)
         prop_thresh_kernel = filter_proportion_threshold(abs__thresh_kernel, 0.6)
-        maxd_cnvlve_kernel = Pool_Manual_2x2(diff_radial_kernel if removeaxes else diff_radial_kernel [1:, 1:], np.max)
-        doub_cnvlve_kernel = Pool_Manual_2x2(maxd_cnvlve_kernel, np.max)
+        #print(f"{diff_radial_kernel.shape}")
+        #maxd_cnvlve_kernel = Pool_Manual_2x2(diff_radial_kernel[1:, 1:] if removeaxes else diff_radial_kernel, np.max)
+        #print(f"{maxd_cnvlve_kernel.shape}")
+        #doub_cnvlve_kernel = Pool_Manual_2x2(maxd_cnvlve_kernel, np.max)
+        #print(f"{doub_cnvlve_kernel.shape}")
+        
+        # if i == 0:
+        #     print(base_radial_kernel)
+        #     print("----")
+        #     print(symm_radial_kernel)
 
-        plot_objects = (file, base_radial_kernel, symm_radial_kernel, diff_radial_kernel, maxd_cnvlve_kernel, doub_cnvlve_kernel)
+        plot_objects = (file, base_radial_kernel, symm_radial_kernel, diff_radial_kernel) #, maxd_cnvlve_kernel, doub_cnvlve_kernel)
         p = len(plot_objects)
         for j,plot_obj in enumerate(plot_objects):
             plt.subplot(p, f, i+f*j+1)
@@ -354,7 +405,7 @@ def UNIT_TEST_plotter():
 
     plt.show()
 
-UNIT_TEST_plotter()
+#UNIT_TEST_plotter()
 
 
 
@@ -369,14 +420,8 @@ def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "c
 
     def select_section(x, y, size):
         return file_array[y:y+size, x:x+size]
-    
-    """def processed__img(img):
-        base = remap_radial_kernel(img, 0, removeaxes)
-        symm = symmetry_remap(base)
-        diff = floor_subtractive_convolve_remap(4*base, symm)
-        cutt = pass_filter(diff, 64)
-        return cutt"""
-    
+
+
     def section_generator(num, arr, size = size):
         i = 0
         w = arr.shape[1]
@@ -385,14 +430,14 @@ def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "c
             interesting = False
             tries = 0
             while not(interesting):
-                x, y = np.random.randint(w-size), np.random.randint(h-size)
-                if np.mean(select_section(x, y, size)) > 4:
-                   interesting = True
                 # x, y = np.random.randint(w-size), np.random.randint(h-size)
-                # print(mask_array[y+size//2, x+size//2])
-                # if not(np.any(mask_array[y+size//2, x+size//2][0] == 0)):
+                # if np.mean(select_section(x, y, size)) > 4:
                 #    interesting = True
-                #print(interesting)
+                x, y = np.random.randint(w-size), np.random.randint(h-size)
+                print(mask_array[y+size//2, x+size//2])
+                if not(np.any(mask_array[y+size//2, x+size//2][0] == 0)):
+                   interesting = True
+                print(interesting)
                 tries += 1
                 if tries % 10000 == 0:
                     print(tries)
@@ -405,21 +450,22 @@ def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "c
         #print(file)
         #print(i)
         base = remap_radial_kernel(file, 0, True)
-        brht = norm_brighten(base, factor = 2)
+        brht = norm_brighten(base)
         invt = invert(brht)
 
 
-        symm = symmetry_remap(invt)
+        #symm = symmetry_remap(invt)
         flrd = floor_subtractive_convolve_remap(brht, invt)
 
         center = size//2
 
         bse_ = np.delete(np.delete(file, 32, 0), 32, 1)
 
+        cutt = pass_filter(flrd, 215)
 
-        overlay = np.add(bse_, flrd)
+        overlay = np.add(bse_, cutt)
         #cutt = pass_filter(diff, 64)
-        plot_objects = (file, base, brht, invt, symm, flrd, overlay)
+        plot_objects = (file, base, brht, invt, flrd, cutt, overlay)
     
         p = len(plot_objects)
         for j,plot_obj in enumerate(plot_objects):
@@ -427,7 +473,7 @@ def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "c
             plt.imshow(plot_obj, cmap='gray', vmin = 0, vmax = 255)
     plt.show()
 
-#RANDOM_SAMPLE_plotter(64, 8)
+RANDOM_SAMPLE_plotter(64, 5)
 
 
       
