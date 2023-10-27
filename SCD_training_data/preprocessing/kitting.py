@@ -409,9 +409,9 @@ def UNIT_TEST_plotter():
 
 
 
-def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "cot1_STOMATA_MASKS.tiff"):
-    #source_path = "C:\\Users\\Muroyama lab\\Documents\\Muroyama Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
-    source_path = "C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
+def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "cot1_STOM_BIN_MASK.tiff"):
+    source_path = "C:\\Users\\Muroyama lab\\Documents\\Muroyama Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
+    #source_path = "C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
     file_path = os.path.join(source_path, "BASE", pool_path)
     mask_path = os.path.join(source_path, "ANNOTATION", mask_pool_path)
     file_array = imread(file_path)
@@ -430,14 +430,14 @@ def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "c
             interesting = False
             tries = 0
             while not(interesting):
-                # x, y = np.random.randint(w-size), np.random.randint(h-size)
-                # if np.mean(select_section(x, y, size)) > 4:
-                #    interesting = True
                 x, y = np.random.randint(w-size), np.random.randint(h-size)
-                print(mask_array[y+size//2, x+size//2])
-                if not(np.any(mask_array[y+size//2, x+size//2][0] == 0)):
+                if np.mean(select_section(x, y, size)) > 4:
                    interesting = True
-                print(interesting)
+                # x, y = np.random.randint(w-size), np.random.randint(h-size)
+                # print(mask_array[y+size//2, x+size//2])
+                # if not(np.any(mask_array[y+size//2, x+size//2] == 0)):
+                #    interesting = True
+                # print(interesting)
                 tries += 1
                 if tries % 10000 == 0:
                     print(tries)
@@ -461,7 +461,7 @@ def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "c
 
         bse_ = np.delete(np.delete(file, 32, 0), 32, 1)
 
-        cutt = pass_filter(flrd, 215)
+        cutt = pass_filter(flrd, 200)
 
         overlay = np.add(bse_, cutt)
         #cutt = pass_filter(diff, 64)
