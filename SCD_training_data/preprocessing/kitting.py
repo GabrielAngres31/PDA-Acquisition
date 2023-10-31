@@ -350,42 +350,123 @@ arr_test = np.arange(81).reshape((9,9))
 #print(arr_test)
 #print(pass_filter(arr_test, 25))
 
+        
+def flip_xaxe(point: tuple, size: int):
+    y,x = point[0], point[1] 
+    return tuple(y, size-1-x)
 
+def flip_yaxe(point: tuple, size: int):
+    y,x = point[0], point[1] 
+    return tuple(size-1-y, x)
+
+def flip_orig(point: tuple, size: int):
+    y,x = point[0], point[1]
+    return tuple(size-1-y, size-1-x)
+
+def flip_vert_flat(pos: int, width: int):
+    coord = position_to_coord(pos, width) 
+    y, x = coord[0], coord[1]
+    return (width-1)-x + width*y
+
+def flip_horz_flat(pos: int, width: int):
+    coord = position_to_coord(pos, width) 
+    y, x = coord[0], coord[1]
+    return x + width*(width-1-y)
+
+def flip_orig_flat(pos: int, width: int):
+    coord = position_to_coord(pos, width) 
+    y, x = coord[0], coord[1]
+    return (width-1)-x + width*(width-1-y)
+
+def flip_xeqy_flat(pos: int, width: int): # Produces a flip across x=y
+    coord = position_to_coord(pos, width) 
+    y, x = coord[0], coord[1]
+    return (width+1)*(x+y)-pos
+
+def kernel_lookup_list(width):
+    
+
+    flatten_list = lambda y:[x for a in y for x in flatten_list(a)] if type(y) is list else [y]
+    
+    if width % 2:
+        pass
+    else:
+        quad_init_pos = [[coord_to_position(*coord, width) for coord in contacted_pixels(lattice_contacts(y,x,width//2,width//2))] for x in range(width//2) for y in range(width//2)]
+        
+        quad_init_num = [i%(width//2)+i//(width//2)*width for i in range((width//2)**2)]
+        #return quad_init
+        #print("v")
+        quad_pos_v_flip = [[flip_vert_flat(pos, width) for pos in ind] for ind in quad_init_pos]
+        quad_num_v_flip = [flip_vert_flat(num, width) for num in quad_init_num]
+
+        #print("h")
+        quad_pos_h_flip = [[flip_horz_flat(pos, width) for pos in ind] for ind in quad_init_pos]
+        quad_num_h_flip = [flip_horz_flat(num, width) for num in quad_init_num]
+        #print("o")
+        quad_pos_o_flip = [[flip_orig_flat(pos, width) for pos in ind] for ind in quad_init_pos]
+        quad_num_o_flip = [flip_orig_flat(num, width) for num in quad_init_num]
+
+        total_pos = quad_init_pos
+        total_num = quad_init_num
+        total_pos.extend(quad_pos_v_flip)
+        total_pos.extend(quad_pos_h_flip)
+        total_pos.extend(quad_pos_o_flip)
+        total_num.extend(quad_num_v_flip)
+        total_num.extend(quad_num_h_flip)
+        total_num.extend(quad_num_o_flip)
+
+        zipped = zip(total_num, total_pos)
+        flat_zip_sort = sorted(zipped, key = lambda x: x[0])
+        list_out = [piece[1] for piece in flat_zip_sort]
+        return list_out
+
+def maxcalc_from_kernel(arr_in, kernel):
+    
+    def setarray_max(arr, kern, pos):
+        return max([arr[position_to_coord(p, arr.shape[0])] for p in kern[pos]])
+
+    arr_out = np.array([setarray_max(arr_in, kernel, pos) for pos in range(arr_in.size)]).reshape(arr_in.shape)
+    
+    assert len(kernel) == arr_in.size, f"Sizes mismatch! Flat Kernel: {len(kernel)}, Array Size: {arr_in.size}"
+    # arr_in_flat = arr_in.flatten()
+    # flat_list_out = [max([arr_in_flat[pos] for pos in lookup_pos]) for lookup_pos in kernel]
+    # arr_out = np.array(flat_list_out).reshape(arr_in.shape)
+    
+    #assert type(arr_out) == "list", f"{type(arr_out)}"
+    return arr_out
+
+def drawoncanvas(canvas, endpos):
+    canvas_flat = canvas.flatten()
+    lookup = kernel_lookup_list(canvas.shape[0])
+    canvas_flat[lookup[endpos]] = 0
+    #plt.imshow(canvas_flat.reshape(canvas.shape), cmap = 'gray', vmin = 0, vmax = 255)
+    #plt.show()
+    return canvas_flat.reshape(canvas.shape)
+
+CANVAS = np.full((64,64), 255)
+
+plt.figure(1)
+for i in range(8**2):
+    plt.subplot(16, 16, i+1)
+    plt.imshow(drawoncanvas(CANVAS, 16*i), cmap = 'gray', vmin = 0, vmax = 255)
+plt.show()
 
 def UNIT_TEST_plotter():
     DIR_MAIN = os.getcwd()
     DIR_TEST_IMAGE = os.path.join(DIR_MAIN, "TEST_IMAGES")
-    im_in = imread(os.path.join(DIR_TEST_IMAGE, "TESTING.tiff"))
-    im_in_part = imread(os.path.join(DIR_TEST_IMAGE, "TEST_PART.tiff"))
-    im_in_non = imread(os.path.join(DIR_TEST_IMAGE, "TEST_NON.tiff"))
-    im_in_scr = imread(os.path.join(DIR_TEST_IMAGE, "scrunch.tiff"))
-    im_in_edge = imread(os.path.join(DIR_TEST_IMAGE, "EDGE.tiff"))
 
-    im_in_stem = imread(os.path.join(DIR_TEST_IMAGE, "STEM.tiff"))
-    im_in_crowd = imread(os.path.join(DIR_TEST_IMAGE, "CROWD.tiff"))
+    file_names = ("TESTING", "TEST_PART", "TEST_NON", "scrunch", "EDGE", "STEM", "CROWD")
+    file_loads = (imread(os.path.join(DIR_TEST_IMAGE, file_name + ".tiff")) for file_name in file_names)
+    files = (np.asarray([item for item in [[pixel[0] for pixel in line] for line in file_load]]) for file_load in file_loads)
 
-
-    im_in = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in]])
-    im_in_part = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_part]])
-    im_in_non = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_non]])
-    im_in_scr = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_scr]])
-    im_in_edge = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_edge]])
-
-    im_in_stem = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_stem]])
-    im_in_crowd = np.asarray([item for item in [[pixel[0] for pixel in line] for line in im_in_crowd]])
     removeaxes = False
-    files = (im_in, im_in_non, im_in_part, im_in_scr, im_in_edge, im_in_stem, im_in_crowd)
+    
     plt.figure(1)
-    f = len(files)
+    f = len(file_names)
     for i,file in enumerate(files):
         
-        base_radial_kernel = remap_radial_kernel(file, 0, removeaxes)
-        symm_radial_kernel = symmetry_remap(base_radial_kernel)
-        diff_radial_kernel = floor_subtractive_convolve_remap(4*base_radial_kernel, symm_radial_kernel)
-        crck_radial_kernel = floor_subtractive_convolve_remap(base_radial_kernel, diff_radial_kernel)
-        threshold_r_kernel = filter_proportion_threshold(diff_radial_kernel, 0.15)
-        abs__thresh_kernel = pass_filter(diff_radial_kernel, 64)
-        prop_thresh_kernel = filter_proportion_threshold(abs__thresh_kernel, 0.6)
+        base_radial_kernel = maxcalc_from_kernel(file, kernel_lookup_list(50))
+
         #print(f"{diff_radial_kernel.shape}")
         #maxd_cnvlve_kernel = Pool_Manual_2x2(diff_radial_kernel[1:, 1:] if removeaxes else diff_radial_kernel, np.max)
         #print(f"{maxd_cnvlve_kernel.shape}")
@@ -397,7 +478,7 @@ def UNIT_TEST_plotter():
         #     print("----")
         #     print(symm_radial_kernel)
 
-        plot_objects = (file, base_radial_kernel, symm_radial_kernel, diff_radial_kernel) #, maxd_cnvlve_kernel, doub_cnvlve_kernel)
+        plot_objects = (file, base_radial_kernel) #, maxd_cnvlve_kernel, doub_cnvlve_kernel)
         p = len(plot_objects)
         for j,plot_obj in enumerate(plot_objects):
             plt.subplot(p, f, i+f*j+1)
@@ -405,13 +486,13 @@ def UNIT_TEST_plotter():
 
     plt.show()
 
-#UNIT_TEST_plotter()
+UNIT_TEST_plotter()
 
 
 
 def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "cot1_STOM_BIN_MASK.tiff"):
-    source_path = "C:\\Users\\Muroyama lab\\Documents\\Muroyama Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
-    #source_path = "C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
+    #source_path = "C:\\Users\\Muroyama lab\\Documents\\Muroyama Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
+    source_path = "C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
     file_path = os.path.join(source_path, "BASE", pool_path)
     mask_path = os.path.join(source_path, "ANNOTATION", mask_pool_path)
     file_array = imread(file_path)
@@ -446,10 +527,11 @@ def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "c
     plt.figure(1)
     files = [i for i in section_generator(num, file_array)]
     f = len(files)
+    SAMPLE_KERNEL = kernel_lookup_list(size)
     for i,file in enumerate(files):
         #print(file)
         #print(i)
-        base = remap_radial_kernel(file, 0, True)
+        base = maxcalc_from_kernel(file, SAMPLE_KERNEL)
         brht = norm_brighten(base)
         invt = invert(brht)
 
@@ -463,7 +545,7 @@ def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "c
 
         cutt = pass_filter(flrd, 200)
 
-        overlay = np.add(bse_, cutt)
+        overlay = np.add(base, cutt)
         #cutt = pass_filter(diff, 64)
         plot_objects = (file, base, brht, invt, flrd, cutt, overlay)
     
@@ -473,7 +555,7 @@ def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "c
             plt.imshow(plot_obj, cmap='gray', vmin = 0, vmax = 255)
     plt.show()
 
-RANDOM_SAMPLE_plotter(64, 5)
+#RANDOM_SAMPLE_plotter(64, 5)
 
 
       
