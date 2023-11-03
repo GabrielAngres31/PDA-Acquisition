@@ -23,7 +23,7 @@ def lattice_contacts(x0, y0, x1, y1):
 
     contacts = []
     delta_x, delta_y = int(x1-x0), int(y1-y0)
-    delta_D = max(abs(delta_x), abs(delta_y))
+    #delta_D = max(abs(delta_x), abs(delta_y))
     
     assert delta_x != 0, "Vertical Lines are Not Allowed!"
     assert delta_y != 0, "Horizontal Lines are Not Allowed!"
