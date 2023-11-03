@@ -32,10 +32,10 @@ def lattice_contacts(x0, y0, x1, y1):
     
     contacts_x = [(x, m*(x-x0)+y0) for x in range(x0, x1+xs, xs)]
         
-    for y in range(y0, y1+ys, ys):
-        contacts.append(((y-y0)/m+x0, y))
+    # for y in range(y0, y1+ys, ys):
+    #     contacts.append(((y-y0)/m+x0, y))
 
-    contacts_y = [((y-y0)/m+x0, y) for x in range(y0, y1+ys, ys)]
+    contacts_y = [((y-y0)/m+x0, y) for y in range(y0, y1+ys, ys)]
 
     contacts.extend(contacts_x)
     contacts.extend(contacts_y)
@@ -266,8 +266,8 @@ def drawoncanvas(canvas, endpos):
 
 
 def RANDOM_SAMPLE_plotter(size, num, pool_path = "cot1.tif", mask_pool_path = "cot1_STOM_BIN_MASK.tiff"):
-    #source_path = "C:\\Users\\Muroyama lab\\Documents\\Muroyama Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
-    source_path = "C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
+    source_path = "C:\\Users\\Muroyama lab\\Documents\\Muroyama Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
+    #source_path = "C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images"
     file_path = os.path.join(source_path, "BASE", pool_path)
     mask_path = os.path.join(source_path, "ANNOTATION", mask_pool_path)
     file_array = imread(file_path)
