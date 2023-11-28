@@ -161,7 +161,7 @@ def updatedScraper(searchfile, annofile, number):
 def file_iterator():
     num = 0
 
-    for i in tqdm.tqdm(range(1, 5)):
+    for i in tqdm.tqdm(range(1, 6+1)):
         searchfile_name = os.path.join(DIR_BASE, f"cot{i}.tif")
         annofile_name =   os.path.join(DIR_ANNO, f"cot{i}_STOMATA_MASKS.tiff")
         #maskedfile_name = os.path.join(DIR_ANNO, f"cot{i}_STOMATA_MASKS.tiff")
