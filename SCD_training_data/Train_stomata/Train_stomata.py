@@ -12,8 +12,10 @@ import segmentation_models_pytorch as smp
 import segmentation_models_pytorch.utils
 from multiprocessing import Process, freeze_support
 
+import gc
 
-DATA_DIR = 'Train_stomata/data'
+#os.chdir("")
+DATA_DIR = os.path.join('Train_stomata')
 
 #load repo with data if it is not exists
 # if not os.path.exists(DATA_DIR):
@@ -21,14 +23,14 @@ DATA_DIR = 'Train_stomata/data'
 #     os.system('git clone https://github.com/alexgkendall/SegNet-Tutorial ./data')
 #     print('Done!')
 
-x_train_dir = os.path.join(DATA_DIR, 'train')
-y_train_dir = os.path.join(DATA_DIR, 'trainannot')
+x_train_dir = 'train' #os.path.join(DATA_DIR, 'train')
+y_train_dir = 'trainannot' #os.path.join(DATA_DIR, 'trainannot')
 
-x_valid_dir = os.path.join(DATA_DIR, 'val')
-y_valid_dir = os.path.join(DATA_DIR, 'valannot')
+x_valid_dir = 'val' #os.path.join(DATA_DIR, 'val')
+y_valid_dir = 'valannot' #os.path.join(DATA_DIR, 'valannot')
 
-x_test_dir = os.path.join(DATA_DIR, 'test')
-y_test_dir = os.path.join(DATA_DIR, 'testannot')
+x_test_dir = 'test' #os.path.join(DATA_DIR, 'test')
+y_test_dir = 'testannot' #os.path.join(DATA_DIR, 'testannot')
 
 # helper function for data visualization
 # def visualize(**images):
@@ -54,7 +56,7 @@ class Dataset(BaseDataset):
         augmentation (albumentations.Compose): data transfromation pipeline
             (e.g. flip, scale, etc.)
         preprocessing (albumentations.Compose): data preprocessing
-            (e.g. noralization, shape manipulation, etc.)
+            (e.g. normalization, shape manipulation, etc.)
 
     """
 
@@ -68,6 +70,7 @@ class Dataset(BaseDataset):
             augmentation=None,
             preprocessing=None,
     ):
+        print(images_dir)
         self.ids = os.listdir(images_dir)
         self.images_fps = [os.path.join(images_dir, image_id) for image_id in self.ids]
         self.masks_fps = [os.path.join(masks_dir, image_id) for image_id in self.ids]
@@ -121,11 +124,25 @@ def get_training_augmentation():
 
         albu.OneOf(
             [
-                albu.HorizontalFlip(p=0.5),
-                albu.VerticalFlip(p=0.5)
+                albu.HorizontalFlip(0.5)
+                #albu.VerticalFlip(p=0.5)
             ],
-            p=0.3333333333
+            p=1.0
         ),
+
+        albu.OneOf(
+            [
+                albu.RandomRotate90(p = 0.5)
+            ],
+            p=1.0
+        ),
+
+                albu.OneOf(
+            [
+                albu.VerticalFlip(0.5)
+            ],
+            p=1.0
+        )#,
 
 
 
@@ -137,14 +154,14 @@ def get_training_augmentation():
         #albu.IAAAdditiveGaussianNoise(p=0.2),
         #albu.IAAPerspective(p=0.5),
 
-        albu.OneOf(
-            [
-                albu.CLAHE(p=1),
-                albu.RandomBrightness(p=1),
-                albu.RandomGamma(p=1),
-            ],
-            p=0.9,
-        ),
+        # albu.OneOf(
+        #     [
+        #         albu.CLAHE(p=1),
+        #         #albu.RandomBrightness(p=1)#,
+        #         #albu.RandomGamma(p=1),
+        #     ],
+        #     p=0.6,
+        # ),
 
         # albu.OneOf(
         #     [
@@ -155,13 +172,13 @@ def get_training_augmentation():
         #     p=0.9,
         # ),
 
-        albu.OneOf(
-            [
-                albu.RandomContrast(p=1),
-                albu.HueSaturationValue(p=1),
-            ],
-            p=0.9,
-        ),
+        # albu.OneOf(
+        #     [
+        #         albu.RandomContrast(p=1),
+        #         albu.HueSaturationValue(p=1),
+        #     ],
+        #     p=0.9,
+        # ),
     ]
     return albu.Compose(train_transform)
 
@@ -169,7 +186,7 @@ def get_training_augmentation():
 def get_validation_augmentation():
     """Add paddings to make image shape divisible by 32"""
     test_transform = [
-        albu.PadIfNeeded(384, 480)
+        albu.PadIfNeeded(64, 64)
     ]
     return albu.Compose(test_transform)
 
@@ -283,8 +300,8 @@ if __name__ == '__main__':
 
     max_score = 0
 
-    for i in range(0, 40):
-
+    for i in range(0, 5):
+        gc.collect()
         print('\nEpoch: {}'.format(i))
         train_logs = train_epoch.run(train_loader)
         valid_logs = valid_epoch.run(valid_loader)
