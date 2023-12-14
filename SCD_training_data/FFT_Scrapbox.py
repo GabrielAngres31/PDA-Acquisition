@@ -55,15 +55,64 @@ def fft_avg_investigator(dir):
 # plt.imshow(np.log(abs(fft_avg_out)), cmap='gray')
 # plt.show()
 
-def fft_bulk_return(dir):
+def fft_bulk_return(dir, func = lambda x: np.log(abs(np.fft.fftshift(np.fft.fft2(x))))):
     imgs = [imread(os.path.join(dir, img)) for img in os.listdir(dir)]
-    fft_imgs = [np.log(abs(np.fft.fftshift(np.fft.fft2(img)))) for img in imgs]
+    fft_imgs = [func(img) for img in imgs]
     
     return fft_imgs
 
+def symmetry_remap(arr, func = lambda x: 255 - np.abs(x - np.flip(x))):
+    assert arr.shape[0] == arr.shape[1]
+    np.clip(arr, 0, 255, out = arr)
+    assert np.all(arr >= 0) and np.all(arr <= 255), f"{arr}"
+    parity = arr.size % 2
+    center = arr.shape[0]//2
+    arr_out = np.full(arr.shape, 0)
+
+    #print(f"Parity _{parity}_ || Center _{center}_")
+    
+    arr_out = func(arr)
+    
+    if parity:
+        arr_out[center, center] = int(
+            np.mean(
+                np.delete(
+                    arr_out[center-1:center+2, center-1:center+2,].flatten(), 4
+                )
+            )
+        )
+        
+    return arr_out
+
+FFT_OUT_DIR = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\generated\\test\\FFT_TEST"
+
 for i, img in enumerate(fft_bulk_return(IMG_DIR)):
-    imsave(os.path.join("C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\generated\\test\\FFT_TEST", f"file_{i}.png"), (img*256).astype("uint8"))
+    imsave(os.path.join(FFT_OUT_DIR, f"file_{i}.png"), (img*256).astype("uint8"))
+
+# for img in [imread(os.path.join(FFT_OUT_DIR, file)) for file in os.listdir(FFT_OUT_DIR)]:
+#     print("doing")
+#     imsave(os.path.join("C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\generated\\test\\FFT_TEST_SYMM", f"file_{i}.png"), symmetry_remap(img))
+
+# plt.figure(1)
+# plt.subplot(121)
+# plt.plot(imread(os.path.join(FFT_OUT_DIR, "file_0.png")))
+
+# plt.plot(symmetry_remap(imread(os.path.join(FFT_OUT_DIR, "file_0.png"))))
+
+pic = imread(os.path.join(FFT_OUT_DIR, "file_0.png"))
+transform = symmetry_remap(imread(os.path.join(FFT_OUT_DIR, "file_0.png")))
+
+# plt.show()
 
 
 
+plt.figure(1)
+# plt.subplot(121)
 
+# imshow(pic)
+# plt.subplot(122)
+# imshow(transform)
+
+imshow(symmetry_remap(imread("C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\testchecker.png")))
+
+plt.show()

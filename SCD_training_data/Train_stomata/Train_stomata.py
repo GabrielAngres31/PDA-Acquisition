@@ -17,6 +17,7 @@ import gc
 #os.chdir("")
 DATA_DIR = os.path.join('Train_stomata')
 
+
 #load repo with data if it is not exists
 # if not os.path.exists(DATA_DIR):
 #     print('Loading data...')
@@ -300,7 +301,7 @@ if __name__ == '__main__':
 
     max_score = 0
 
-    for i in range(0, 5):
+    for i in range(0, 40):
         gc.collect()
         print('\nEpoch: {}'.format(i))
         train_logs = train_epoch.run(train_loader)
