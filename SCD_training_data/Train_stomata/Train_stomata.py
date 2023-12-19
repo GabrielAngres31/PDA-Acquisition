@@ -7,7 +7,6 @@ from torch.utils.data import DataLoader
 from torch.utils.data import Dataset as BaseDataset
 import albumentations as albu
 import torch
-import numpy as np
 import segmentation_models_pytorch as smp
 import segmentation_models_pytorch.utils
 from multiprocessing import Process, freeze_support
@@ -15,7 +14,7 @@ from multiprocessing import Process, freeze_support
 import gc
 
 #os.chdir("")
-DATA_DIR = os.path.join('Train_stomata')
+DATA_DIR = os.path.join('C:\\Users\\gjang\\Documents\\GitHubPDA-Acquisition\\SCD_training_data\\example_training_set')
 
 
 #load repo with data if it is not exists

@@ -12,8 +12,8 @@ import tqdm
 
 #DIR_CWD = "C:/Users/Muroyama lab/Documents/Muroyama_Lab/Gabriel/GitHub/PDA-Acquisition/SCD_training_data/"
 #DIR_SOURCE = os.path.join(DIR_CWD, "source_images")
-DIR_BASE = os.path.join("source_images", "BASE")
-DIR_ANNO = os.path.join("source_images", "ANNOTATION")
+DIR_BASE = os.path.join("SCD_training_data\\source_images", "BASE")
+DIR_ANNO = os.path.join("SCD_training_data\\source_images", "ANNOTATION")
 
 def timer_func(func):
     def wrap_func(*args, **kwargs):
@@ -105,7 +105,7 @@ def timeTaker(searchfile, maskedfile, number, print_it = False):
 
 
 def updatedScraper(searchfile, annofile, number):
-
+    print(searchfile)
     SEARCH_FILE = imread(searchfile)
     ANNO_FILE = imread(annofile)
     def chunk_getter(x, y, super_seg_size):
@@ -162,20 +162,62 @@ def updatedScraper(searchfile, annofile, number):
     # TODO: WHY THE FUCK IS THIS WRITING EVERYTHING INSTEAD OF JSUT THE STOMATA
     return (chunk_getter(x, y, 64+2) for x in range(0, SEARCH_FILE.shape[1]) for y in range(0, SEARCH_FILE.shape[0]))
 
+num = 0
+def file_iterator(cot = None):
+    
 
-def file_iterator():
-    num = 0
 
+    if cot == None:
+        for i in tqdm.tqdm(range(1, 6+1)):
+            searchfile_name = os.path.join(DIR_BASE, f"cot{i}.tif")
+            annofile_name   = os.path.join(DIR_ANNO, f"cot{i}_STOMATA_MASKS.tiff")
+            #maskedfile_name = os.path.join(DIR_ANNO, f"cot{i}_STOMATA_MASKS.tiff")
+            print("beginning!")
+            def dual_write(path0, tag0, file0, path1, tag1, file1):
+                #print(path0)
+                #print(path1)
+                #global num
+                #num += 1
+                global num
+                num += 1
+                if num % 10000 == 0: print(f"assessing {num}")
+                if not os.path.exists(path0):
+                    os.makedirs(path0, exist_ok = True)
+                
+                if not os.path.exists(path1):
+                    os.makedirs(path1, exist_ok = True)
+                
+                assert os.path.exists(path0)
+                assert os.path.exists(path1)
+                imwrite(os.path.join(path0, tag0), file0) #imwrite(path0.replace(" ", "\ "), file0)
+                imwrite(os.path.join(path1, tag1), file1) #imwrite(path1.replace(" ", "\ "), file1) 
 
+            print("Beginning Write")
+            [
+                dual_write(os.path.join(".\\source_images", f"generated\\test\\base\\COT{i}_{unit[3]+unit[5]}y-{unit[2]+unit[4]}x"), f"COT{i}_{unit[3]}y-{unit[2]}x.png", unit[0], 
+                        os.path.join(".\\source_images", f"generated\\test\\anno\\COT{i}_{unit[3]+unit[5]}y-{unit[2]+unit[4]}x"), f"COT{i}_{unit[3]}y-{unit[2]}x.png", unit[1])
+                        for unit in updatedScraper(searchfile_name, annofile_name, i) if unit is not None
+                        ]
+                # dual_write(os.path.join(".\\source_images", f"generated\\test\\base\\COT{i}", f"COT{i}_{unit[3]}y-{unit[2]}x.png"), unit[0], 
+                #            os.path.join(".\\source_images", f"generated\\test\\anno\\COT{i}", f"COT{i}_{unit[3]}y-{unit[2]}x.png"), unit[1])
+                #            for unit in updatedScraper(searchfile_name, annofile_name, i) if unit is not None
+                #            ]
+            #[imwrite(os.path.join(DIR_SOURCE, "generated\\test", f"COT{i}_trim_{unit[3]}y-{unit[2]}x.png"), unit[0]) for unit in updatedScraper(searchfile_name, annofile_name, i) if unit is not None]  #maskedfile_name,
+        print("There was an attempt!")
 
-    for i in tqdm.tqdm(range(1, 6+1)):
-        searchfile_name = os.path.join(DIR_BASE, f"cot{i}.tif")
-        annofile_name   = os.path.join(DIR_ANNO, f"cot{i}_STOMATA_MASKS.tiff")
+    else:
+        searchfile_name = os.path.join(DIR_BASE, f"cot{cot}.tif")
+        annofile_name   = os.path.join(DIR_ANNO, f"cot{cot}_STOMATA_MASKS.tiff")
         #maskedfile_name = os.path.join(DIR_ANNO, f"cot{i}_STOMATA_MASKS.tiff")
+        print("beginning!")
         def dual_write(path0, tag0, file0, path1, tag1, file1):
             #print(path0)
             #print(path1)
-
+            #global num
+            #num += 1
+            global num
+            num += 1
+            if num % 10000 == 0: print(f"assessing {num}")
             if not os.path.exists(path0):
                 os.makedirs(path0, exist_ok = True)
             
@@ -187,12 +229,12 @@ def file_iterator():
             imwrite(os.path.join(path0, tag0), file0) #imwrite(path0.replace(" ", "\ "), file0)
             imwrite(os.path.join(path1, tag1), file1) #imwrite(path1.replace(" ", "\ "), file1) 
 
-         
+        print("Beginning Write")
         [
-            dual_write(os.path.join(".\\source_images", f"generated\\test\\base\\COT{i}_{unit[3]+unit[5]}y-{unit[2]+unit[4]}x"), f"COT{i}_{unit[3]}y-{unit[2]}x.png", unit[0], 
-                       os.path.join(".\\source_images", f"generated\\test\\anno\\COT{i}_{unit[3]+unit[5]}y-{unit[2]+unit[4]}x"), f"COT{i}_{unit[3]}y-{unit[2]}x.png", unit[1])
-                       for unit in updatedScraper(searchfile_name, annofile_name, i) if unit is not None
-                       ]
+            dual_write(os.path.join(".\\source_images", f"generated\\test\\base\\COT{cot}_{unit[3]+unit[5]}y-{unit[2]+unit[4]}x"), f"COT{cot}_{unit[3]}y-{unit[2]}x.png", unit[0], 
+                    os.path.join(".\\source_images", f"generated\\test\\anno\\COT{cot}_{unit[3]+unit[5]}y-{unit[2]+unit[4]}x"), f"COT{cot}_{unit[3]}y-{unit[2]}x.png", unit[1])
+                    for unit in updatedScraper(searchfile_name, annofile_name, cot) if unit is not None
+                    ]
             # dual_write(os.path.join(".\\source_images", f"generated\\test\\base\\COT{i}", f"COT{i}_{unit[3]}y-{unit[2]}x.png"), unit[0], 
             #            os.path.join(".\\source_images", f"generated\\test\\anno\\COT{i}", f"COT{i}_{unit[3]}y-{unit[2]}x.png"), unit[1])
             #            for unit in updatedScraper(searchfile_name, annofile_name, i) if unit is not None
@@ -200,4 +242,4 @@ def file_iterator():
         #[imwrite(os.path.join(DIR_SOURCE, "generated\\test", f"COT{i}_trim_{unit[3]}y-{unit[2]}x.png"), unit[0]) for unit in updatedScraper(searchfile_name, annofile_name, i) if unit is not None]  #maskedfile_name,
     print("There was an attempt!")
 
-file_iterator()
+file_iterator(3)
