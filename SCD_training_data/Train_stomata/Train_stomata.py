@@ -14,8 +14,9 @@ from multiprocessing import Process, freeze_support
 import gc
 
 #os.chdir("")
-DATA_DIR = os.path.join('C:\\Users\\gjang\\Documents\\GitHubPDA-Acquisition\\SCD_training_data\\example_training_set')
-
+#DATA_DIR = os.path.join('C:\\Users\\gjang\\Documents\\GitHubPDA-Acquisition\\SCD_training_data\\example_training_set')
+DATA_DIR = 'C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\example_training_set'
+#DATA_DIR = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\full_training_set"
 
 #load repo with data if it is not exists
 # if not os.path.exists(DATA_DIR):
@@ -23,14 +24,25 @@ DATA_DIR = os.path.join('C:\\Users\\gjang\\Documents\\GitHubPDA-Acquisition\\SCD
 #     os.system('git clone https://github.com/alexgkendall/SegNet-Tutorial ./data')
 #     print('Done!')
 
-x_train_dir = 'train' #os.path.join(DATA_DIR, 'train')
-y_train_dir = 'trainannot' #os.path.join(DATA_DIR, 'trainannot')
+# x_train_dir = 'train' #os.path.join(DATA_DIR, 'train')
+# y_train_dir = 'trainannot' #os.path.join(DATA_DIR, 'trainannot')
 
-x_valid_dir = 'val' #os.path.join(DATA_DIR, 'val')
-y_valid_dir = 'valannot' #os.path.join(DATA_DIR, 'valannot')
+# x_valid_dir = 'val' #os.path.join(DATA_DIR, 'val')
+# y_valid_dir = 'valannot' #os.path.join(DATA_DIR, 'valannot')
 
-x_test_dir = 'test' #os.path.join(DATA_DIR, 'test')
-y_test_dir = 'testannot' #os.path.join(DATA_DIR, 'testannot')
+# x_test_dir = 'test' #os.path.join(DATA_DIR, 'test')
+# y_test_dir = 'testannot' #os.path.join(DATA_DIR, 'testannot')
+
+x_train_dir = os.path.join(DATA_DIR, 'train')
+y_train_dir = os.path.join(DATA_DIR, 'trainannot')
+
+x_valid_dir = os.path.join(DATA_DIR, 'val')
+y_valid_dir = os.path.join(DATA_DIR, 'valannot')
+
+x_test_dir = os.path.join(DATA_DIR, 'test')
+y_test_dir = os.path.join(DATA_DIR, 'testannot')
+
+
 
 # helper function for data visualization
 # def visualize(**images):
@@ -85,9 +97,11 @@ class Dataset(BaseDataset):
 
         # read data
         image_gry = cv2.imread(self.images_fps[i], cv2.IMREAD_GRAYSCALE)
+
         image_rgb = np.stack((image_gry,)*3, axis = -1)
 
         mask = cv2.imread(self.masks_fps[i], 0)
+        mask = mask/255.0
 
         # extract certain classes from mask (e.g. cars)
         masks = [(mask == v) for v in self.class_values]
@@ -110,7 +124,7 @@ class Dataset(BaseDataset):
 
 # Lets look at data we have
 
-dataset = Dataset(x_train_dir, y_train_dir, classes=['stomata'])
+dataset = Dataset(x_train_dir, y_train_dir, classes=['background', 'stomata'])
 
 image, mask = dataset[4] # get some sample
 # visualize(

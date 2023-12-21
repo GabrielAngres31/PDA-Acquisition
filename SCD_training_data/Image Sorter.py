@@ -5,13 +5,17 @@ import shutil
 
 import tqdm
 
-# DIR_OUT = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\example_training_set"
+# C:\Users\Muroyama lab\Documents\Muroyama_Lab\Gabriel\GitHub\PDA-Acquisition\SCD_training_data\Train_stomata
 
-# DIR_IN = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\generated\\test"
+DIR_OUT = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\example_training_set"
 
-DIR_OUT = "C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD_training_data\\example_training_set"
+DIR_IN = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\generated\\test"
 
-DIR_IN = "C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\source_images\\generated\\test"
+#DIR_OUT = "C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\SCD_training_data\\example_training_set"
+
+#DIR_IN = "C:\\Users\\gjang\\Documents\\GitHub\\PDA-Acquisition\\source_images\\generated\\test"
+
+
 
 
 def randfile(dir):

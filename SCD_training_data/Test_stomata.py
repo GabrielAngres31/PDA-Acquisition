@@ -21,7 +21,8 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 
 
-DATA_DIR = 'C:\\Users\\gjang\\Documents\\GitHubPDA-Acquisition\\SCD_training_data\\example_training_set'
+#DATA_DIR = 'C:\\Users\\gjang\\Documents\\GitHubPDA-Acquisition\\SCD_training_data\\example_training_set'
+DATA_DIR = 'C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\example_training_set'
 
 # load repo with data if it is not exists
 # if not os.path.exists(DATA_DIR):
@@ -29,27 +30,36 @@ DATA_DIR = 'C:\\Users\\gjang\\Documents\\GitHubPDA-Acquisition\\SCD_training_dat
 #     os.system('git clone https://github.com/alexgkendall/SegNet-Tutorial ./data')
 #     print('Done!')
 
-x_train_dir = 'train' #os.path.join(DATA_DIR, 'train')
-y_train_dir = 'trainannot' #os.path.join(DATA_DIR, 'trainannot')
+# x_train_dir = 'train' #os.path.join(DATA_DIR, 'train')
+# y_train_dir = 'trainannot' #os.path.join(DATA_DIR, 'trainannot')
 
-x_valid_dir = 'val' #os.path.join(DATA_DIR, 'val')
-y_valid_dir = 'valannot' #os.path.join(DATA_DIR, 'valannot')
+# x_valid_dir = 'val' #os.path.join(DATA_DIR, 'val')
+# y_valid_dir = 'valannot' #os.path.join(DATA_DIR, 'valannot')
 
-x_test_dir = 'test' #os.path.join(DATA_DIR, 'test')
-y_test_dir = 'testannot' #os.path.join(DATA_DIR, 'testannot')
+# x_test_dir = 'test' #os.path.join(DATA_DIR, 'test')
+# y_test_dir = 'os.path.join(DATA_DIR, 'testannot')
+
+x_train_dir = os.path.join(DATA_DIR, 'train')
+y_train_dir = os.path.join(DATA_DIR, 'trainannot')
+
+x_valid_dir = os.path.join(DATA_DIR, 'val')
+y_valid_dir = os.path.join(DATA_DIR, 'valannot')
+
+x_test_dir = os.path.join(DATA_DIR, 'test')
+y_test_dir = os.path.join(DATA_DIR, 'testannot')
 
 # helper function for data visualization
-# def visualize(**images):
-#     """PLot images in one row."""
-#     n = len(images)
-#     plt.figure(figsize=(16, 5))
-#     for i, (name, image) in enumerate(images.items()):
-#         plt.subplot(1, n, i + 1)
-#         plt.xticks([])
-#         plt.yticks([])
-#         plt.title(' '.join(name.split('_')).title())
-#         plt.imshow(image)
-#     plt.show()
+def visualize(**images):
+    """PLot images in one row."""
+    n = len(images)
+    plt.figure(figsize=(16, 5))
+    for i, (name, image) in enumerate(images.items()):
+        plt.subplot(1, n, i + 1)
+        plt.xticks([])
+        plt.yticks([])
+        plt.title(' '.join(name.split('_')).title())
+        plt.imshow(image)
+    plt.show()
 
 
 class Dataset(BaseDataset):
@@ -90,9 +100,11 @@ class Dataset(BaseDataset):
 
         # read data
         image_gry = cv2.imread(self.images_fps[i], cv2.IMREAD_GRAYSCALE)
+
         image_rgb = np.stack((image_gry,)*3, axis = -1)
 
         mask = cv2.imread(self.masks_fps[i], 0)
+        mask = mask/255.0
 
         # extract certain classes from mask (e.g. cars)
         masks = [(mask == v) for v in self.class_values]
@@ -100,22 +112,22 @@ class Dataset(BaseDataset):
 
         # apply augmentations
         if self.augmentation:
-            sample = self.augmentation(image=image, mask=mask)
-            image, mask = sample['image'], sample['mask']
+            sample = self.augmentation(image=image_rgb, mask=mask)
+            image_rgb, mask = sample['image'], sample['mask']
 
         # apply preprocessing
         if self.preprocessing:
-            sample = self.preprocessing(image=image, mask=mask)
-            image, mask = sample['image'], sample['mask']
+            sample = self.preprocessing(image=image_rgb, mask=mask)
+            image_rgb, mask = sample['image'], sample['mask']
 
-        return image, mask
+        return image_rgb, mask
 
     def __len__(self):
         return len(self.ids)
 
 # Lets look at data we have
 
-dataset = Dataset(x_train_dir, y_train_dir, classes=['stomata'])
+dataset = Dataset(x_train_dir, y_train_dir, classes=['background', 'stomata'])
 
 image, mask = dataset[4] # get some sample
 # visualize(
@@ -201,7 +213,7 @@ if __name__ == '__main__':
 
     ENCODER = 'se_resnext50_32x4d'
     ENCODER_WEIGHTS = 'imagenet'
-    CLASSES = ['car']
+    CLASSES = ['stomata']
     ACTIVATION = 'sigmoid' # could be None for logits or 'softmax2d' for multiclass segmentation
     DEVICE = 'cuda'
 
@@ -266,8 +278,8 @@ if __name__ == '__main__':
         verbose=True,
     )
 
-
-    best_model = torch.load('./best_model.pth')
+    # C:\Users\Muroyama lab\Documents\Muroyama_Lab\Gabriel\GitHub\PDA-Acquisition
+    best_model = torch.load('C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\best_model.pth')
     # create test dataset
     test_dataset = Dataset(
         x_test_dir,
@@ -309,6 +321,11 @@ if __name__ == '__main__':
             ground_truth_mask=gt_mask,
             predicted_mask=pr_mask
         )
+
+        cv2.imwrite("C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\Train_stomata\\im.png", image_vis)
+        cv2.imwrite("C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\Train_stomata\\gt.png", gt_mask)
+        cv2.imwrite("C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\Train_stomata\\pr.png", pr_mask)
+
         print('running step')
 
 print('done')

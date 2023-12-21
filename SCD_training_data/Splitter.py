@@ -17,14 +17,14 @@ def pickRandomFolders(N, subdir):
     return folders[:N]
 
 def pickRandomImage(subfold):
-    files = os.listdir("source_images\\generated\\test\\base\\"+ subfold)
+    files = os.listdir("SCD_training_data\\source_images\\generated\\test\\base\\"+ subfold)
     random.shuffle(files)
     return subfold + "\\"+ files[0]
 
 # RETURN THE FULL FILE NAME, INCLUDING THE SUBFOLDER, OR YOU ARE S.O.L.
 
 
-filenames = [pickRandomImage(sf) for sf in os.listdir("source_images\\generated\\test\\base")] #os.listdir("source_images\\generated\\test\\base")
+filenames = [pickRandomImage(sf) for sf in os.listdir("SCD_training_data\\source_images\\generated\\test\\base")] #os.listdir("source_images\\generated\\test\\base")
 print(len(filenames))
 
 train_split = 0.8
@@ -62,29 +62,34 @@ DIR_O___VAL = os.path.join(DIR__OUTPUT, "val")
 DIR_O_TRAIN = os.path.join(DIR__OUTPUT, "train")
 DIR_O___ALL = os.path.join(DIR__OUTPUT, "all")
 
+def create_directory(directory_path):
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+
+[create_directory(i) for i in [DIR_O__TEST, DIR_O___VAL, DIR_O_TRAIN, DIR_O___ALL]]
 
 counter = 0
 
 for ind, file in tqdm.tqdm(enumerate(train_list)):
     counter += 1
-    shutil.copyfile(DIR_S_BASE + "\\"+ file, DIR_O_TRAIN + "\\" + str(ind) + "trn_" + "b.png")
-    shutil.copyfile(DIR_S_ANNO + "\\"+ file, DIR_O_TRAIN + "annot" + "\\" + str(ind) + "trn_ann_" + "b.png")
-    shutil.copyfile(DIR_S_BASE + "\\"+ file, DIR_O___ALL + "\\img_" + str(counter) + ".png")
-    shutil.copyfile(DIR_S_ANNO + "\\"+ file, DIR_O___ALL + "annot" + "\\ann_img_" + str(counter) + ".png")
+    shutil.copyfile("SCD_training_data\\" + DIR_S_BASE + "\\"+ file, DIR_O_TRAIN + "\\" + str(ind) + "trn_" + "b.png")
+    shutil.copyfile("SCD_training_data\\" + DIR_S_ANNO + "\\"+ file, DIR_O_TRAIN + "annot" + "\\" + str(ind) + "trn_ann_" + "b.png")
+    shutil.copyfile("SCD_training_data\\" + DIR_S_BASE + "\\"+ file, DIR_O___ALL + "\\img_" + str(counter) + ".png")
+    shutil.copyfile("SCD_training_data\\" + DIR_S_ANNO + "\\"+ file, DIR_O___ALL + "annot" + "\\ann_img_" + str(counter) + ".png")
     
 
 for ind, file in tqdm.tqdm(enumerate(val_list)):
     counter += 1
-    shutil.copyfile(DIR_S_BASE + "\\"+ file, DIR_O___VAL + "\\" + str(ind) + "val_" + "b.png")
-    shutil.copyfile(DIR_S_ANNO + "\\"+ file, DIR_O___VAL + "annot" + "\\" + str(ind) + "val_ann_" + "b.png")
-    shutil.copyfile(DIR_S_BASE + "\\"+ file, DIR_O___ALL + "\\img_" + str(counter) + ".png")
-    shutil.copyfile(DIR_S_ANNO + "\\"+ file, DIR_O___ALL + "annot" + "\\ann_img_" + str(counter) + ".png")
+    shutil.copyfile("SCD_training_data\\" + DIR_S_BASE + "\\"+ file, DIR_O___VAL + "\\" + str(ind) + "val_" + "b.png")
+    shutil.copyfile("SCD_training_data\\" + DIR_S_ANNO + "\\"+ file, DIR_O___VAL + "annot" + "\\" + str(ind) + "val_ann_" + "b.png")
+    shutil.copyfile("SCD_training_data\\" + DIR_S_BASE + "\\"+ file, DIR_O___ALL + "\\img_" + str(counter) + ".png")
+    shutil.copyfile("SCD_training_data\\" + DIR_S_ANNO + "\\"+ file, DIR_O___ALL + "annot" + "\\ann_img_" + str(counter) + ".png")
 
 
 for ind, file in tqdm.tqdm(enumerate(test_list)):
     counter += 1
-    shutil.copyfile(DIR_S_BASE + "\\"+ file, DIR_O__TEST + "\\" + str(ind) + "tst_" + "b.png")
-    shutil.copyfile(DIR_S_ANNO + "\\"+ file, DIR_O__TEST + "annot" + "\\" + str(ind) + "tst_ann_" + "b.png")
-    shutil.copyfile(DIR_S_BASE + "\\"+ file, DIR_O___ALL + "\\img_" + str(counter) + ".png")
-    shutil.copyfile(DIR_S_ANNO + "\\"+ file, DIR_O___ALL + "annot" + "\\ann_img_" + str(counter) + ".png")
+    shutil.copyfile("SCD_training_data\\" + DIR_S_BASE + "\\"+ file, DIR_O__TEST + "\\" + str(ind) + "tst_" + "b.png")
+    shutil.copyfile("SCD_training_data\\" + DIR_S_ANNO + "\\"+ file, DIR_O__TEST + "annot" + "\\" + str(ind) + "tst_ann_" + "b.png")
+    shutil.copyfile("SCD_training_data\\" + DIR_S_BASE + "\\"+ file, DIR_O___ALL + "\\img_" + str(counter) + ".png")
+    shutil.copyfile("SCD_training_data\\" + DIR_S_ANNO + "\\"+ file, DIR_O___ALL + "annot" + "\\ann_img_" + str(counter) + ".png")
 
