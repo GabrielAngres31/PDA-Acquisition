@@ -128,13 +128,7 @@ class Dataset(BaseDataset):
 # Lets look at data we have
 
 dataset = Dataset(x_train_dir, y_train_dir, classes=['background', 'stomata'])
-
-image, mask = dataset[4] # get some sample
-# visualize(
-#     image=image,
-#     cars_mask=mask.squeeze(),
-# )
-
+image, mask = dataset[4]
 
 def get_training_augmentation():
     train_transform = [

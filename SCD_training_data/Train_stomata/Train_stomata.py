@@ -139,34 +139,23 @@ def get_training_augmentation():
         albu.OneOf(
             [
                 albu.HorizontalFlip(0.5)
-                #albu.VerticalFlip(p=0.5)
-            ],
-            p=1.0
-        ),
-
-        albu.OneOf(
-            [
-                albu.RandomRotate90(p = 0.5)
-            ],
-            p=1.0
+            ]
         ),
 
                 albu.OneOf(
             [
                 albu.VerticalFlip(0.5)
-            ],
-            p=1.0
-        )#,
+            ]
+        ),
 
+        albu.OneOf(
+            [
+                albu.RandomRotate90()
+            ]
+        )
 
-
-        #albu.ShiftScaleRotate(scale_limit=0.5, rotate_limit=0, shift_limit=0.1, p=1, border_mode=0),
-
-        #albu.PadIfNeeded(min_height=320, min_width=320, always_apply=True, border_mode=0),
-        #albu.RandomCrop(height=320, width=320, always_apply=True),
 
         #albu.IAAAdditiveGaussianNoise(p=0.2),
-        #albu.IAAPerspective(p=0.5),
 
         # albu.OneOf(
         #     [
@@ -175,23 +164,6 @@ def get_training_augmentation():
         #         #albu.RandomGamma(p=1),
         #     ],
         #     p=0.6,
-        # ),
-
-        # albu.OneOf(
-        #     [
-        #         albu.IAASharpen(p=1),
-        #         albu.Blur(blur_limit=3, p=1)#,
-        #         #albu.MotionBlur(blur_limit=3, p=1),
-        #     ],
-        #     p=0.9,
-        # ),
-
-        # albu.OneOf(
-        #     [
-        #         albu.RandomContrast(p=1),
-        #         albu.HueSaturationValue(p=1),
-        #     ],
-        #     p=0.9,
         # ),
     ]
     return albu.Compose(train_transform)
@@ -314,7 +286,7 @@ if __name__ == '__main__':
 
     max_score = 0
 
-    for i in range(0, 40):
+    for i in range(0, 25):
         gc.collect()
         print('\nEpoch: {}'.format(i))
         train_logs = train_epoch.run(train_loader)
@@ -326,7 +298,7 @@ if __name__ == '__main__':
             torch.save(model, './best_model.pth')
             print('Model saved!')
 
-        if i == 25:
+        if i == 18:
             optimizer.param_groups[0]['lr'] = 1e-5
             print('Decrease decoder learning rate to 1e-5!')
 
