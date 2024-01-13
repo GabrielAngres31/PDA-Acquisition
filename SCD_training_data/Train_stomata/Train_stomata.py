@@ -296,6 +296,7 @@ if __name__ == '__main__':
         if max_score < valid_logs['iou_score']:
             max_score = valid_logs['iou_score']
             torch.save(model, './best_model.pth')
+            torch.save(model.state_dict(), "./best_model_loadable.pth")
             print('Model saved!')
 
         if i == 18:
