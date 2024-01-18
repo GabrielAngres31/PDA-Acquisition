@@ -8,9 +8,13 @@ import matplotlib.pyplot as plt
 import torch
 import numpy as np
 from torch.utils.data import Dataset as BaseDataset
+import glob
+import re
+import tqdm
 
 IMAGE_DIR = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\BASE"
 TILE_OUTS = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\tiles"
+TILE_MASK_OUTS = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\tile_masks"
 
 IN_FILE = "cot1.tif"
 
@@ -18,8 +22,8 @@ IMAGE = cv2.imread(IMAGE_DIR + "\\" + IN_FILE)
 
 
 TILESIZE = 64
-HORZ_OVERLAP = 0
-VERT_OVERLAP = 0
+HORZ_OVERLAP = 48
+VERT_OVERLAP = 48
 assert HORZ_OVERLAP < TILESIZE and VERT_OVERLAP < TILESIZE, f"Overlap values do not permit image processing! Overlap must be less than current tilesize: {TILESIZE}"
 
 
@@ -31,19 +35,19 @@ height_buffer = (height - TILESIZE) % (TILESIZE - VERT_OVERLAP)
 
 
 CLIP_IMAGE = IMAGE[:-(width_buffer), :-(height_buffer), :]
-print(CLIP_IMAGE.shape)
+#print(CLIP_IMAGE.shape)
 
 clip_width, clip_height = CLIP_IMAGE.shape[0:2]
 
 # Generate all tile indices.
-tile_column_indices = range(0, clip_width, TILESIZE)
-tile_row_indices = range(0, clip_height, TILESIZE)
+tile_column_indices = range(0, clip_width, TILESIZE-HORZ_OVERLAP)
+tile_row_indices = range(0, clip_height, TILESIZE-VERT_OVERLAP)
 
 tile_corners = [(c, r) for c in tile_column_indices for r in tile_row_indices]
 
 
 # Calculate the number of tiles that will be generated.
-print(len(tile_corners))
+#print(len(tile_corners))
 
 # Build Tile Dataset
 
@@ -51,8 +55,8 @@ def grab_clip(image, tile_size, coordinates):
     x_coord, y_coord = coordinates
     return image[x_coord:x_coord+tile_size, y_coord:y_coord+tile_size, :]
 
-if True:
-    [cv2.imwrite(TILE_OUTS + "\\" + IN_FILE + f"_{i}.tif", grab_clip(CLIP_IMAGE, TILESIZE, i)) for i in tile_corners]
+if False:
+    [cv2.imwrite(TILE_OUTS + "\\" + IN_FILE[:-4] + f"_{i}.tif", grab_clip(CLIP_IMAGE, TILESIZE, i)) for i in tile_corners]
 
 # Build Classifier
 
@@ -117,8 +121,8 @@ class Dataset_InUse(BaseDataset):
         self.preprocessing = preprocessing
 
     def __getitem__(self, i):
-
-        image_gry = cv2.imread(self.images_fps[i], cv2.IMREAD_GRAYSCALE)
+        #print(self.ids.index(i) if isinstance(i, str) else i)
+        image_gry = cv2.imread(self.images_fps[self.ids.index(i) if isinstance(i, str) else i], cv2.IMREAD_GRAYSCALE)
 
         image_rgb = np.stack((image_gry,)*3, axis = -1)
 
@@ -166,14 +170,52 @@ def classify(image_in):
 
     scan_tensor = torch.from_numpy(image_in).to(DEVICE).unsqueeze(0)
     pr_mask = best_model.predict(scan_tensor)
-    pr_mask = (pr_mask.squeeze().cpu().numpy().round())*255
-
+    pr_mask = np.uint8((pr_mask.squeeze().cpu().numpy().round())*255)
+    #print(pr_mask)
     return pr_mask
 
+if False:
+    [cv2.imwrite(TILE_MASK_OUTS + f"\\{n}", classify(test_dataset[n])) for n in test_dataset.ids]
+    #[print(classify(test_dataset[n])) for n in test_dataset.ids]
+
+FULL_MASK_CANVAS = np.zeros(IMAGE.shape)
+
+def replaceAtCoordinates(array, chunk, y_coord, x_coord):
+    #print(chunk.shape)
+    array[int(y_coord):int(y_coord)+chunk.shape[0], int(x_coord):int(x_coord)+chunk.shape[1]] = chunk
+
+def addAtCoordinates(array, chunk, y_coord, x_coord):
+    target_chunk = array[int(y_coord):int(y_coord)+chunk.shape[0], int(x_coord):int(x_coord)+chunk.shape[1]]
+    # print(chunk.size)
+    # print(TILESIZE**2)
+    #print(target_chunk.shape)
+    if target_chunk.shape != (TILESIZE, TILESIZE, 3):
+        #print("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEAYEH")
+        add_chunk = np.full(target_chunk.shape, 0)
+    #target_chunk = array[int(y_coord):int(y_coord)+chunk.shape[0], int(x_coord):int(x_coord)+chunk.shape[1]]
+    else:
+        denumberer = np.vectorize(lambda n: 1 if n else 0)
+        add_chunk = denumberer(chunk)
+        #print(max(add_chunk) if max(add_chunk) else "")
+        #print(add_chunk.shape)
+    array[int(y_coord):int(y_coord)+chunk.shape[0], int(x_coord):int(x_coord)+chunk.shape[1]] = target_chunk + add_chunk
+
+pattern = re.compile(r'\((\d+), (\d+)\)')
+for f in tqdm.tqdm(glob.glob(TILE_MASK_OUTS + "\\*.tif")):
+    #print(pattern.search(f))
+    addAtCoordinates(FULL_MASK_CANVAS, cv2.imread(f), pattern.search(f)[1], pattern.search(f)[2])
+#[replaceAtCoordinates(FULL_MASK_CANVAS, cv2.imread(f), pattern.search(f)[0], pattern.search(f)[1]) for f in glob.glob(TILE_MASK_OUTS + "\\*.tif")]
+
+print(f"Max Value: {np.max(FULL_MASK_CANVAS)}")
+#print(np.uint8((FULL_MASK_CANVAS/max(np.max(FULL_MASK_CANVAS), 1))*255))
+
+cv2.imwrite(IMAGE_DIR + "\\AI_MASK_" + IN_FILE, np.uint8(FULL_MASK_CANVAS/np.max(FULL_MASK_CANVAS)*255))
+
+#print(test_dataset['cot1.tif_(1152, 1920).tif'])
 #[cv2.imwrite(TILE_OUTS + "\\" + IN_FILE + f"_{i}.tif", grab_clip(CLIP_IMAGE, TILESIZE, i)) for n in test_dataset]
 # TODO: MAKE THE LIST COMPREHENSION OF THE TILE CLASSIFIER WORK!!!
 
-if True:
+if False:
     for i in range(5):
         n = np.random.choice(len(test_dataset))
 
@@ -185,7 +227,7 @@ if True:
         pr_mask = best_model.predict(scan_tensor)
         pr_mask = (pr_mask.squeeze().cpu().numpy().round())*255
 
-        print((pr_mask))
+        #print((pr_mask))
 
         visualize(
             image=image_vis,
