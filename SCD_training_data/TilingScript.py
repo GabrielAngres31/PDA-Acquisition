@@ -16,16 +16,21 @@ IMAGE_DIR = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\
 TILE_OUTS = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\tiles"
 TILE_MASK_OUTS = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\tile_masks"
 
-IN_FILE = "cot1.tif"
+IN_FILE = "cot_A.tif"
 
 IMAGE = cv2.imread(IMAGE_DIR + "\\" + IN_FILE)
 
+# GET THE FUNCTION FROM TQDM SCRAPBOX
+# [cv2.imwrite(TILE_OUTS + "\\" + IN_FILE[:-4] + f"_{tqdm_comp(i_token)}.tif", grab_clip(CLIP_IMAGE, TILESIZE, tqdm_comp(i_token))) for i_token in tqdm.tqdm([{"counter" : i} for i in tile_corners])]
+# [cv2.imwrite(TILE_MASK_OUTS + f"\\{n_token}", classify(test_dataset[tqdm_comp(n_token)])) for n_token in tqdm.tqdm([{"counter" : i} for i in test_dataset.ids])]
 
 TILESIZE = 64
 HORZ_OVERLAP = 48
 VERT_OVERLAP = 48
 assert HORZ_OVERLAP < TILESIZE and VERT_OVERLAP < TILESIZE, f"Overlap values do not permit image processing! Overlap must be less than current tilesize: {TILESIZE}"
 
+SWITCH_harvestTiles = False
+SWITCH_makeMasks = False
 
 # Clip the image down
 width, height = IMAGE.shape[0:2]
@@ -55,7 +60,9 @@ def grab_clip(image, tile_size, coordinates):
     x_coord, y_coord = coordinates
     return image[x_coord:x_coord+tile_size, y_coord:y_coord+tile_size, :]
 
-if False:
+if SWITCH_harvestTiles:
+    print(f"Generating {len(tile_corners)} Tiles with {HORZ_OVERLAP} <> and {VERT_OVERLAP} /|/...")
+    
     [cv2.imwrite(TILE_OUTS + "\\" + IN_FILE[:-4] + f"_{i}.tif", grab_clip(CLIP_IMAGE, TILESIZE, i)) for i in tile_corners]
 
 # Build Classifier
@@ -174,7 +181,10 @@ def classify(image_in):
     #print(pr_mask)
     return pr_mask
 
-if False:
+
+
+if SWITCH_makeMasks:
+    print("Generating Predictions...")
     [cv2.imwrite(TILE_MASK_OUTS + f"\\{n}", classify(test_dataset[n])) for n in test_dataset.ids]
     #[print(classify(test_dataset[n])) for n in test_dataset.ids]
 
@@ -201,6 +211,7 @@ def addAtCoordinates(array, chunk, y_coord, x_coord):
     array[int(y_coord):int(y_coord)+chunk.shape[0], int(x_coord):int(x_coord)+chunk.shape[1]] = target_chunk + add_chunk
 
 pattern = re.compile(r'\((\d+), (\d+)\)')
+print("Stitching Tiles...")
 for f in tqdm.tqdm(glob.glob(TILE_MASK_OUTS + "\\*.tif")):
     #print(pattern.search(f))
     addAtCoordinates(FULL_MASK_CANVAS, cv2.imread(f), pattern.search(f)[1], pattern.search(f)[2])
@@ -209,6 +220,7 @@ for f in tqdm.tqdm(glob.glob(TILE_MASK_OUTS + "\\*.tif")):
 print(f"Max Value: {np.max(FULL_MASK_CANVAS)}")
 #print(np.uint8((FULL_MASK_CANVAS/max(np.max(FULL_MASK_CANVAS), 1))*255))
 
+print("Storing File!")
 cv2.imwrite(IMAGE_DIR + "\\AI_MASK_" + IN_FILE, np.uint8(FULL_MASK_CANVAS/np.max(FULL_MASK_CANVAS)*255))
 
 #print(test_dataset['cot1.tif_(1152, 1920).tif'])
