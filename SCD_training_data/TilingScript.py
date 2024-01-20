@@ -29,8 +29,8 @@ HORZ_OVERLAP = 48
 VERT_OVERLAP = 48
 assert HORZ_OVERLAP < TILESIZE and VERT_OVERLAP < TILESIZE, f"Overlap values do not permit image processing! Overlap must be less than current tilesize: {TILESIZE}"
 
-SWITCH_harvestTiles = False
-SWITCH_makeMasks = False
+SWITCH_harvestTiles = True
+SWITCH_makeMasks = True
 
 # Clip the image down
 width, height = IMAGE.shape[0:2]
@@ -61,6 +61,8 @@ def grab_clip(image, tile_size, coordinates):
     return image[x_coord:x_coord+tile_size, y_coord:y_coord+tile_size, :]
 
 if SWITCH_harvestTiles:
+    #print("Clearing Existing Files...")
+    #[os.remove(f) for f in glob.glob(TILE_OUTS + "\\")]
     print(f"Generating {len(tile_corners)} Tiles with {HORZ_OVERLAP} <> and {VERT_OVERLAP} /|/...")
     
     [cv2.imwrite(TILE_OUTS + "\\" + IN_FILE[:-4] + f"_{i}.tif", grab_clip(CLIP_IMAGE, TILESIZE, i)) for i in tile_corners]
@@ -93,7 +95,7 @@ model = smp.FPN(
 
 preprocessing_fn = smp.encoders.get_preprocessing_fn(ENCODER, ENCODER_WEIGHTS)
 
-best_model = torch.load('C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\best_model.pth')
+best_model = torch.load('C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\best_model.pth') #best_model_on_whole.pth')
 # create test dataset
 
 def visualize(**images):
@@ -184,6 +186,8 @@ def classify(image_in):
 
 
 if SWITCH_makeMasks:
+    #print("Clearing Existing Files...")
+    #[os.remove(f) for f in glob.glob(TILE_MASK_OUTS + "\\")]
     print("Generating Predictions...")
     [cv2.imwrite(TILE_MASK_OUTS + f"\\{n}", classify(test_dataset[n])) for n in test_dataset.ids]
     #[print(classify(test_dataset[n])) for n in test_dataset.ids]

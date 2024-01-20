@@ -15,8 +15,18 @@ import gc
 
 #os.chdir("")
 #DATA_DIR = os.path.join('C:\\Users\\gjang\\Documents\\GitHubPDA-Acquisition\\SCD_training_data\\example_training_set')
-DATA_DIR = 'C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\example_training_set'
-#DATA_DIR = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\full_training_set"
+
+SWITCH_selection = "All Tiles"
+
+if SWITCH_selection == "Whole Only":
+    MODEL_PATH_OUT = "best_model"
+    DATA_DIR = 'C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\example_training_set'
+elif SWITCH_selection == "All Tiles":
+    MODEL_PATH_OUT = "best_model_on_whole"
+    DATA_DIR = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\full_training_set"
+
+#
+#
 
 #load repo with data if it is not exists
 # if not os.path.exists(DATA_DIR):
@@ -286,7 +296,7 @@ if __name__ == '__main__':
 
     max_score = 0
 
-    for i in range(0, 25):
+    for i in range(0, 1):
         gc.collect()
         print('\nEpoch: {}'.format(i))
         train_logs = train_epoch.run(train_loader)
@@ -295,8 +305,8 @@ if __name__ == '__main__':
         # do something (save model, change lr, etc.)
         if max_score < valid_logs['iou_score']:
             max_score = valid_logs['iou_score']
-            torch.save(model, './best_model.pth')
-            torch.save(model.state_dict(), "./best_model_loadable.pth")
+            torch.save(model, './' + MODEL_PATH_OUT + '.pth')
+            torch.save(model.state_dict(), './' + MODEL_PATH_OUT + '_loadable.pth')
             print('Model saved!')
 
         if i == 18:

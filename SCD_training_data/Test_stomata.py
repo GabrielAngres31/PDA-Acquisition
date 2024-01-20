@@ -273,7 +273,7 @@ if __name__ == '__main__':
     )
 
     # C:\Users\Muroyama lab\Documents\Muroyama_Lab\Gabriel\GitHub\PDA-Acquisition
-    best_model = torch.load('C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\best_model.pth')
+    best_model = torch.load('C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\best_model_on_whole.pth')
     # create test dataset
     test_dataset = Dataset(
         x_test_dir,
