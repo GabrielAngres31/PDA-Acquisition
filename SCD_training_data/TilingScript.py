@@ -29,6 +29,8 @@ HORZ_OVERLAP = 48
 VERT_OVERLAP = 48
 assert HORZ_OVERLAP < TILESIZE and VERT_OVERLAP < TILESIZE, f"Overlap values do not permit image processing! Overlap must be less than current tilesize: {TILESIZE}"
 
+CUTOFF_THRESHOLD = 64*64*2 # Tested
+
 SWITCH_harvestTiles = True
 SWITCH_makeMasks = True
 
@@ -38,6 +40,8 @@ width_buffer = (width - TILESIZE) % (TILESIZE - HORZ_OVERLAP)
 height_buffer = (height - TILESIZE) % (TILESIZE - VERT_OVERLAP)
 #clip_width, clip_height = TILESIZE
 
+print(width_buffer)
+print(height_buffer)
 
 CLIP_IMAGE = IMAGE[:-(width_buffer), :-(height_buffer), :]
 #print(CLIP_IMAGE.shape)
@@ -45,11 +49,15 @@ CLIP_IMAGE = IMAGE[:-(width_buffer), :-(height_buffer), :]
 clip_width, clip_height = CLIP_IMAGE.shape[0:2]
 
 # Generate all tile indices.
-tile_column_indices = range(0, clip_width, TILESIZE-HORZ_OVERLAP)
-tile_row_indices = range(0, clip_height, TILESIZE-VERT_OVERLAP)
+tile_column_indices = range(0, clip_width, 1) #TILESIZE-HORZ_OVERLAP
+print(tile_column_indices)
+tile_row_indices = range(0, clip_height, 1) #TILESIZE-VERT_OVERLAP
+print(tile_row_indices)
 
 tile_corners = [(c, r) for c in tile_column_indices for r in tile_row_indices]
 
+print(tile_corners)
+print(len(tile_corners))
 
 # Calculate the number of tiles that will be generated.
 #print(len(tile_corners))
@@ -65,7 +73,7 @@ if SWITCH_harvestTiles:
     #[os.remove(f) for f in glob.glob(TILE_OUTS + "\\")]
     print(f"Generating {len(tile_corners)} Tiles with {HORZ_OVERLAP} <> and {VERT_OVERLAP} /|/...")
     
-    [cv2.imwrite(TILE_OUTS + "\\" + IN_FILE[:-4] + f"_{i}.tif", grab_clip(CLIP_IMAGE, TILESIZE, i)) for i in tile_corners]
+    [cv2.imwrite(TILE_OUTS + "\\" + IN_FILE[:-4] + f"_{i}.tif", grab_clip(CLIP_IMAGE, TILESIZE, i)) for i in tile_corners if np.sum(grab_clip(CLIP_IMAGE, TILESIZE, i)) > CUTOFF_THRESHOLD]
 
 # Build Classifier
 
@@ -224,9 +232,17 @@ for f in tqdm.tqdm(glob.glob(TILE_MASK_OUTS + "\\*.tif")):
 print(f"Max Value: {np.max(FULL_MASK_CANVAS)}")
 #print(np.uint8((FULL_MASK_CANVAS/max(np.max(FULL_MASK_CANVAS), 1))*255))
 
+# a[a > 3] = -101
+
+
 print("Storing File!")
 cv2.imwrite(IMAGE_DIR + "\\AI_MASK_" + IN_FILE, np.uint8(FULL_MASK_CANVAS/np.max(FULL_MASK_CANVAS)*255))
+print(np.max(FULL_MASK_CANVAS))
 
+if np.max(FULL_MASK_CANVAS) > 0:
+    FULL_MASK_CANVAS[FULL_MASK_CANVAS < (0.70*(np.max(FULL_MASK_CANVAS)))] = 0
+
+cv2.imwrite(IMAGE_DIR + "\\AI_MASK_SCRUB" + IN_FILE, np.uint8(FULL_MASK_CANVAS/np.max(FULL_MASK_CANVAS)*255))
 #print(test_dataset['cot1.tif_(1152, 1920).tif'])
 #[cv2.imwrite(TILE_OUTS + "\\" + IN_FILE + f"_{i}.tif", grab_clip(CLIP_IMAGE, TILESIZE, i)) for n in test_dataset]
 # TODO: MAKE THE LIST COMPREHENSION OF THE TILE CLASSIFIER WORK!!!
