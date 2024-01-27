@@ -116,3 +116,6 @@ bloblist = []
 for i in tqdm.tqdm(range(200, 256)):
     bloblist.append(f"{i}: {len(find_blobs(image, i))}")
 print(bloblist)
+
+# TODO
+# Filter blobs that have greater than certain dimensions on any axis. Go with 64x64.
