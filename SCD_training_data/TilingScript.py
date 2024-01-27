@@ -16,7 +16,10 @@ IMAGE_DIR = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\
 TILE_OUTS = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\tiles"
 TILE_MASK_OUTS = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\tile_masks"
 
-IN_FILE = "cot_A.tif"
+# IN_FILE = "cot_A.tif"
+IN_FILE = "cot1.tif"
+
+print("Reading File...")
 
 IMAGE = cv2.imread(IMAGE_DIR + "\\" + IN_FILE)
 
@@ -24,34 +27,53 @@ IMAGE = cv2.imread(IMAGE_DIR + "\\" + IN_FILE)
 # [cv2.imwrite(TILE_OUTS + "\\" + IN_FILE[:-4] + f"_{tqdm_comp(i_token)}.tif", grab_clip(CLIP_IMAGE, TILESIZE, tqdm_comp(i_token))) for i_token in tqdm.tqdm([{"counter" : i} for i in tile_corners])]
 # [cv2.imwrite(TILE_MASK_OUTS + f"\\{n_token}", classify(test_dataset[tqdm_comp(n_token)])) for n_token in tqdm.tqdm([{"counter" : i} for i in test_dataset.ids])]
 
+
+
+
 TILESIZE = 64
-HORZ_OVERLAP = 48
-VERT_OVERLAP = 48
+
+VERT_SPACING = 4
+HORZ_SPACING = 4
+
+VERT_OVERLAP = TILESIZE - VERT_SPACING
+HORZ_OVERLAP = TILESIZE - HORZ_SPACING
+
+
+
 assert HORZ_OVERLAP < TILESIZE and VERT_OVERLAP < TILESIZE, f"Overlap values do not permit image processing! Overlap must be less than current tilesize: {TILESIZE}"
 
 CUTOFF_THRESHOLD = 64*64*2 # Tested
 
-SWITCH_harvestTiles = True
-SWITCH_makeMasks = True
+SWITCH_harvestTiles = False
+SWITCH_makeMasks = False
 
 # Clip the image down
 width, height = IMAGE.shape[0:2]
-width_buffer = (width - TILESIZE) % (TILESIZE - HORZ_OVERLAP)
-height_buffer = (height - TILESIZE) % (TILESIZE - VERT_OVERLAP)
+width_buffer = (width - TILESIZE) % (HORZ_SPACING)
+height_buffer = (height - TILESIZE) % (VERT_SPACING)
 #clip_width, clip_height = TILESIZE
+
+print("Diagnostic")
+print(f"{width} - {TILESIZE} % {HORZ_SPACING} = {width_buffer}")
+print(f"{height} - {TILESIZE} % {VERT_SPACING} = {height_buffer}")
+
+print("-----")
 
 print(width_buffer)
 print(height_buffer)
 
-CLIP_IMAGE = IMAGE[:-(width_buffer), :-(height_buffer), :]
+CLIP_IMAGE = IMAGE[:width-width_buffer+1, :height-height_buffer+1, :]
 #print(CLIP_IMAGE.shape)
 
 clip_width, clip_height = CLIP_IMAGE.shape[0:2]
+print(IMAGE.shape)
+print(CLIP_IMAGE.shape)
 
 # Generate all tile indices.
-tile_column_indices = range(0, clip_width, 1) #TILESIZE-HORZ_OVERLAP
+print("Generating Tile Indices...")
+tile_column_indices = range(0, clip_width, HORZ_SPACING) #TILESIZE-HORZ_OVERLAP
 print(tile_column_indices)
-tile_row_indices = range(0, clip_height, 1) #TILESIZE-VERT_OVERLAP
+tile_row_indices = range(0, clip_height, VERT_SPACING) #TILESIZE-VERT_OVERLAP
 print(tile_row_indices)
 
 tile_corners = [(c, r) for c in tile_column_indices for r in tile_row_indices]
@@ -69,10 +91,9 @@ def grab_clip(image, tile_size, coordinates):
     return image[x_coord:x_coord+tile_size, y_coord:y_coord+tile_size, :]
 
 if SWITCH_harvestTiles:
-    #print("Clearing Existing Files...")
-    #[os.remove(f) for f in glob.glob(TILE_OUTS + "\\")]
+    print("Clearing Existing TILE Files...")
+    [os.remove(f) for f in glob.glob(TILE_OUTS + "\\*.tif")]
     print(f"Generating {len(tile_corners)} Tiles with {HORZ_OVERLAP} <> and {VERT_OVERLAP} /|/...")
-    
     [cv2.imwrite(TILE_OUTS + "\\" + IN_FILE[:-4] + f"_{i}.tif", grab_clip(CLIP_IMAGE, TILESIZE, i)) for i in tile_corners if np.sum(grab_clip(CLIP_IMAGE, TILESIZE, i)) > CUTOFF_THRESHOLD]
 
 # Build Classifier
@@ -93,6 +114,7 @@ CLASSES = ['stomata']
 ACTIVATION = 'sigmoid' # could be None for logits or 'softmax2d' for multiclass segmentation
 DEVICE = 'cuda'
 
+print("Loading Segmentation Model...")
 # create segmentation model with pretrained encoder
 model = smp.FPN(
     encoder_name=ENCODER,
@@ -194,8 +216,8 @@ def classify(image_in):
 
 
 if SWITCH_makeMasks:
-    #print("Clearing Existing Files...")
-    #[os.remove(f) for f in glob.glob(TILE_MASK_OUTS + "\\")]
+    print("Clearing Existing MASK Files...")
+    [os.remove(f) for f in glob.glob(TILE_MASK_OUTS + "\\*.tif")]
     print("Generating Predictions...")
     [cv2.imwrite(TILE_MASK_OUTS + f"\\{n}", classify(test_dataset[n])) for n in test_dataset.ids]
     #[print(classify(test_dataset[n])) for n in test_dataset.ids]
@@ -236,13 +258,13 @@ print(f"Max Value: {np.max(FULL_MASK_CANVAS)}")
 
 
 print("Storing File!")
-cv2.imwrite(IMAGE_DIR + "\\AI_MASK_" + IN_FILE, np.uint8(FULL_MASK_CANVAS/np.max(FULL_MASK_CANVAS)*255))
+cv2.imwrite(IMAGE_DIR + "\\AI_MASK_" + "V" + str(VERT_SPACING) + "H" + str(HORZ_SPACING) + "_" + IN_FILE, np.uint8(FULL_MASK_CANVAS/np.max(FULL_MASK_CANVAS)*255))
 print(np.max(FULL_MASK_CANVAS))
 
 if np.max(FULL_MASK_CANVAS) > 0:
     FULL_MASK_CANVAS[FULL_MASK_CANVAS < (0.70*(np.max(FULL_MASK_CANVAS)))] = 0
 
-cv2.imwrite(IMAGE_DIR + "\\AI_MASK_SCRUB" + IN_FILE, np.uint8(FULL_MASK_CANVAS/np.max(FULL_MASK_CANVAS)*255))
+cv2.imwrite(IMAGE_DIR + "\\AI_MASK_SCRUB_" + "V" + str(VERT_SPACING) + "H" + str(HORZ_SPACING) + "_" + IN_FILE, np.uint8(FULL_MASK_CANVAS/np.max(FULL_MASK_CANVAS)*255))
 #print(test_dataset['cot1.tif_(1152, 1920).tif'])
 #[cv2.imwrite(TILE_OUTS + "\\" + IN_FILE + f"_{i}.tif", grab_clip(CLIP_IMAGE, TILESIZE, i)) for n in test_dataset]
 # TODO: MAKE THE LIST COMPREHENSION OF THE TILE CLASSIFIER WORK!!!
