@@ -11,13 +11,14 @@ from torch.utils.data import Dataset as BaseDataset
 import glob
 import re
 import tqdm
+from progressbar import progressbar as pog
 
 IMAGE_DIR = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\BASE"
 TILE_OUTS = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\tiles"
 TILE_MASK_OUTS = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\tile_masks"
 
-# IN_FILE = "cot_A.tif"
-IN_FILE = "cot1.tif"
+IN_FILE = "cot_A.tif"
+#IN_FILE = "cot1.tif"
 
 print("Reading File...")
 
@@ -44,8 +45,8 @@ assert HORZ_OVERLAP < TILESIZE and VERT_OVERLAP < TILESIZE, f"Overlap values do 
 
 CUTOFF_THRESHOLD = 64*64*2 # Tested
 
-SWITCH_harvestTiles = False
-SWITCH_makeMasks = False
+SWITCH_harvestTiles = True
+SWITCH_makeMasks = True
 
 # Clip the image down
 width, height = IMAGE.shape[0:2]
@@ -90,11 +91,21 @@ def grab_clip(image, tile_size, coordinates):
     x_coord, y_coord = coordinates
     return image[x_coord:x_coord+tile_size, y_coord:y_coord+tile_size, :]
 
+def process(token):
+    return token['counter']
+
 if SWITCH_harvestTiles:
     print("Clearing Existing TILE Files...")
     [os.remove(f) for f in glob.glob(TILE_OUTS + "\\*.tif")]
     print(f"Generating {len(tile_corners)} Tiles with {HORZ_OVERLAP} <> and {VERT_OVERLAP} /|/...")
-    [cv2.imwrite(TILE_OUTS + "\\" + IN_FILE[:-4] + f"_{i}.tif", grab_clip(CLIP_IMAGE, TILESIZE, i)) for i in tile_corners if np.sum(grab_clip(CLIP_IMAGE, TILESIZE, i)) > CUTOFF_THRESHOLD]
+    def writetile(clip, tilesize, corner):
+        cv2.imwrite(TILE_OUTS + "\\" + IN_FILE[:-4] + f"_{corner}.tif", grab_clip(clip, tilesize, corner))
+    [writetile(CLIP_IMAGE, TILESIZE, i) for i in tqdm.tqdm(tile_corners) if np.sum(grab_clip(CLIP_IMAGE, TILESIZE, i)) > CUTOFF_THRESHOLD]
+    # print("If this step takes more than a fraction of a second, HALT IT IMMEDIATELY using CTRL + C in the Terminal!!!")
+    
+    # [process(token) for token in tqdm.tqdm([{'counter': writetile(CLIP_IMAGE, TILESIZE, i)} for i in tile_corners if np.sum(grab_clip(CLIP_IMAGE, TILESIZE, i)) > CUTOFF_THRESHOLD])]
+    # [writetile(CLIP_IMAGE, TILESIZE, i) for i in tile_corners if np.sum(grab_clip(CLIP_IMAGE, TILESIZE, i)) > CUTOFF_THRESHOLD]
+    # [cv2.imwrite(TILE_OUTS + "\\" + IN_FILE[:-4] + f"_{i}.tif", grab_clip(CLIP_IMAGE, TILESIZE, i)) for i in tile_corners if np.sum(grab_clip(CLIP_IMAGE, TILESIZE, i)) > CUTOFF_THRESHOLD]
 
 # Build Classifier
 
@@ -219,7 +230,7 @@ if SWITCH_makeMasks:
     print("Clearing Existing MASK Files...")
     [os.remove(f) for f in glob.glob(TILE_MASK_OUTS + "\\*.tif")]
     print("Generating Predictions...")
-    [cv2.imwrite(TILE_MASK_OUTS + f"\\{n}", classify(test_dataset[n])) for n in test_dataset.ids]
+    [cv2.imwrite(TILE_MASK_OUTS + f"\\{n}", classify(test_dataset[n])) for n in tqdm.tqdm(test_dataset.ids)]
     #[print(classify(test_dataset[n])) for n in test_dataset.ids]
 
 FULL_MASK_CANVAS = np.zeros(IMAGE.shape)
