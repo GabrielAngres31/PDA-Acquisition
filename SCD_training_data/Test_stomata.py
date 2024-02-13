@@ -22,7 +22,8 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 
 #DATA_DIR = 'C:\\Users\\gjang\\Documents\\GitHubPDA-Acquisition\\SCD_training_data\\example_training_set'
-DATA_DIR = 'C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\example_training_set'
+# DATA_DIR = 'C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\example_training_set'
+DATA_DIR = ".\\SCD_training_data\\example_training_set"
 
 # load repo with data if it is not exists
 # if not os.path.exists(DATA_DIR):
@@ -273,7 +274,7 @@ if __name__ == '__main__':
     )
 
     # C:\Users\Muroyama lab\Documents\Muroyama_Lab\Gabriel\GitHub\PDA-Acquisition
-    best_model = torch.load('C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\best_model_on_whole.pth')
+    best_model = torch.load('.\\PDA-Acquisition\\best_model_on_whole.pth')
     # create test dataset
     test_dataset = Dataset(
         x_test_dir,
@@ -316,9 +317,9 @@ if __name__ == '__main__':
             predicted_mask=pr_mask
         )
 
-        cv2.imwrite("C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\Train_stomata\\im.png", image_vis)
-        cv2.imwrite("C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\Train_stomata\\gt.png", gt_mask)
-        cv2.imwrite("C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\Train_stomata\\pr.png", pr_mask)
+        cv2.imwrite(".\\SCD_training_data\\Train_stomata\\im.png", image_vis)
+        cv2.imwrite(".\\SCD_training_data\\Train_stomata\\gt.png", gt_mask)
+        cv2.imwrite(".\\SCD_training_data\\Train_stomata\\pr.png", pr_mask)
 
         print('running step')
 

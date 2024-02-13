@@ -13,9 +13,9 @@ import re
 import tqdm
 from progressbar import progressbar as pog
 
-IMAGE_DIR = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\BASE"
-TILE_OUTS = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\tiles"
-TILE_MASK_OUTS = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\tile_masks"
+IMAGE_DIR = ".\\SCD_training_data\\source_images\\BASE"
+TILE_OUTS = ".\\SCD_training_data\\source_images\\tiles"
+TILE_MASK_OUTS = ".\\SCD_training_data\\source_images\\tile_masks"
 
 IN_FILE = "cot_A.tif"
 #IN_FILE = "cot1.tif"
@@ -136,7 +136,7 @@ model = smp.FPN(
 
 preprocessing_fn = smp.encoders.get_preprocessing_fn(ENCODER, ENCODER_WEIGHTS)
 
-best_model = torch.load('C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\best_model.pth') #best_model_on_whole.pth')
+best_model = torch.load('.\\PDA-Acquisition\\best_model.pth') #best_model_on_whole.pth')
 # create test dataset
 
 def visualize(**images):

@@ -5,9 +5,9 @@ import glob
 import sys
 import tqdm
 
-IMAGE_DIR = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\BASE"
-TILE_OUTS = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\tiles"
-TILE_MASK_OUTS = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\tile_masks"
+IMAGE_DIR = ".\\PDA-Acquisition\\SCD_training_data\\source_images\\BASE"
+TILE_OUTS = ".\\PDA-Acquisition\\SCD_training_data\\source_images\\tiles"
+TILE_MASK_OUTS = ".\\PDA-Acquisition\\SCD_training_data\\source_images\\tile_masks"
 
 IN_FILE = "AI_MASK_V4H4_cot1.tif"
 # IN_FILE = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\source_images\\ANNOTATION\\cot1_STOMATA_MASKS.tiff"
