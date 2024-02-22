@@ -1,0 +1,101 @@
+import argparse
+import os
+import time
+import typing as tp
+
+import numpy as np
+import torch
+import torchvision
+
+import src.data
+import src.training_utils
+import src.unet
+
+
+def main(args:argparse.Namespace) -> bool:
+    '''Training entry point'''
+    trainfiles = src.data.load_splitfile(args.trainingsplit)
+    trainfiles = src.data.cache_file_pairs(
+        trainfiles, args.cachedir, args.patchsize, overlap=32
+    )
+    validationfiles = None
+    if args.validationsplit is not None:
+        validationfiles = src.data.load_splitfile(args.validationsplit)
+        validationfiles = src.data.cache_file_pairs(
+            validationfiles, args.cachedir, args.patchsize, overlap=32, clear=False
+        )
+    
+    model = src.unet.UNet()
+    model = src.training_utils.run_training(
+        model, 
+        trainfiles, 
+        args.epochs, 
+        args.lr,
+        args.batchsize, 
+        args.checkpointdir, 
+        validationfiles
+    )
+    return True
+
+
+
+def get_argparser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--trainingsplit', 
+        type     = str, 
+        required = True,
+        help     = '''Path to .csv file containing pairs of input images and 
+        annotations to be used for training'''
+    )
+    parser.add_argument(
+        '--validationsplit', 
+        type     = str, 
+        required = False,
+        help     = '''Path to .csv file containing pairs of input images and 
+        annotations to be used for validation'''
+    )
+    parser.add_argument(
+        '--patchsize',
+        type    = int,
+        default = 256,
+        help    = 'Size of input patches in pixels'
+    )
+    parser.add_argument(
+        '--cachedir', 
+        type    = str, 
+        default = './cache/', 
+        help    = 'Where to store image patches',
+    )
+    parser.add_argument(
+        '--checkpointdir',
+        type    = str,
+        default = './checkpoints/',
+        help    = 'Where to store trained models',
+    )
+    parser.add_argument(
+        '--epochs',
+        type    = int,
+        default = 30,
+        help    = 'Number of training epochs'
+    )
+    parser.add_argument(
+        '--lr',
+        type    = float,
+        default = 1e-3,
+        help    = 'Learning rate for AdamW optimizer'
+    )
+    parser.add_argument(
+        '--batchsize',
+        type    = int,
+        default = 8,
+        help    = 'Number of samples in a batch per training step'
+    )
+    return parser
+
+
+if __name__ == '__main__':
+    args = get_argparser().parse_args()
+    ok   = main(args)
+    if ok:
+        print('Done')
