@@ -6,6 +6,10 @@
 #new python virtual environment
 python -m venv venv
 
+#activate it
+source venv/bin/activate   #linux
+#venv\Scripts\activate     #windows
+
 #install packages
 pip install -r requirements.txt
 

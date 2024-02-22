@@ -14,6 +14,7 @@ def run_training(
     epochs:               int,
     learning_rate:        float,
     batchsize:            int,
+    pos_weight:           float,
     checkpointdir:        str,
     validation_filepairs: src.data.FilePairs|None = None,
 ):
@@ -31,7 +32,7 @@ def run_training(
         vloader  = src.data.create_dataloader(vdataset, batchsize, shuffle=False)
     
     for e in range(epochs):
-        loss = train_one_epoch(module, loader, optimizer)
+        loss = train_one_epoch(module, loader, optimizer, pos_weight)
         scheduler.step()
         if vloader is not None:
             vloss = validate_one_epoch(module, vloader)
@@ -66,7 +67,7 @@ def train_one_epoch(
     module:     torch.nn.Module, 
     loader:     tp.Iterable, 
     optimizer:  torch.optim.Optimizer,
-    pos_weight: float = 2.0,
+    pos_weight: float = 5.0,
 ) -> float:
     losses = []
     for i,[x,t] in enumerate(loader):

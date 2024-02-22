@@ -31,7 +31,8 @@ def main(args:argparse.Namespace) -> bool:
         trainfiles, 
         args.epochs, 
         args.lr,
-        args.batchsize, 
+        args.batchsize,
+        args.pos_weight,
         args.checkpointdir, 
         validationfiles
     )
@@ -90,6 +91,12 @@ def get_argparser() -> argparse.ArgumentParser:
         type    = int,
         default = 8,
         help    = 'Number of samples in a batch per training step'
+    )
+    parser.add_argument(
+        '--pos_weight',
+        type    = float,
+        default = 5.0,
+        help    = 'Extra training weight on the positive class'
     )
     return parser
 
