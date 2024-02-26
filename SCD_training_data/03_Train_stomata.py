@@ -20,10 +20,10 @@ SWITCH_selection = "All Tiles"
 
 if SWITCH_selection == "Whole Only":
     MODEL_PATH_OUT = "best_model"
-    DATA_DIR = 'C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\example_training_set'
+    DATA_DIR = 'SCD_training_data\\example_training_set'
 elif SWITCH_selection == "All Tiles":
     MODEL_PATH_OUT = "best_model_on_whole"
-    DATA_DIR = "C:\\Users\\Muroyama lab\\Documents\\Muroyama_Lab\\Gabriel\\GitHub\\PDA-Acquisition\\SCD_training_data\\full_training_set"
+    DATA_DIR = "SCD_training_data\\full_training_set"
 
 #
 #
