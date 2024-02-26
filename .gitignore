@@ -4,3 +4,8 @@ SCD\ training\ data/**/*.jpg
 *.png
 *.png
 *.tif
+__pycache__
+checkpoints
+inference
+cache
+venv
