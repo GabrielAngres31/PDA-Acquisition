@@ -115,7 +115,6 @@ def create_dataloader(
         collate_fn      = getattr(ds, 'collate_fn', None),
         num_workers     = num_workers, 
         pin_memory      = True,
-        worker_init_fn  = lambda x: np.random.seed(torch.randint(0,1000,(1,))[0].item()+x),
         **kw
     )
 
