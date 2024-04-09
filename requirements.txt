@@ -7,3 +7,4 @@ tifffile==2024.2.12
 torch==2.1.1+cpu
 torchvision==0.16.1+cpu
 tqdm==4.66.2
+#opencv-python==4.9.0.80
