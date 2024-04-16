@@ -40,7 +40,13 @@ def load_annotation(path:str) -> torch.Tensor:
 
 def save_image(path:str, imagedata:np.ndarray) -> None:
     assert imagedata.dtype == np.float32
-    PIL.Image.fromarray((imagedata * 255).astype('uint8')).save(path)
+    PIL.Image.fromarray(imagedata.astype('uint8')).save(path)
+
+def save_image_RGB(path:str, imagedata:np.ndarray) -> None:
+    assert imagedata.dtype == np.float32
+    if np.shape(imagedata)[0] == 3:
+        np.transpose(1,2,0) 
+    PIL.Image.fromarray(imagedata.astype('uint8'), mode='RGB').save(path)
 
 
 def cache_file_pairs(

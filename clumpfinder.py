@@ -9,75 +9,70 @@ import argparse
 
 import src.data
 import tqdm
-
+import numpy
 import PIL
 
 
 def main(args:argparse.Namespace) -> bool:
-    print(src.data.load_image(args.input_path, "RGB"))
-    print(src.data.load_image(args.input_path, "L"))
+    
     target_tensor = src.data.load_image(args.input_path, "L")
     clumps_list = find_clumps(target_tensor)
-    #print(clumps_list)
-    #print(clumps_list.keys())
-
-    #TODO: You're not importing the image as RGB. FIND OUT WHY!!!!!
-
-    print(clumps_list[0])
+    
     if args.histogram:
         pass
 
     if args.colorize:
-        #output_colorized = src.data.load_image(args.input_path, "RGBA")
-        image = PIL.Image.open(args.input_path).convert("RGB")
-        print(str(image))
-        output_colorized = torchvision.transforms.PILToTensor(image)
-        #output_colorized = src.data.load_inputimage(args.input_path)
-        #clumps_iter = dict(zip(clumps_list.keys(), clumps_list.values()))
-        print(clumps_list.keys())
+        output_colorized = src.data.load_image(args.input_path, "RGB").permute(1, 2, 0)
         for id in clumps_list.keys():
-            color = [(64+id*31)%256, (72+id*29)%256, (80+id*23)%256]
-            for pixel in clumps_list[id]:
-                print(output_colorized[0])
-                print(output_colorized[0, pixel[0]])
-                print(output_colorized[0, pixel[0], pixel[1]])
-                
-                output_colorized[0, pixel[0], pixel[1]] = torch.Tensor(*color, size=1)
-                print(output_colorized[0, pixel[0], pixel[1]])
+            
+            sample_clump = clumps_list[id]
+            sample_clump.sort(key=lambda x: (x[0], x[1]))
 
-        filename_component = args.input_path.split("/")[-1]
-        src.data.save_image(filename_component+".output.png", output_colorized)
+            tag_pixel = sample_clump[0]
+
+            # Color is based on pixel location within image so that the appearance or disappearance of clumps does not affect clump color.
+            # RGB values are floored at 55 minimum to enhance visibility on dark backgrounds.
+            color = [tag_pixel[0]%200+55, tag_pixel[1]%200+55, (tag_pixel[0]+tag_pixel[1])%200+55]
+            
+            for pixel in clumps_list[id]:
+                
+                output_colorized[pixel[0], pixel[1], 0] = color[0]
+                output_colorized[pixel[0], pixel[1], 1] = color[1]
+                output_colorized[pixel[0], pixel[1], 2] = color[2]
+
+        filename_component = args.input_path.split("/")[-1][0:-4]
+        
+        src.data.save_image_RGB("inference/"+filename_component+"color.output.png", output_colorized.numpy())
     return True
 
 
-def iterative_flood_fill(matrix: torch.Tensor, x: int, y: int, visited: torch.Tensor) -> tp.List[tp.Tuple[int, int]]:
-    #print("Beep!")
+def iterative_flood_fill(matrix: torch.Tensor, x: int, y: int, visited: torch.Tensor, threshold:float = 1.) -> tp.List[tp.Tuple[int, int]]:
     queue = deque()
     queue.append((x, y))
     points = list()
     use_matrix = matrix
-    #print(use_matrix.shape)
-    directions: tp.List[tp.Tuple[int, int]] = [(0,1), (1,0), (0,-1), (-1,0)]
+
+
+
+    ### Strict Adjacency/Taxicab/NSEW: [(0,1), (1,0), (0,-1), (-1,0)]
+    #directions: tp.List[tp.Tuple[int, int]] = [(0,1), (1,0), (0,-1), (-1,0)]
     
+    ### Full Neighborhood: [(0,1), (1,1), (1,0), (1,-1), (0,-1), (-1,-1), (-1,0), (-1,1)]
+    directions: tp.List[tp.Tuple[int, int]] = [(0,1), (1,1), (1,0), (1,-1), (0,-1), (-1,-1), (-1,0), (-1,1)]
     while queue:
         x, y = queue.pop()
         if x < 0 or x >= use_matrix.shape[0] or y >= use_matrix.shape[1]:
             continue
         if visited[x, y] or use_matrix[x, y] == 0:
-            #print("argh!!!!!!")
             continue
-        #print("Aight.")
 
         for dx, dy in directions:
             nx, ny = x + dx, y + dy
-            #print(f"{y} {x}")
             if 0 <= nx < use_matrix.shape[0] and 0 <= ny < use_matrix.shape[1]:
                 if (nx, ny) not in points:
                     queue.appendleft((nx, ny))
         visited[x, y] = True
         points.append(tuple([x,y]))
-        #points.append(tuple([nx, ny]))
-                    #print(len(queue))
     return points
 
 def recursive_flood_fill(matrix: torch.Tensor, x: int, y: int, visited: torch.Tensor):
@@ -92,25 +87,12 @@ def find_clumps(matrix: torch.Tensor) -> tp.Dict[int, tp.List[tp.Tuple[int, int]
     clumps: tp.Dict[int, tp.List[tp.Tuple[int, int]]] = {}
     clump_id = 0
 
-    #TODO: Add pre-disqualifier for empty spaces
-    def empty_space_remove(mat_check: torch.Tensor, visited_blank: torch.Tensor, step: int = 12):
-        
-        for x in range(0, height, step):
-            for y in range(0, width, step):
-                #print(mat_check[0,x,y])
-                pass
-    empty_space_remove(matrix, matrix)
-
     for x in tqdm.tqdm(range(0, height)):
         for y in range(0, width):
             if use_matrix[x, y] > 0 and not visited[x, y]:
-                #print("Determining Clump...")
-                #print(x,y)
                 clump_points = iterative_flood_fill(use_matrix, x, y, visited)
                 if clump_points:
-                    #print(f"Located Clump #{clump_id}")
                     clumps[clump_id] = clump_points
-                    #print(clumps[clump_id])
                     clump_id += 1
     return clumps
 
