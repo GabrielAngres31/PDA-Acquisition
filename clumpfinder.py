@@ -12,14 +12,31 @@ import tqdm
 import numpy
 import PIL
 
+import matplotlib.pyplot as plt
+
 
 def main(args:argparse.Namespace) -> bool:
     
     target_tensor = src.data.load_image(args.input_path, "L")
+    #print(target_tensor)
     clumps_list = find_clumps(target_tensor)
     
     if args.histogram:
-        pass
+        clump_info_dict:tp.Dict[int, int] = {}
+        for id in clumps_list.keys():
+            print(id)
+            confidence_values = []
+            #for pixel in clumps_list[id]:
+            #    #print(pixel)
+            #    #print(target_tensor[0, pixel[0], pixel[1]])
+            #    confidence_values.append(target_tensor[0, pixel[0], pixel[1]])
+            #clump_info_dict[id] = (len(clumps_list[id]), confidence_values)
+            clump_info_dict[id] = len(clumps_list[id])
+        
+        plt.hist(clump_info_dict.values(), bins=list(range(0, 1000, 50)))
+        plt.title("Clump Sizes")
+        plt.show()
+        print(clump_info_dict)
 
     if args.colorize:
         output_colorized = src.data.load_image(args.input_path, "RGB").permute(1, 2, 0)
