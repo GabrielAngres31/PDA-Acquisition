@@ -14,29 +14,48 @@ import PIL
 
 import matplotlib.pyplot as plt
 
-
 def main(args:argparse.Namespace) -> bool:
     
     target_tensor = src.data.load_image(args.input_path, "L")
-    #print(target_tensor)
-    clumps_list = find_clumps(target_tensor)
-    
+    clumps_list = find_clumps(target_tensor, args.size_threshold, args.confidence_threshold)
+       
     if args.histogram:
         clump_info_dict:tp.Dict[int, int] = {}
         for id in clumps_list.keys():
             print(id)
-            confidence_values = []
+            #confidence_values = []
             #for pixel in clumps_list[id]:
             #    #print(pixel)
             #    #print(target_tensor[0, pixel[0], pixel[1]])
             #    confidence_values.append(target_tensor[0, pixel[0], pixel[1]])
             #clump_info_dict[id] = (len(clumps_list[id]), confidence_values)
             clump_info_dict[id] = len(clumps_list[id])
-        
+    
         plt.hist(clump_info_dict.values(), bins=list(range(0, 1000, 50)))
         plt.title("Clump Sizes")
         plt.show()
         print(clump_info_dict)
+    
+    if args.density:
+        density_info:tp.Dict[int, tp.Tuple[int, int, int, float]] = {}
+        for id in clumps_list.keys():
+            pixels_active = len(clumps_list[id])
+            x_values = sorted([x[0] for x in clumps_list[id]])
+            y_values = sorted([y[1] for y in clumps_list[id]])
+            x_span = x_values[-1] - x_values[0]
+            y_span = y_values[-1] - y_values[0]
+            total_pixels = x_span*y_span
+            
+            pixels_inactive = numpy.abs(total_pixels-pixels_active)
+            print(f"{pixels_active}, {total_pixels}")
+            density_info[id] = (total_pixels, pixels_active, pixels_inactive, (pixels_active/total_pixels if total_pixels > 0 else 0))
+        list_total    = [n[0] for n in density_info.values()]
+        list_active   = [n[1] for n in density_info.values()]
+        list_inactive = [n[2] for n in density_info.values()]
+        list_density  = [n[3] for n in density_info.values()]
+        plt.scatter(list_inactive, list_active)
+        plt.show()
+        
 
     if args.colorize:
         output_colorized = src.data.load_image(args.input_path, "RGB").permute(1, 2, 0)
@@ -60,10 +79,11 @@ def main(args:argparse.Namespace) -> bool:
         filename_component = args.input_path.split("/")[-1][0:-4]
         
         src.data.save_image_RGB("inference/"+filename_component+"color.output.png", output_colorized.numpy())
+        
     return True
 
 
-def iterative_flood_fill(matrix: torch.Tensor, x: int, y: int, visited: torch.Tensor, threshold:float = 1.) -> tp.List[tp.Tuple[int, int]]:
+def iterative_flood_fill(matrix: torch.Tensor, x: int, y: int, visited: torch.Tensor) -> tp.List[tp.Tuple[int, int]]:
     queue = deque()
     queue.append((x, y))
     points = list()
@@ -92,25 +112,24 @@ def iterative_flood_fill(matrix: torch.Tensor, x: int, y: int, visited: torch.Te
         points.append(tuple([x,y]))
     return points
 
-def recursive_flood_fill(matrix: torch.Tensor, x: int, y: int, visited: torch.Tensor):
-    use_matrix = matrix
-    if x < 0 or x >- use_matrix.shape[0] or y >= use_matrix.shape[1]:
-        pass    
-
-def find_clumps(matrix: torch.Tensor) -> tp.Dict[int, tp.List[tp.Tuple[int, int]]]:
+def find_clumps(matrix: torch.Tensor, size_threshold: int, confidence_threshold: float) -> tp.Dict[int, tp.List[tp.Tuple[int, int]]]:
     use_matrix = matrix[0]
     height, width = use_matrix.shape
     visited = torch.zeros_like(use_matrix, dtype=torch.bool)
     clumps: tp.Dict[int, tp.List[tp.Tuple[int, int]]] = {}
     clump_id = 0
 
-    for x in tqdm.tqdm(range(0, height)):
-        for y in range(0, width):
+    for x in tqdm.tqdm(range(0, height, 2)):
+        for y in range(0, width, 2):
             if use_matrix[x, y] > 0 and not visited[x, y]:
                 clump_points = iterative_flood_fill(use_matrix, x, y, visited)
                 if clump_points:
-                    clumps[clump_id] = clump_points
-                    clump_id += 1
+                    confident_clump_points = [point for point in clump_points if use_matrix[point[0], point[1]] > confidence_threshold]
+                    if len(clump_points) < size_threshold:
+                        break
+                    else:    
+                        clumps[clump_id] = clump_points
+                        clump_id += 1
     return clumps
 
 def get_argparser() -> argparse.ArgumentParser:
@@ -132,6 +151,24 @@ def get_argparser() -> argparse.ArgumentParser:
         type = int,
         default = 0,
         help = 'Whether or not to generate a histogram of clump sizes.'
+    )
+    parser.add_argument(
+        '--density',
+        type = int,
+        default = 0,
+        help = "Set to 1 to analyze relative clump size vs. clump density on a scatterplot."
+    )
+    parser.add_argument(
+        '--size_threshold',
+        type = int,
+        required = True,
+        help = "Threshold below which clumps are not counted in the final list."
+    )
+    parser.add_argument(
+        '--confidence_threshold',
+        type = float,
+        required = True,
+        help = "Threshold below which pixels of a given confidence are not counted in the final clump."
     )
     return parser
 

@@ -7,6 +7,8 @@ import torch
 
 import src.data
 
+import tqdm
+
 
 def main(args:argparse.Namespace) -> bool:
     model = torch.load(args.model).eval()
@@ -22,7 +24,7 @@ def run_patchwise_inference(model:torch.nn.Module, x:torch.Tensor) -> torch.Tens
     #FIXME: hardcoded patchsize
     input_patches  = src.data.slice_into_patches_with_overlap(x, 256, 32)
     output_patches = []
-    for x_patch in input_patches:
+    for x_patch in tqdm.tqdm(input_patches):
         with torch.no_grad():
             y_patch = model(x_patch[None])
         output_patches.append(y_patch)
