@@ -9,8 +9,7 @@ import torchvision
 import PIL.Image
 
 import src.data
-import src.training_utils
-import src.unet
+
 
 import sys
 
@@ -63,16 +62,6 @@ def main(args:argparse.Namespace) -> bool:
         img_both.save(args.save)
 
     return True
-
-"""
-TODO:
-Do not load a tensor. Just a PILLOW image is fine.
-ImageOps.colorize() should have what you need. 
-https://stackoverflow.com/questions/67404269/colourize-a-grayscale-image-using-pillow
-You want FFA500 (255, 165, 00) and 005AFF (0, 90, 255) for False Positive and True Positive values.
-Subtract the upper layer from the bottom layer.
-"""
-
 
 
 
