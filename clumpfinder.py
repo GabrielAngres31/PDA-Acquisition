@@ -59,6 +59,7 @@ def main(args:argparse.Namespace) -> bool:
 
     if args.colorize:
         output_colorized = src.data.load_image(args.input_path, "RGB").permute(1, 2, 0)
+        output_colorized = (output_colorized * 255).to(torch.uint8)
         for id in clumps_list.keys():
             
             sample_clump = clumps_list[id]
