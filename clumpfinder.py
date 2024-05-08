@@ -14,74 +14,97 @@ import PIL
 
 import matplotlib.pyplot as plt
 
+import skimage.measure as skimm
+
+import pandas as pd
+
+
 def main(args:argparse.Namespace) -> bool:
     
     target_tensor = src.data.load_image(args.input_path, "L")
-    clumps_list = find_clumps(target_tensor, args.size_threshold, args.confidence_threshold)
-       
-    if args.histogram:
-        clump_info_dict:tp.Dict[int, int] = {}
-        for id in clumps_list.keys():
-            print(id)
-            #confidence_values = []
-            #for pixel in clumps_list[id]:
-            #    #print(pixel)
-            #    #print(target_tensor[0, pixel[0], pixel[1]])
-            #    confidence_values.append(target_tensor[0, pixel[0], pixel[1]])
-            #clump_info_dict[id] = (len(clumps_list[id]), confidence_values)
-            clump_info_dict[id] = len(clumps_list[id])
+
+    #clumps_list = find_clumps(target_tensor, args.size_threshold, args.confidence_threshold)
+
+    table = find_clumps_skimage(target_tensor)
+    print(table)
     
-        plt.hist(clump_info_dict.values(), bins=list(range(0, 1000, 50)))
-        plt.title("Clump Sizes")
-        plt.show()
-        print(clump_info_dict)
+    if args.histogram:
+        pass
+        # clump_info_dict:tp.Dict[int, int] = {}
+        # for id in clumps_list.keys():
+        #     #print(id)
+        #     #confidence_values = []
+        #     #for pixel in clumps_list[id]:
+        #     #    #print(pixel)
+        #     #    #print(target_tensor[0, pixel[0], pixel[1]])
+        #     #    confidence_values.append(target_tensor[0, pixel[0], pixel[1]])
+        #     #clump_info_dict[id] = (len(clumps_list[id]), confidence_values)
+        #     clump_info_dict[id] = len(clumps_list[id])
+    
+        # plt.hist(clump_info_dict.values(), bins=list(range(0, 1000, 50)))
+        # plt.title("Clump Sizes")
+        # plt.show()
+        #print(clump_info_dict)
     
     if args.density:
-        density_info:tp.Dict[int, tp.Tuple[int, int, int, float]] = {}
-        for id in clumps_list.keys():
-            pixels_active = len(clumps_list[id])
-            x_values = sorted([x[0] for x in clumps_list[id]])
-            y_values = sorted([y[1] for y in clumps_list[id]])
-            x_span = x_values[-1] - x_values[0]
-            y_span = y_values[-1] - y_values[0]
-            total_pixels = x_span*y_span
+        pass
+        # density_info:tp.Dict[int, tp.Tuple[int, int, int, float]] = {}
+        # for id in clumps_list.keys():
+        #     pixels_active = len(clumps_list[id])
+        #     x_values = sorted([x[0] for x in clumps_list[id]])
+        #     y_values = sorted([y[1] for y in clumps_list[id]])
+        #     x_span = x_values[-1] - x_values[0]
+        #     y_span = y_values[-1] - y_values[0]
+        #     total_pixels = x_span*y_span
             
-            pixels_inactive = numpy.abs(total_pixels-pixels_active)
-            print(f"{pixels_active}, {total_pixels}")
-            density_info[id] = (total_pixels, pixels_active, pixels_inactive, (pixels_active/total_pixels if total_pixels > 0 else 0))
-        list_total    = [n[0] for n in density_info.values()]
-        list_active   = [n[1] for n in density_info.values()]
-        list_inactive = [n[2] for n in density_info.values()]
-        list_density  = [n[3] for n in density_info.values()]
-        plt.scatter(list_inactive, list_active)
-        plt.show()
+        #     pixels_inactive = numpy.abs(total_pixels-pixels_active)
+        #     #print(f"{pixels_active}, {total_pixels}")
+        #     density_info[id] = (total_pixels, pixels_active, pixels_inactive, (pixels_active/total_pixels if total_pixels > 0 else 0))
+        # list_total    = [n[0] for n in density_info.values()]
+        # list_active   = [n[1] for n in density_info.values()]
+        # list_inactive = [n[2] for n in density_info.values()]
+        # list_density  = [n[3] for n in density_info.values()]
+        # plt.scatter(list_inactive, list_active)
+        # plt.show()
         
-
     if args.colorize:
-        output_colorized = src.data.load_image(args.input_path, "RGB").permute(1, 2, 0)
-        output_colorized = (output_colorized * 255).to(torch.uint8)
-        for id in clumps_list.keys():
-            
-            sample_clump = clumps_list[id]
-            sample_clump.sort(key=lambda x: (x[0], x[1]))
-
-            tag_pixel = sample_clump[0]
-
-            # Color is based on pixel location within image so that the appearance or disappearance of clumps does not affect clump color.
-            # RGB values are floored at 55 minimum to enhance visibility on dark backgrounds.
-            color = [tag_pixel[0]%200+55, tag_pixel[1]%200+55, (tag_pixel[0]+tag_pixel[1])%200+55]
-            
-            for pixel in clumps_list[id]:
-                
-                output_colorized[pixel[0], pixel[1], 0] = color[0]
-                output_colorized[pixel[0], pixel[1], 1] = color[1]
-                output_colorized[pixel[0], pixel[1], 2] = color[2]
-
-        filename_component = args.input_path.split("/")[-1][0:-4]
         
-        src.data.save_image_RGB("inference/"+filename_component+"color.output.png", output_colorized.numpy())
+        pass
+        # output_colorized = src.data.load_image(args.input_path, "RGB").permute(1, 2, 0)
+        # output_colorized = (output_colorized * 255).to(torch.uint8)
+        # for id in clumps_list.keys():
+            
+        #     sample_clump = clumps_list[id]
+        #     sample_clump.sort(key=lambda x: (x[0], x[1]))
+
+        #     tag_pixel = sample_clump[0]
+
+        #     # Color is based on pixel location within image so that the appearance or disappearance of clumps does not affect clump color.
+        #     # RGB values are floored at 55 minimum to enhance visibility on dark backgrounds.
+        #     color = [tag_pixel[0]%200+55, tag_pixel[1]%200+55, (tag_pixel[0]+tag_pixel[1])%200+55]
+            
+        #     for pixel in clumps_list[id]:
+                
+        #         output_colorized[pixel[0], pixel[1], 0] = color[0]
+        #         output_colorized[pixel[0], pixel[1], 1] = color[1]
+        #         output_colorized[pixel[0], pixel[1], 2] = color[2]
+
+        # filename_component = args.input_path.split("/")[-1][0:-4]
+        
+        # src.data.save_image_RGB("inference/"+filename_component+"color.output.png", output_colorized.numpy())
         
     return True
+
+def find_clumps_skimage(image: PIL.Image) -> None:
+    #print(skimm.label(image, connectivity=2))
+    clumps_map = skimm.label(image, connectivity=2) 
+    shape = clumps_map.shape
+    #print([clumps_map[0, x, y] for x in range(shape[1]) for y in range(shape[2]) if clumps_map[0, x, y] > 0])
+    
+    #[print(x) for x in skimm.label(image, return_num=True, connectivity=2)[0][0]]
+
+    #print(clustarrays(numpy.ndarray(skimm.label(image, connectivity=2)).keys()))
+    return skimm.regionprops_table(skimm.label(image))
 
 
 def iterative_flood_fill(matrix: torch.Tensor, x: int, y: int, visited: torch.Tensor) -> tp.List[tp.Tuple[int, int]]:
@@ -89,13 +112,6 @@ def iterative_flood_fill(matrix: torch.Tensor, x: int, y: int, visited: torch.Te
     queue.append((x, y))
     points = list()
     use_matrix = matrix
-
-
-
-    ### Strict Adjacency/Taxicab/NSEW: [(0,1), (1,0), (0,-1), (-1,0)]
-    #directions: tp.List[tp.Tuple[int, int]] = [(0,1), (1,0), (0,-1), (-1,0)]
-    
-    ### Full Neighborhood: [(0,1), (1,1), (1,0), (1,-1), (0,-1), (-1,-1), (-1,0), (-1,1)]
     directions: tp.List[tp.Tuple[int, int]] = [(0,1), (1,1), (1,0), (1,-1), (0,-1), (-1,-1), (-1,0), (-1,1)]
     while queue:
         x, y = queue.pop()
@@ -132,6 +148,8 @@ def find_clumps(matrix: torch.Tensor, size_threshold: int, confidence_threshold:
                         clumps[clump_id] = clump_points
                         clump_id += 1
     return clumps
+
+
 
 def get_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
