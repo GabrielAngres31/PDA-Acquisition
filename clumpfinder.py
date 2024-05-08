@@ -24,12 +24,12 @@ def main(args:argparse.Namespace) -> bool:
     target_tensor = src.data.load_image(args.input_path, "L")
 
     #clumps_list = find_clumps(target_tensor, args.size_threshold, args.confidence_threshold)
-
-    table = find_clumps_skimage(target_tensor)
-    print(table)
+    print(target_tensor)
+    table = find_clumps_skimage(target_tensor[0])
+    #print(table)
     
-    if args.histogram:
-        pass
+    if args.area_histogram:
+        # pass
         # clump_info_dict:tp.Dict[int, int] = {}
         # for id in clumps_list.keys():
         #     #print(id)
@@ -45,29 +45,13 @@ def main(args:argparse.Namespace) -> bool:
         # plt.title("Clump Sizes")
         # plt.show()
         #print(clump_info_dict)
-    
-    if args.density:
-        pass
-        # density_info:tp.Dict[int, tp.Tuple[int, int, int, float]] = {}
-        # for id in clumps_list.keys():
-        #     pixels_active = len(clumps_list[id])
-        #     x_values = sorted([x[0] for x in clumps_list[id]])
-        #     y_values = sorted([y[1] for y in clumps_list[id]])
-        #     x_span = x_values[-1] - x_values[0]
-        #     y_span = y_values[-1] - y_values[0]
-        #     total_pixels = x_span*y_span
-            
-        #     pixels_inactive = numpy.abs(total_pixels-pixels_active)
-        #     #print(f"{pixels_active}, {total_pixels}")
-        #     density_info[id] = (total_pixels, pixels_active, pixels_inactive, (pixels_active/total_pixels if total_pixels > 0 else 0))
-        # list_total    = [n[0] for n in density_info.values()]
-        # list_active   = [n[1] for n in density_info.values()]
-        # list_inactive = [n[2] for n in density_info.values()]
-        # list_density  = [n[3] for n in density_info.values()]
-        # plt.scatter(list_inactive, list_active)
-        # plt.show()
+        assert 'area' in table.keys(), "Area is not listed in this table!"
+
+        plt.hist(table["area"], bins=list(range(0, 2000, 120)))
+        plt.title("Clump Sizes")
+        plt.show()
         
-    if args.colorize:
+    if True or args.colorize:
         
         pass
         # output_colorized = src.data.load_image(args.input_path, "RGB").permute(1, 2, 0)
@@ -93,18 +77,31 @@ def main(args:argparse.Namespace) -> bool:
         
         # src.data.save_image_RGB("inference/"+filename_component+"color.output.png", output_colorized.numpy())
         
+    if args.scatter_plot:
+        assert 'eccentricity' in table.keys(), "Eccentricity is not listed in this table!"
+        plt.scatter(table["area"], table["eccentricity"])
+        plt.title("Clump Sizes vs. Eccentricity")
+        plt.show()
+        # heatmap, xedges, yedges = numpy.histogram2d(table["area"], table["eccentricity"]*1000, bins = [list(range(0, 2000, 50)), list(range(0, 1000, 50))])
+        # extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+
+        # plt.clf()
+        # plt.imshow(heatmap.T, extent=extent, origin='lower')
+        # plt.show()
+        pass
     return True
 
 def find_clumps_skimage(image: PIL.Image) -> None:
     #print(skimm.label(image, connectivity=2))
     clumps_map = skimm.label(image, connectivity=2) 
     shape = clumps_map.shape
+    print(shape)
     #print([clumps_map[0, x, y] for x in range(shape[1]) for y in range(shape[2]) if clumps_map[0, x, y] > 0])
     
     #[print(x) for x in skimm.label(image, return_num=True, connectivity=2)[0][0]]
 
     #print(clustarrays(numpy.ndarray(skimm.label(image, connectivity=2)).keys()))
-    return skimm.regionprops_table(skimm.label(image))
+    return skimm.regionprops_table(skimm.label(image), properties = ('label', 'bbox', 'area', 'area_bbox', 'axis_major_length', 'centroid', 'eccentricity')) #, 'eccentricity'
 
 
 def iterative_flood_fill(matrix: torch.Tensor, x: int, y: int, visited: torch.Tensor) -> tp.List[tp.Tuple[int, int]]:
@@ -159,35 +156,40 @@ def get_argparser() -> argparse.ArgumentParser:
         required = True,
         help = 'Image to find chunks for.'
     )
+    # parser.add_argument(
+    #     '--colorize',
+    #     type = int,
+    #     default = 0,
+    #     help = "Set to 1 to generate an image with the clumps colored in, and 0 otherwise."
+    # )
     parser.add_argument(
-        '--colorize',
-        type = int,
-        default = 0,
-        help = "Set to 1 to generate an image with the clumps colored in, and 0 otherwise."
-    )
-    parser.add_argument(
-        '--histogram',
+        '--area_histogram',
         type = int,
         default = 0,
         help = 'Whether or not to generate a histogram of clump sizes.'
     )
+    # parser.add_argument(
+    #     '--density',
+    #     type = int,
+    #     default = 0,
+    #     help = "Set to 1 to analyze relative clump size vs. clump density on a scatterplot."
+    # )
+    # parser.add_argument(
+    #     '--size_threshold',
+    #     type = int,
+    #     required = True,
+    #     help = "Threshold below which clumps are not counted in the final list."
+    # )
+    # parser.add_argument(
+    #     '--confidence_threshold',
+    #     type = float,
+    #     required = True,
+    #     help = "Threshold below which pixels of a given confidence are not counted in the final clump."
+    # )
     parser.add_argument(
-        '--density',
+        '--scatter_plot',
         type = int,
-        default = 0,
-        help = "Set to 1 to analyze relative clump size vs. clump density on a scatterplot."
-    )
-    parser.add_argument(
-        '--size_threshold',
-        type = int,
-        required = True,
-        help = "Threshold below which clumps are not counted in the final list."
-    )
-    parser.add_argument(
-        '--confidence_threshold',
-        type = float,
-        required = True,
-        help = "Threshold below which pixels of a given confidence are not counted in the final clump."
+        help = "Whether or not to generate a scatter plot of clump sizes versus eccentricity."
     )
     return parser
 
