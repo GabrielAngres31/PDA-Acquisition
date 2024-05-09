@@ -39,13 +39,13 @@ def load_annotation(path:str) -> torch.Tensor:
     return load_image(path, 'L')
 
 def save_image(path:str, imagedata_f32:np.ndarray) -> None:
-    assert imagedata_f32.dtype == np.float32
+    assert imagedata_f32.dtype == np.float32, f"{imagedata_f32.dtype}"
     assert 0.0 <= imagedata_f32.min() and imagedata_f32.max() <= 1.0
     imagedata_u8 = (imagedata_f32 * 255).astype('uint8')
     PIL.Image.fromarray(imagedata_u8).save(path)
 
 def save_image_RGB(path:str, imagedata_u8:np.ndarray) -> None:
-    assert imagedata_u8.dtype == np.uint8
+    assert imagedata_u8.dtype == np.uint8, f"{imagedata_u8.dtype}"
     if np.shape(imagedata_u8)[0] == 3:
         np.transpose(imagedata_u8, [1,2,0])
     PIL.Image.fromarray(imagedata_u8, mode='RGB').save(path)
