@@ -15,6 +15,7 @@ import PIL
 import matplotlib.pyplot as plt
 
 import skimage.measure as skimm
+import skimage.morphology as skimorph
 
 import pandas as pd
 
@@ -22,7 +23,7 @@ import pandas as pd
 def main(args:argparse.Namespace) -> bool:
     
     target_tensor = src.data.load_image(args.input_path, "L")
-
+    
     #clumps_list = find_clumps(target_tensor, args.size_threshold, args.confidence_threshold)
     print(target_tensor)
     table = find_clumps_skimage(target_tensor[0])
@@ -88,14 +89,31 @@ def main(args:argparse.Namespace) -> bool:
         # plt.clf()
         # plt.imshow(heatmap.T, extent=extent, origin='lower')
         # plt.show()
-        pass
     return True
 
-def find_clumps_skimage(image: PIL.Image) -> None:
+def find_clumps_skimage(image: PIL.Image): #-> None:
     #print(skimm.label(image, connectivity=2))
+
+    """
+    Blacken pixels less than a threshold_value
+    Perform area closing on closing threshold [default 200]
+    Perform area opening on different threshold [default 200]
+    whiten all nonblack pixels with target_tensor = (target_tensor > 0.5)
+    """
+    
+    image = (image > 0.5)
+    # image = skimorph.area_closing(image, area_threshold = 200)
+    
+    #image_opening = skimorph.area_opening(image, area_threshold = 200)
+    
+    #image = skimorph.closing(image, footprint=[(numpy.ones((9, 1)), 1), (numpy.ones((1, 9)), 1)])
+
+    #clumps_map = skimm.label(image_opening, connectivity=2) 
     clumps_map = skimm.label(image, connectivity=2) 
     shape = clumps_map.shape
     print(shape)
+
+
     #print([clumps_map[0, x, y] for x in range(shape[1]) for y in range(shape[2]) if clumps_map[0, x, y] > 0])
     
     #[print(x) for x in skimm.label(image, return_num=True, connectivity=2)[0][0]]
