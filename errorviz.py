@@ -16,7 +16,7 @@ import sys
 def main(args:argparse.Namespace) -> bool:
     grnd = src.data.load_image(args.ground_truth,  "RGB")
     pred = src.data.load_image(args.model_predict, "RGB")
-    assert grnd.shape == pred.shape
+    assert grnd.shape == pred.shape, f"{grnd.shape} != {pred.shape}"
     diff = torch.sub(grnd, pred)
     pos_mask = torch.where(diff > 0,  diff, 0)
     neg_mask = torch.where(diff < 0, -diff, 0)

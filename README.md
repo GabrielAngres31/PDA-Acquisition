@@ -17,7 +17,7 @@ pip install -r requirements.txt
 python training.py --trainingsplit=splits/train_0.csv
 
 #run inference on a file (adjust paths)
-python inference.py --model=checkpoints/2024-04-09_11h-56m-29s/last.e029.pth --input=SCD_training_data/source_images/BASE/cot6.tif
+python inference.py --model=checkpoints/2024-05-07_10h-21m-35s/last.e029.pth --input=SCD_training_data/source_images/BASE/cot6.tif
 
 #show insufficiently confident positives in blue and false positives in orange
 python errorviz.py --ground_truth=SCD_training_data/source_images/ANNOTATION/cot6_STOMATA_MASKS.tiff  --model_predict=inference/cot6.tif.output.png --show=1

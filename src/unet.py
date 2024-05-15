@@ -21,6 +21,7 @@ class UNet(torch.nn.Module):
             )
         def forward(self, x:torch.Tensor, skip_x:torch.Tensor, relu=True) -> torch.Tensor:
             x = resize_tensor(x, skip_x.shape[-2:], mode='nearest')   #TODO? mode='bilinear
+            # x = resize_tensor(x, skip_x.shape[-2:], mode='bilinear')   #TODO? mode='bilinear
             x = torch.cat([x, skip_x], dim=1)
             x = self.conv1x1(x)
             x = self.convblock(x)

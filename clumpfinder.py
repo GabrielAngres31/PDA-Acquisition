@@ -46,6 +46,8 @@ def main(args:argparse.Namespace) -> bool:
     if args.scatter_plot:
         assert 'axis_major_length' in table.keys(), "Major Axis Length is not listed in this table!"
         plt.scatter(table["area"], table["axis_major_length"])
+        plt.xlim(0, 2000)
+        plt.ylim(0,   60)
         plt.title("Clump Sizes vs. Major Axis Length")
         if args.save_to:
             plt.savefig(f"reference_figures/{args.save_to}_area_axis_scatter.png")
@@ -64,24 +66,31 @@ def main(args:argparse.Namespace) -> bool:
         
     return True
 
-def find_clumps_skimage(image: PIL.Image, closing_threshold: int, opening_threshold: int): #-> None
+def find_clumps_skimage(image: PIL.Image, closing_threshold: int, opening_threshold: int, properties: tuple = None): #-> None
 
     # image_numpy = skimorph.area_opening(image, area_threshold = 200)
-    image = (image > 0.5)
+    image = (image > 0.1)
     image_numpy = numpy.asarray(image)
 
-    # src.data.save_image("example.png", numpy.asarray(image).astype(numpy.float32))
-    print(closing_threshold)
+    #src.data.save_image("example.png", numpy.asarray(image).astype(numpy.float32))
+    #print(closing_threshold)
     image_closing = skimorph.area_closing(image_numpy, area_threshold = closing_threshold) #80
     image_opening = skimorph.area_opening(image_closing, area_threshold = opening_threshold) #120
 
-    # src.data.save_image("example_both.png", image_opening.astype(numpy.float32))
+    src.data.save_image("reference_figures/example_both.png", image_opening.astype(numpy.float32))
 
     clumps_map = skimm.label(image_opening, connectivity=2) 
     shape = clumps_map.shape
+    #plt.imshow(clumps_map)
+    #plt.show()
     #print(shape)
-
-    return skimm.regionprops_table(skimm.label(clumps_map), properties = ('label', 'bbox', 'area', 'area_bbox', 'axis_major_length', 'centroid', 'eccentricity')) #, 'eccentricity'
+    #plt.clf()
+    if properties:
+        props = properties
+    else:
+        props = ('label', 'bbox')
+        # ('label', 'bbox', 'area', 'area_bbox', 'axis_major_length', 'axis_minor_length', 'centroid', 'eccentricity', 'area_convex', 'perimeter')
+    return skimm.regionprops_table(skimm.label(clumps_map), properties = props) #, 'eccentricity'
 
 def get_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
