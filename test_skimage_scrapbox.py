@@ -98,7 +98,7 @@ IoU_csr = IoU.tocsr()
 
 default_list = IoU_csr[IoU_csr > 0.001]
 
-#print(str(default_list))
+print(str(default_list))
 
 #IoU_csr[:, 0] = 0
 #IoU_csr[0, :] = 0
@@ -108,9 +108,9 @@ default_list = IoU_csr[IoU_csr > 0.001]
 bins = np.arange(0, 1, 0.05) # fixed bin size
 
 data = [x for x in default_list.tolist()[0]]
-print(np.mean(data))
+print(f"Mean: {np.mean(data)}")
 
-plt.xlim([min(data)-0.2, max(data)+0.2])
+#plt.xlim([min(data)-0.2, max(data)+0.2])
 
 plt.hist(data, bins=bins, alpha=0.5)
 plt.title('IoU data (fixed bin size)')

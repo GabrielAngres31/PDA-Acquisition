@@ -6,6 +6,5 @@ SCD\ training\ data/**/*.jpg
 *.tif
 __pycache__
 checkpoints
-inference
 cache
 venv

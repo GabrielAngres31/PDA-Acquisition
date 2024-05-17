@@ -12,7 +12,7 @@ area_dict = {}
 axis_dict = {}
 minx_dict = {}
 
-fig = plt.figure()
+fig = plt.figure(1)
 ax = fig.add_subplot(projection='3d')
 
 colors_dict = {"N/A":"gray", "3":"orange", "4":"green", "5":"blue",}
