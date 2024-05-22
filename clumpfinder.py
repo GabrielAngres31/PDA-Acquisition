@@ -23,51 +23,59 @@ import skimage.morphology as skimorph
 def main(args:argparse.Namespace) -> bool:
     
     target_tensor = src.data.load_image(args.input_path, "L")
-    
-    table = find_clumps_skimage(target_tensor[0], args.closing_threshold, args.opening_threshold)
-    
-    if args.area_histogram:
-    
+    #properties = args.properties.split(":")
+    properties = list(set(args.histogram.split("%")) | set(y for sublist in args.scatter_plot.split(":") for y in sublist.split("^")))
+    table = find_clumps_skimage(target_tensor[0], args.closing_threshold, args.opening_threshold, properties = properties)
+
+    # TODO: FIGURE OUT YOUR BINS
+
+    if args.histogram:
+        for param in args.histogram.split("%"):
         # plt.hist(clump_info_dict.values(), bins=list(range(0, 1000, 50)))
         # plt.title("Clump Sizes")
         # plt.show()
         #print(clump_info_dict)
-        assert 'area' in table.keys(), "Area is not listed in this table!"
-
-        plt.hist(table["area"], bins=list(range(0, 2000, 120)))
-        plt.title("Clump Sizes")
-        if args.save_to:
-            plt.savefig(f"reference_figures/{args.save_to}_area_histogram.png")
-        #plt.show()
-        plt.clf()
+        #assert 'area' in table.keys(), "Area is not listed in this table!"
+            plt.hist(table[param])#, bins=list(range(0, 2000, 120)))
+            plt.title(f"{param}")
+            if args.save_to:
+                plt.savefig(f"reference_figures/{args.save_to}_area_histogram.png")
+            #plt.show()
+            plt.clf()
         
         
         
     if args.scatter_plot:
-        assert 'axis_major_length' in table.keys(), "Major Axis Length is not listed in this table!"
-        plt.scatter(table["area"], table["axis_major_length"])
-        plt.xlim(0, 2000)
-        plt.ylim(0,   60)
-        plt.title("Clump Sizes vs. Major Axis Length")
-        if args.save_to:
-            plt.savefig(f"reference_figures/{args.save_to}_area_axis_scatter.png")
-        #plt.show()
-        plt.clf()
-        
-        heatmap, xedges, yedges = numpy.histogram2d(table["area"], table["axis_major_length"]*1000, bins = [list(range(0, 2000, 50)), list(range(0, 1000, 50))])
-        extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+        for param in args.scatter_plot.split("%"):
+            #assert 'axis_major_length' in table.keys(), "Major Axis Length is not listed in this table!"
+            field1, field2 = param.split("^")
+            plt.scatter(table[field1], table[field2])
+            # plt.xlim(0, 2000)
+            # plt.ylim(0,   60)
+            plt.title(f"{field1} vs. {field2}")
+            if args.save_to:
+                plt.savefig(f"reference_figures/{args.save_to}_{field1}_vs_{field2}_scatter.png")
+            else:
+                plt.show()
+            #plt.show()
+            plt.clf()
+            
+            heatmap, xedges, yedges = numpy.histogram2d(table[field1], table[field2])#, bins = [list(range(0, 2000, 50)), list(range(0, 1000, 50))])
+            extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
 
-        plt.clf()
-        plt.imshow(heatmap.T, extent=extent, origin='lower')
-        if args.save_to:
-            plt.savefig(f"reference_figures/{args.save_to}_area_axis_heatmap.png")
-        #plt.show()
-        plt.clf()
+            plt.clf()
+            plt.imshow(heatmap.T, extent=extent, origin='lower')
+            if args.save_to:
+                plt.savefig(f"reference_figures/{args.save_to}_{field1}_vs_{field2}_heatmap.png")
+            else:
+                plt.show()
+            #plt.show()
+            plt.clf()
         
     return True
 
-def find_clumps_skimage(image: PIL.Image, closing_threshold: int, opening_threshold: int, properties: tuple = None): #-> None
-
+def find_clumps_skimage(image: PIL.Image, closing_threshold: int, opening_threshold: int, properties: tuple = (" ")): #-> None
+    assert properties, "You haven't put any properties!"
     # image_numpy = skimorph.area_opening(image, area_threshold = 200)
     image = (image > 0.1)
     image_numpy = numpy.asarray(image)
@@ -100,11 +108,17 @@ def get_argparser() -> argparse.ArgumentParser:
         required = True,
         help = 'Image to find chunks for.'
     )
+    # parser.add_argument(
+    #     '--properties',
+    #     type = str,
+    #     required = False,
+    #     help = 'List of properties separated by commas.'
+    # )
     parser.add_argument(
-        '--area_histogram',
-        type = int,
-        default = 0,
-        help = 'Whether or not to generate a histogram of clump sizes.'
+        '--histogram',
+        type = str,
+        default = "",
+        help = 'List of parameters you would like to plot in a histogram, separated by colons.'
     )
     parser.add_argument(
         '--closing_threshold',
@@ -126,8 +140,9 @@ def get_argparser() -> argparse.ArgumentParser:
     # )
     parser.add_argument(
         '--scatter_plot',
-        type = int,
-        help = "Whether or not to generate a scatter plot of clump sizes versus eccentricity."
+        type = str,
+        default="",
+        help = "Whether or not to generate scatter plots, separated by colons and commas"
     )
     parser.add_argument(
         '--save_to',
