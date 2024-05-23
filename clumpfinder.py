@@ -17,17 +17,22 @@ import matplotlib.pyplot as plt
 import skimage.measure as skimm
 import skimage.morphology as skimorph
 
-#import pandas as pd
+import pandas as pd
 
 
 def main(args:argparse.Namespace) -> bool:
     
     target_tensor = src.data.load_image(args.input_path, "L")
     #properties = args.properties.split(":")
-    properties = list(set(args.histogram.split("%")) | set(y for sublist in args.scatter_plot.split(":") for y in sublist.split("^")))
+    properties = set(args.histogram.split("%")) | set(y for sublist in args.scatter_plot.split(":") for y in sublist.split("^"))
+    properties.remove('')
+    properties = list(properties)
+
+    if args.distances:
+        properties.append("centroid")
     table = find_clumps_skimage(target_tensor[0], args.closing_threshold, args.opening_threshold, properties = properties)
 
-    # TODO: FIGURE OUT YOUR BINS
+    # TODO: FIGURE OUT How to store the results of O(n^2) distances to a file specific to an image being analyzed
 
     if args.histogram:
         for param in args.histogram.split("%"):
@@ -36,8 +41,10 @@ def main(args:argparse.Namespace) -> bool:
         # plt.show()
         #print(clump_info_dict)
         #assert 'area' in table.keys(), "Area is not listed in this table!"
+
             plt.hist(table[param])#, bins=list(range(0, 2000, 120)))
             plt.title(f"{param}")
+            plt.figure(figsize = (8,6))
             if args.save_to:
                 plt.savefig(f"reference_figures/{args.save_to}_area_histogram.png")
             #plt.show()
@@ -49,10 +56,12 @@ def main(args:argparse.Namespace) -> bool:
         for param in args.scatter_plot.split("%"):
             #assert 'axis_major_length' in table.keys(), "Major Axis Length is not listed in this table!"
             field1, field2 = param.split("^")
+            plt.figure(figsize = (8,6))
             plt.scatter(table[field1], table[field2])
             # plt.xlim(0, 2000)
             # plt.ylim(0,   60)
             plt.title(f"{field1} vs. {field2}")
+            
             if args.save_to:
                 plt.savefig(f"reference_figures/{args.save_to}_{field1}_vs_{field2}_scatter.png")
             else:
@@ -71,11 +80,20 @@ def main(args:argparse.Namespace) -> bool:
                 plt.show()
             #plt.show()
             plt.clf()
+    
+    if args.distances:
+        #print(table)
+        #print(table['centroid-0'])
+        #print(table['centroid-1'])
+
+        points = [(x,y) for x in table['centroid-0'] for y in table['centroid-1']]
         
+
     return True
 
 def find_clumps_skimage(image: PIL.Image, closing_threshold: int, opening_threshold: int, properties: tuple = (" ")): #-> None
     assert properties, "You haven't put any properties!"
+    print(f"Properties: {properties}")
     # image_numpy = skimorph.area_opening(image, area_threshold = 200)
     image = (image > 0.1)
     image_numpy = numpy.asarray(image)
@@ -143,6 +161,12 @@ def get_argparser() -> argparse.ArgumentParser:
         type = str,
         default="",
         help = "Whether or not to generate scatter plots, separated by colons and commas"
+    )
+    parser.add_argument(
+        '--distances',
+        type = int,
+        default=0,
+        help = "Whether or not to generate a histogram of interstomatal distances."
     )
     parser.add_argument(
         '--save_to',

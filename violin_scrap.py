@@ -6,8 +6,6 @@ import src.data
 
 data_dict = {}
 
-
-
 for i in range(1, 15):
     print(i)
     image = src.data.load_image(f"SCD_training_data/source_images/ANNOTATION/cotE{i:02d}_STOMATA_MASKS.tiff", "L")
