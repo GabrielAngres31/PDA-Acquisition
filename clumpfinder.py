@@ -30,7 +30,7 @@ def main(args:argparse.Namespace) -> bool:
 
     if args.distances:
         properties.append("centroid")
-    table = find_clumps_skimage(target_tensor[0], args.closing_threshold, args.opening_threshold, properties = properties)
+    table = find_clumps_skimage(target_tensor[0], args.closing_threshold, args.opening_threshold, save_to=args.save_to, properties = properties)
 
     # TODO: FIGURE OUT How to store the results of O(n^2) distances to a file specific to an image being analyzed
 
@@ -91,19 +91,24 @@ def main(args:argparse.Namespace) -> bool:
 
     return True
 
-def find_clumps_skimage(image: PIL.Image, closing_threshold: int, opening_threshold: int, properties: tuple = (" ")): #-> None
+def find_clumps_skimage(image: PIL.Image, closing_threshold: int, opening_threshold: int, save_to: str, properties: tuple = (" ")): #-> None
+    if not properties:
+        properties = ["label"]
     assert properties, "You haven't put any properties!"
     print(f"Properties: {properties}")
     # image_numpy = skimorph.area_opening(image, area_threshold = 200)
     image = (image > 0.1)
     image_numpy = numpy.asarray(image)
 
+    
+
     #src.data.save_image("example.png", numpy.asarray(image).astype(numpy.float32))
     #print(closing_threshold)
     image_closing = skimorph.area_closing(image_numpy, area_threshold = closing_threshold) #80
     image_opening = skimorph.area_opening(image_closing, area_threshold = opening_threshold) #120
 
-    src.data.save_image("reference_figures/example_both.png", image_opening.astype(numpy.float32))
+    if save_to:
+        src.data.save_image(f"reference_figures/{save_to}.png", image_opening.astype(numpy.float32))
 
     clumps_map = skimm.label(image_opening, connectivity=2) 
     shape = clumps_map.shape

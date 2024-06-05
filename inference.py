@@ -37,6 +37,8 @@ def get_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, required=True, help='Path to saved model')
     parser.add_argument('--input', type=str, required=True, help='Path to input image')
+    parser.add_argument('--close_on', type=int, help='Maximum hole size to remove')
+    parser.add_argument('--open_on', type=int, help='Minimum clump size to keep')
     parser.add_argument(
         '--outputdir', 
         type    = str, 
