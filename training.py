@@ -14,6 +14,7 @@ import src.unet
 
 def main(args:argparse.Namespace) -> bool:
     '''Training entry point'''
+    print(args.trainingsplit)
     trainfiles = src.data.load_splitfile(args.trainingsplit)
     trainfiles = src.data.cache_file_pairs(
         trainfiles, args.cachedir, args.patchsize, overlap=32
