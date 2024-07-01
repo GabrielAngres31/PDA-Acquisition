@@ -22,13 +22,13 @@ old_model_path = "checkpoints/2024-04-22_11h-16m-11s/last.e029.pth"
 #         command = f"python clumps_table.py --input_path=SCD_training_data/source_images/ANNOTATION/cot{i}_STOMATA_MASKS.tiff --output_folder=inference/tables --closing_threshold=80 --opening_threshold=120"
 #         subprocess.run(command, shell=True)
 def clumps_table_auto():
-    i = 1
-    for filename in os.listdir("SCD_training_data/source_images/BASE/basl-2_5dpg_cotyledons"):
-        command_infer = f"python inference.py --model={model_path} --input=SCD_training_data/source_images/BASE/basl-2_5dpg_cotyledons/{filename}"
-        subprocess.run(command_infer, shell=True)
-        command_clump = f"python clumpfinder.py --input_path=inference/{filename}.output.png --closing_threshold=80 --opening_threshold=120 --save_to=basl-2_5dpg_COT{i:02d}"
-        subprocess.run(command_clump, shell=True)
-        i += 1
+#     i = 1
+#     for filename in os.listdir("SCD_training_data/source_images/BASE/basl-2_5dpg_cotyledons"):
+#         command_infer = f"python inference.py --model={model_path} --input=SCD_training_data/source_images/BASE/basl-2_5dpg_cotyledons/{filename}"
+#         subprocess.run(command_infer, shell=True)
+#         command_clump = f"python clumpfinder.py --input_path=inference/{filename}.output.png --closing_threshold=80 --opening_threshold=120 --save_to=basl-2_5dpg_COT{i:02d}"
+#         subprocess.run(command_clump, shell=True)
+#         i += 1
     # print("B")
     # for filename in os.listdir("SCD_training_data/source_images/BASE/trm678_5dpg_cotyledons"):
     #     os.rename(f"SCD_training_data/source_images/BASE/trm678_5dpg_cotyledons/{filename}", f"SCD_training_data/source_images/BASE/trm678_5dpg_cotyledons/{filename.replace(' ', '-')}")
@@ -75,7 +75,7 @@ def clumps_table_auto():
     #     command_clump = f"python clumpfinder.py --input_path=inference/{filename}.output.png --closing_threshold=80 --opening_threshold=120 --save_to=WT_8dpg_true-leaves_TRU{i:02d}"
     #     subprocess.run(command_clump, shell=True)
     #     i += 1
-        # command_infer = f"python clumpfinder.py  --input_path= --output_folder=inference/tables --closing_threshold=80 --opening_threshold=120"
-        # command_clump = f""
+    #     command_infer = f"python clumpfinder.py  --input_path= --output_folder=inference/tables --closing_threshold=80 --opening_threshold=120"
+    #     command_clump = f""
 # clumpfinder_auto("area,axis_major_length")
 clumps_table_auto()
