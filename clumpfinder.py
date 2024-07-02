@@ -18,6 +18,7 @@ import skimage.measure as skimm
 import skimage.morphology as skimorph
 
 import pandas as pd
+import winsound
 
 
 def main(args:argparse.Namespace) -> bool:
@@ -47,8 +48,6 @@ def find_clumps_skimage(image: PIL.Image, closing_threshold: int, opening_thresh
     image = (image > 0.1)
     image_numpy = numpy.asarray(image)
 
-    
-
     #src.data.save_image("example.png", numpy.asarray(image).astype(numpy.float32))
     #print(closing_threshold)
     image_closing = skimorph.area_closing(image_numpy, area_threshold = closing_threshold) #80
@@ -68,6 +67,19 @@ def find_clumps_skimage(image: PIL.Image, closing_threshold: int, opening_thresh
     else:
         props = ('label', 'bbox')
         # ('label', 'bbox', 'area', 'area_bbox', 'axis_major_length', 'axis_minor_length', 'centroid', 'eccentricity', 'area_convex', 'perimeter')
+    winsound.Beep(1318, 300)
+    winsound.Beep(1661, 300)
+    winsound.Beep(1975, 300)
+    winsound.Beep(1661, 300)
+    winsound.Beep(1318, 300)
+    winsound.Beep(1661, 300)
+    winsound.Beep(1975, 300)
+    winsound.Beep(1661, 300)
+    winsound.Beep(1318, 300)
+    winsound.Beep(1661, 300)
+    winsound.Beep(1975, 300)
+    winsound.Beep(1661, 300)
+    winsound.Beep(1318, 300)
     return skimm.regionprops_table(skimm.label(clumps_map), properties = props) #, 'eccentricity'
 
 def get_argparser() -> argparse.ArgumentParser:
