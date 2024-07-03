@@ -52,9 +52,12 @@ def main(args:argparse.Namespace) -> bool:
                    6:"#443983FF", 
                    7:"#440154FF"}
         # df["colors"]=df["dpg"].map(mapping)
-        # group_df = df.groupby(["dpg"])
+        grouped_by_ID = df.groupby("ID")
+        # NOTE: this assumes that all items in a group have the same dpg
+        dpg_by_ID    = [ list(group['dpg'])[0]  for _, group in grouped_by_ID]
+        colors_by_ID = [ mapping[dpg] for dpg in dpg_by_ID ]
         for plot in plots:
-            fig, ax = joypy.joyplot(df, by = "ID", column = plot, fade = True, color = "blue")
+            fig, ax = joypy.joyplot(df, by = "ID", column = plot, fade = True, color = colors_by_ID)
             #fig, axes = joypy.joyplot(df, by="Team", column="Minute", colormap = cmap)
             plt.title(f"Ridgeplot of {plot}")
             plt.savefig(f"reference_figures/visualizers_test/test_{plot}_ridgeplot.png")
