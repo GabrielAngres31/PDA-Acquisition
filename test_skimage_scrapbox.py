@@ -16,6 +16,8 @@ import numpy as np
 #image = skimage.io.imread("SCD_training_data/source_images/stupidtestimage_for_idiots.png", as_gray=True)
 image_inf = skimage.io.imread("inference/cot6.tif.output.png", as_gray=True)
 image_tru = skimage.io.imread("SCD_training_data/source_images/ANNOTATION/cot6_STOMATA_MASKS.tiff", as_gray=True)
+# image_inf = skimage.io.imread("inference/trm678_5_COT_02_SUM_trm678_ML1pmCherry-RCI2A_BRXL2pBRXL2-YFP_5dpg_022322_lif---7_fused_abaxial_merged_rotated-0002.tif.output.png", as_gray=True)
+# image_tru = skimage.io.imread("SCD_training_data/source_images/ANNOTATION/trm678_5_COT_02.tiff", as_gray=True)
 # print(image)
 
 # # apply threshold
@@ -116,7 +118,7 @@ plt.hist(data, bins=bins, alpha=0.5)
 plt.title('IoU data (fixed bin size)')
 plt.xlabel('IoU (bin size = 0.05)')
 plt.ylabel('Count')
-
+plt.savefig("inference/cot6_IoU.png")
 plt.show()
 
 #IoU_reconv = IoU_csr.tocoo()

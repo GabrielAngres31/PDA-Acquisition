@@ -23,5 +23,7 @@ for file in file_list[1:]:
     add_file = add_file.assign(ID = file)
     concat_result = pd.concat([concat_result, add_file])
 
+
+
 pd.DataFrame.to_csv(concat_result, f"{sourcefiles_path}/aggregate.csv")
 print(concat_result.shape[0])

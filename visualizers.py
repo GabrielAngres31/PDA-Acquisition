@@ -11,8 +11,8 @@ import os
 
 def main(args:argparse.Namespace) -> bool:
     df = pd.read_csv(args.source_data)
-    print(args.source_data)
-    print(df)
+    #print(args.source_data)
+    #print(df)
 
     if args.histograms:
         assert not ("ID" in df), "Too many groups!"
@@ -26,42 +26,63 @@ def main(args:argparse.Namespace) -> bool:
             plt.figure(figsize = (8,6))
             plt.hist(df[measure])#, bins=list(range(0, 2000, 120)))
             plt.title(f"{measure}")
-            plt.savefig(f"reference_figures/visualizers_test/test_{measure}_histogram_cot6.png")
+            plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{measure}_histogram_cot6.png")
             plt.clf()
     if args.scatterplots:
         assert not ("ID" in df), "Too many groups!"
         plots=args.scatterplots.split("|")
         for plot in plots:
-            print(plot)
+            #print(plot)
             x,y = plot.split(",")
             plt.figure(figsize = (8,6))
             plt.scatter(df[x], df[y])
             plt.title(f"{x} vs. {y}")
-            plt.savefig(f"reference_figures/visualizers_test/test_{x}_vs_{y}_scatter.png")
+            plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{x}_vs_{y}_scatter.png")
             plt.clf()
 
     if args.ridgeplots:
-        print(df.head())
+        
+        #print(df.head())
         assert "ID" in df, "There's only one group in this DF!"
         plots = [g for g in args.ridgeplots.split(",")]
-        mapping = {1:"#fde725FF", 
+        dpg_mapping = {1:"#fde725FF", 
                    2:"#90d743FF", 
                    3:"#35b779FF", 
                    4:"#21918cFF", 
                    5:"#31688eFF", 
                    6:"#443983FF", 
                    7:"#440154FF"}
-        # df["colors"]=df["dpg"].map(mapping)
+
+        sorted_count_by_id = df.groupby("ID").size().sort_values(ascending=True)
+        sortcount_to_dict = dict(zip([k for k in sorted_count_by_id.keys()], 
+                                     [v for v in sorted_count_by_id.values]))
+        
+
+
+
+        df["num"] = df.apply(lambda row: sortcount_to_dict[row["ID"]], axis=1)
+        #print(df.head())
         grouped_by_ID = df.groupby("ID")
         # NOTE: this assumes that all items in a group have the same dpg
         dpg_by_ID    = [ list(group['dpg'])[0]  for _, group in grouped_by_ID]
-        colors_by_ID = [ mapping[dpg] for dpg in dpg_by_ID ]
+        colors_by_ID = [ dpg_mapping[dpg] for dpg in dpg_by_ID ]
+        
         for plot in plots:
             fig, ax = joypy.joyplot(df, by = "ID", column = plot, fade = True, color = colors_by_ID)
-            #fig, axes = joypy.joyplot(df, by="Team", column="Minute", colormap = cmap)
             plt.title(f"Ridgeplot of {plot}")
-            plt.savefig(f"reference_figures/visualizers_test/test_{plot}_ridgeplot.png")
+            plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{plot}_dpg_ridgeplot.png", bbox_inches = "tight")
             plt.clf()
+        df = df.sort_values("num", ascending=True)
+        print(df.head())
+        for plot in plots:
+            fig, ax = joypy.joyplot(df, by="num", column = plot, fade = True)
+            plt.title(f"Ridgeplot of {plot}")
+            plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{plot}_num_ridgeplot.png", bbox_inches = "tight")
+            plt.clf()
+        # print(str(grouped_by_ID.size()))
+        # print(str(grouped_by_ID.size().sort_values(ascending=True)))
+
+        colors_by_norm = []
 
         # plt.show()
 
@@ -74,6 +95,7 @@ def get_argparser() -> argparse.ArgumentParser:
     parser.add_argument('--histograms', type=str, help='Sets of histograms to build and save')
     parser.add_argument('--scatterplots', type=str, help='Sets of scatterplots to build and save')
     parser.add_argument('--ridgeplots', type=str, help='Sets of ridgeplots to build')
+    parser.add_argument('--save_as', type=str, help='File name to save to')
     return parser
 
 
