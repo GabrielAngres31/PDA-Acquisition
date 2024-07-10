@@ -22,7 +22,16 @@ old_model_path = "checkpoints/2024-04-22_11h-16m-11s/last.e029.pth"
 #         command = f"python clumps_table.py --input_path=SCD_training_data/source_images/ANNOTATION/cot{i}_STOMATA_MASKS.tiff --output_folder=inference/tables --closing_threshold=80 --opening_threshold=120"
 #         subprocess.run(command, shell=True)
 def clumps_table_auto():
-#     i = 1
+    for filename in os.listdir("SCD_training_data/source_images/BASE/UBQ10pLNG1_3dpg_cotyledons"):
+        print(filename)
+        command_infer = f"python inference.py --model={model_path} --input=SCD_training_data/source_images/BASE/UBQ10pLNG1_3dpg_cotyledons/{filename} --overlap=128"
+        subprocess.run(command_infer, shell=True)
+        command_clump = f"python clumps_table.py \
+                        --closing_threshold=80 \
+                        --opening_threshold=120 \
+                        --output_folder=inference/clump_data\
+                        --input_path=inference/{filename}.output.png"
+        subprocess.run(command_clump, shell=True)
 #     for filename in os.listdir("SCD_training_data/source_images/BASE/basl-2_5dpg_cotyledons"):
 #         command_infer = f"python inference.py --model={model_path} --input=SCD_training_data/source_images/BASE/basl-2_5dpg_cotyledons/{filename}"
 #         subprocess.run(command_infer, shell=True)

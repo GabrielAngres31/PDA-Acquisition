@@ -75,7 +75,8 @@ def main(args:argparse.Namespace) -> bool:
         df = df.sort_values("num", ascending=True)
         print(df.head())
         for plot in plots:
-            fig, ax = joypy.joyplot(df, by="num", column = plot, fade = True)
+            # fig, ax = joypy.joyplot(df, by="num", column = plot, fade = True)
+            fig, ax = fig, ax = joypy.joyplot(df.groupby("ID", sort=False), column = plot, fade = True, color = colors_by_ID)
             plt.title(f"Ridgeplot of {plot}")
             plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{plot}_num_ridgeplot.png", bbox_inches = "tight")
             plt.clf()

@@ -22,7 +22,6 @@ def main(args:argparse.Namespace) -> bool:
 
 
 def run_patchwise_inference(model:torch.nn.Module, x:torch.Tensor, overlap:int) -> torch.Tensor:
-    #FIXME: hardcoded patchsize
     input_patches  = src.data.slice_into_patches_with_overlap(x, 256, overlap)
     output_patches = []
     for x_patch in tqdm.tqdm(input_patches):
