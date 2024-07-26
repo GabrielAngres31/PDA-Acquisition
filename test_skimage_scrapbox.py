@@ -115,9 +115,10 @@ print(f"Mean: {np.mean(data)}")
 #plt.xlim([min(data)-0.2, max(data)+0.2])
 
 plt.hist(data, bins=bins, alpha=0.5)
-plt.title('IoU data - trm678')
+plt.title('IoU data - mutant')
 plt.xlabel('IoU (bin size = 0.05)')
 plt.ylabel('Count')
+plt.ylim(0, 180)
 plt.savefig("inference/trm678_IoU.png")
 plt.show()
 

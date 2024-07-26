@@ -2,9 +2,11 @@ import subprocess
 import tqdm
 
 import os
+import glob
 
 model_path = "checkpoints/2024-06-27_11h-31m-26s/last.e029.pth"
 old_model_path = "checkpoints/2024-04-22_11h-16m-11s/last.e029.pth"
+outline_model_path = "checkpoints/2024-07-24_00h-32m-14s/last.e029.pth"
 # def clumpfinder_auto(properties):
 #     for i in tqdm.tqdm(range(1, 15)):
 #         command = f"python clumpfinder.py --input_path=SCD_training_data/source_images/ANNOTATION/cotE{i:02d}_STOMATA_MASKS.tiff --closing_threshold=80 --opening_threshold=120 --scatter_plot=1 --save_to=cotE{i:02d} --properties='{properties}'"
@@ -22,16 +24,57 @@ old_model_path = "checkpoints/2024-04-22_11h-16m-11s/last.e029.pth"
 #         command = f"python clumps_table.py --input_path=SCD_training_data/source_images/ANNOTATION/cot{i}_STOMATA_MASKS.tiff --output_folder=inference/tables --closing_threshold=80 --opening_threshold=120"
 #         subprocess.run(command, shell=True)
 def clumps_table_auto():
-    for filename in os.listdir("SCD_training_data/source_images/BASE/UBQ10pLNG1_3dpg_cotyledons"):
+    # files_list = [
+    #     "basl-2_5_COT_02_rotated_MAX_basl-2_5dpg_110321_1_2_abaxial_merged.tif.output.png",
+    #     "basl-2_5_COT_03_rotated_MAX_basl-2_5dpg_110321_2_1_abaxial_merged.tif.output.png",
+    #     "basl-2_5_COT_04_rotated_MAX_basl-2_5dpg_110321_2_2_abaxial_merged.tif.output.png",
+    #     "cot1_STOMATA_MASKS.tiff",
+    #     "cot2_STOMATA_MASKS.tiff",
+    #     "cot3_STOMATA_MASKS.tiff",
+    #     "cot4_STOMATA_MASKS.tiff",
+    #     "cot5_STOMATA_MASKS.tiff",
+    #     "cot6_STOMATA_MASKS.tiff",
+    #     "cotE01_STOMATA_MASKS.tiff",
+    #     "cotE02_STOMATA_MASKS.tiff",
+    #     "cotE03_STOMATA_MASKS.tiff",
+    #     "cotE04_STOMATA_MASKS.tiff",
+    #     "cotE05_STOMATA_MASKS.tiff",
+    #     "cotE06_STOMATA_MASKS.tiff",
+    #     "cotE07_STOMATA_MASKS.tiff",
+    #     "cotE08_STOMATA_MASKS.tiff",
+    #     "cotE09_STOMATA_MASKS.tiff",
+    #     "cotE10_STOMATA_MASKS.tiff",
+    #     "cotE11_STOMATA_MASKS.tiff",
+    #     "cotE12_STOMATA_MASKS.tiff",
+    #     "cotE13_STOMATA_MASKS.tiff",
+    #     "cotE14_STOMATA_MASKS.tiff",
+    #     "trm678_5_COT_02.tiff",
+    #     "UBQ10pLNG1_3_COT_10.png"
+    # ]
+    # for filename in files_list:
+    for filename in glob.glob("SCD_training_data\\source_images\\ANNOTATION\\OUTLINES\\annotations\\*.tiff"):
         print(filename)
-        command_infer = f"python inference.py --model={model_path} --input=SCD_training_data/source_images/BASE/UBQ10pLNG1_3dpg_cotyledons/{filename} --overlap=128"
-        subprocess.run(command_infer, shell=True)
+        # command_table = f"python clumps_table.py\
+        #                     --model={model_path} \
+        #                     --input=SCD_training_data/source_images/ANNOTATION/{filename} \
+        #                     --overlap=128"
+        # subprocess.run(command_table, shell=True)
         command_clump = f"python clumps_table.py \
-                        --closing_threshold=80 \
-                        --opening_threshold=120 \
-                        --output_folder=inference/clump_data\
-                        --input_path=inference/{filename}.output.png"
+                        --output_folder=inference/clump_data/OUTLINES\
+                        --input_path={filename}"
+                        # --closing_threshold=10000 \
+                        # --opening_threshold=0 \
         subprocess.run(command_clump, shell=True)
+    # for filename in os.listdir("SCD_training_data/source_images/BASE/UBQ10pLNG1_3dpg_cotyledons"):
+    #     print(filename)
+    #     command_infer = f"python inference.py --model={model_path} --input=SCD_training_data/source_images/BASE/UBQ10pLNG1_3dpg_cotyledons/{filename} --overlap=128"
+    #     subprocess.run(command_infer, shell=True)
+    #     command_clump = f"python clumps_table.py \
+    #                     --closing_threshold=80 \
+    #                     --opening_threshold=120 \
+    #                     --output_folder=inference/clump_data\
+    #                     --input_path=inference/{filename}.output.png"
+    #     subprocess.run(command_clump, shell=True)
 #     for filename in os.listdir("SCD_training_data/source_images/BASE/basl-2_5dpg_cotyledons"):
 #         command_infer = f"python inference.py --model={model_path} --input=SCD_training_data/source_images/BASE/basl-2_5dpg_cotyledons/{filename}"
 #         subprocess.run(command_infer, shell=True)

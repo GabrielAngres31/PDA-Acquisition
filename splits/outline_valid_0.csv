@@ -1,0 +1,3 @@
+SCD_training_data\source_images\BASE\cot6.tif,SCD_training_data\source_images\ANNOTATION\OUTLINES\annotations\outline_cot6.tiff
+SCD_training_data\source_images\BASE\basl-2_5dpg_cotyledons\basl-2_5_COT_04_rotated_MAX_basl-2_5dpg_110321_2_2_abaxial_merged.tif,SCD_training_data\source_images\ANNOTATION\OUTLINES\annotations\outline_basl-2_5_COT_04_rotated_MAX_basl-2_5dpg_110321_2_2_abaxial_merged.tif.output.tiff
+SCD_training_data\source_images\BASE\cotE14.tif,SCD_training_data\source_images\ANNOTATION\OUTLINES\annotations\outline_cotE14_STOMATA_MASKS.tiff

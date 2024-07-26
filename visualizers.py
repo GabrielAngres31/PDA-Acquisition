@@ -36,6 +36,7 @@ def main(args:argparse.Namespace) -> bool:
             x,y = plot.split(",")
             plt.figure(figsize = (8,6))
             plt.scatter(df[x], df[y])
+            plt.axis(xmin=0, ymin=0, xmax=args.xmax, ymax=args.ymax)
             plt.title(f"{x} vs. {y}")
             plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{x}_vs_{y}_scatter.png")
             plt.clf()
@@ -62,13 +63,13 @@ def main(args:argparse.Namespace) -> bool:
 
         df["num"] = df.apply(lambda row: sortcount_to_dict[row["ID"]], axis=1)
         #print(df.head())
-        grouped_by_ID = df.groupby("ID")
+        grouped_by_ID = df.groupby("ID", sort=False)
         # NOTE: this assumes that all items in a group have the same dpg
         dpg_by_ID    = [ list(group['dpg'])[0]  for _, group in grouped_by_ID]
         colors_by_ID = [ dpg_mapping[dpg] for dpg in dpg_by_ID ]
         
         for plot in plots:
-            fig, ax = joypy.joyplot(df, by = "ID", column = plot, fade = True, color = colors_by_ID)
+            fig, ax = joypy.joyplot(df.groupby("ID", sort=False), by = "ID", column = plot, fade = True, color = colors_by_ID)
             plt.title(f"Ridgeplot of {plot}")
             plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{plot}_dpg_ridgeplot.png", bbox_inches = "tight")
             plt.clf()
@@ -97,6 +98,9 @@ def get_argparser() -> argparse.ArgumentParser:
     parser.add_argument('--scatterplots', type=str, help='Sets of scatterplots to build and save')
     parser.add_argument('--ridgeplots', type=str, help='Sets of ridgeplots to build')
     parser.add_argument('--save_as', type=str, help='File name to save to')
+    parser.add_argument('--xmax', type=int, help='Length of X axis for scatterplots')
+    parser.add_argument('--ymax', type=int, help='Length of Y axis for scatterplots')
+
     return parser
 
 
