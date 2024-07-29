@@ -52,19 +52,61 @@ def clumps_table_auto():
     #     "UBQ10pLNG1_3_COT_10.png"
     # ]
     # for filename in files_list:
-    for filename in glob.glob("SCD_training_data\\source_images\\ANNOTATION\\OUTLINES\\annotations\\*.tiff"):
-        print(filename)
+
+
+    folders = [file_set[0].split("\\")[-1:][0] for file_set in os.walk("SCD_training_data\\source_images\\Akankshas_files\\")][1:]
+    # print(folders)
+    for folder in folders:
+        print(f"inference\\Akanksha\\{folder}\\*.tif")
+        for filename in tqdm.tqdm(glob.glob(f"SCD_training_data\\source_images\\Akankshas_files\\{folder}\\*.tif")):
+            # command_infer = f"python inference.py --model={outline_model_path}\
+            #     --input={filename}\
+            #     --overlap=128\
+            #     --outputdir=inference/Akanksha/{folder}/"
+            # subprocess.run(command_infer, shell=True)
+
+            command_clump = f"python clumps_table.py \
+                            --output_folder=inference/tables/Akanksha_tables/{folder}\
+                            --input_path={filename}"
+                            # --closing_threshold=10000 \
+                            # --opening_threshold=0 \
+            subprocess.run(command_clump, shell=True)
+                                  
+        # for filename in tqdm.tqdm(glob.glob(f"inference/Akanksha/{folder}")):
+        #     print(filename)
+        #     command_table = f"python clumps_table.py\
+        #                     --model={model_path} \
+        #                     --input={filename} \
+        #                     --overlap=128"
+        #     subprocess.run(command_table, shell=True)
         # command_table = f"python clumps_table.py\
         #                     --model={model_path} \
         #                     --input=SCD_training_data/source_images/ANNOTATION/{filename} \
         #                     --overlap=128"
         # subprocess.run(command_table, shell=True)
-        command_clump = f"python clumps_table.py \
-                        --output_folder=inference/clump_data/OUTLINES\
-                        --input_path={filename}"
-                        # --closing_threshold=10000 \
-                        # --opening_threshold=0 \
-        subprocess.run(command_clump, shell=True)
+        # command_clump = f"python clumps_table.py \
+        #                 --output_folder=inference/clump_data/OUTLINES\
+        #                 --input_path={filename}"
+        #                 # --closing_threshold=10000 \
+        #                 # --opening_threshold=0 \
+        # subprocess.run(command_clump, shell=True)
+
+    # RECENT
+    # for filename in glob.glob("SCD_training_data\\source_images\\ANNOTATION\\OUTLINES\\annotations\\*.tiff"):
+    #     print(filename)
+    #     # command_table = f"python clumps_table.py\
+    #     #                     --model={model_path} \
+    #     #                     --input=SCD_training_data/source_images/ANNOTATION/{filename} \
+    #     #                     --overlap=128"
+    #     # subprocess.run(command_table, shell=True)
+    #     command_clump = f"python clumps_table.py \
+    #                     --output_folder=inference/clump_data/OUTLINES\
+    #                     --input_path={filename}"
+    #                     # --closing_threshold=10000 \
+    #                     # --opening_threshold=0 \
+    #     subprocess.run(command_clump, shell=True)
+
+
     # for filename in os.listdir("SCD_training_data/source_images/BASE/UBQ10pLNG1_3dpg_cotyledons"):
     #     print(filename)
     #     command_infer = f"python inference.py --model={model_path} --input=SCD_training_data/source_images/BASE/UBQ10pLNG1_3dpg_cotyledons/{filename} --overlap=128"
@@ -131,3 +173,7 @@ def clumps_table_auto():
     #     command_clump = f""
 # clumpfinder_auto("area,axis_major_length")
 clumps_table_auto()
+
+# for filename in glob.glob('SCD_training_data\\source_images\\Akankshas_files\\**\\*.tif'):
+#     new_name = '_'.join(filename.split(' '))  # another method 
+#     os.rename(filename, new_name)
