@@ -60,7 +60,7 @@ def find_clumps_skimage(image: PIL.Image): #-> None
     clumps_map = skimm.label(otsu_clr, connectivity=2) 
     # shape = clumps_map.shape
 
-    return skimm.regionprops_table(skimm.label(clumps_map)) #, 'eccentricity'
+    #return skimm.regionprops_table(skimm.label(clumps_map)) #, 'eccentricity'
     return skimm.regionprops_table(skimm.label(clumps_map), 
                                    properties = ('label', 
                                                  'bbox', 
