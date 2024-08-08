@@ -15,7 +15,7 @@ def main(args:argparse.Namespace) -> bool:
     model = torch.load(args.model).eval()
     x     = src.data.load_inputimage(args.input)
     y     = run_patchwise_inference(model, x, args.overlap)
-    outf  = os.path.join(args.outputdir, os.path.basename(args.input)+'.output.png')
+    outf  = os.path.join(args.outputdir, os.path.basename(args.input)+f'{args.outputname}.output.png')
     os.makedirs(os.path.dirname(outf), exist_ok=True)
     src.data.save_image(outf, y[0,0].numpy())
     return True
@@ -45,6 +45,12 @@ def get_argparser() -> argparse.ArgumentParser:
         type    = str, 
         default = './inference/', 
         help    = 'Path to outputfolder'
+    )
+    parser.add_argument(
+        '--outputname', 
+        type    = str, 
+        default = './inference/', 
+        help    = 'Optional suffix before file type'
     )
     return parser
 
