@@ -48,7 +48,7 @@ def run_training(
             loss_list.append(f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" },')
     
     if table_out:
-        with open(f'{table_out}.csv', 'w', newline='') as csv_out:
+        with open(f'{checkpointdir}{table_out}.csv', 'w', newline='') as csv_out:
             csv_out_writer = csv.writer(csv_out, delimiter=',',
                                 quotechar='\"', quoting=csv.QUOTE_MINIMAL)
             [csv_out_writer.writerow(i) for i in loss_list]
