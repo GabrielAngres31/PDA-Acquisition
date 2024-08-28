@@ -7,6 +7,7 @@ import torch
 
 import src.data
 
+import csv
 
 def run_training(
     module:               torch.nn.Module, 
@@ -16,10 +17,13 @@ def run_training(
     batchsize:            int,
     pos_weight:           float,
     checkpointdir:        str,
+    table_out:            str,
     validation_filepairs: src.data.FilePairs|None = None,
 ):
     checkpointdir = os.path.join(checkpointdir, time.strftime(f'%Y-%m-%d_%Hh-%Mm-%Ss'))
     os.makedirs(checkpointdir)
+
+    loss_list = []
 
     module.train()
     optimizer = torch.optim.AdamW(module.parameters(), lr=learning_rate)
@@ -40,7 +44,14 @@ def run_training(
             f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" }'
         )
         torch.save(module, os.path.join(checkpointdir, f'last.e{e:03d}.pth'))
-
+        if table_out:
+            loss_list.append(f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" },')
+    
+    if table_out:
+        with open(f'{table_out}.csv', 'w', newline='') as csv_out:
+            csv_out_writer = csv.writer(csv_out, delimiter=',',
+                                quotechar='\"', quoting=csv.QUOTE_MINIMAL)
+            [csv_out_writer.writerow(i) for i in loss_list]
     return module.eval()
 
 

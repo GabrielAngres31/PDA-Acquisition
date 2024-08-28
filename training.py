@@ -35,7 +35,8 @@ def main(args:argparse.Namespace) -> bool:
         args.batchsize,
         args.pos_weight,
         args.checkpointdir, 
-        validationfiles
+        args.outputcsvdir,
+        validationfiles,
     )
     return True
 
@@ -74,6 +75,12 @@ def get_argparser() -> argparse.ArgumentParser:
         type    = str,
         default = './checkpoints/',
         help    = 'Where to store trained models',
+    )
+    parser.add_argument(
+        '--outputcsvdir',
+        type    = str,
+        default = '',
+        help    = 'Where to store csv of losses and epochs for easy viewing',
     )
     parser.add_argument(
         '--epochs',

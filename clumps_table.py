@@ -30,52 +30,53 @@ def main(args:argparse.Namespace) -> bool:
     # target_tensor = src.data.load_image(args.input_path, "L")
     # table = find_clumps_skimage(target_tensor[0])
     image_in = skimage.io.imread(args.input_path)
-    table = find_clumps_skimage(image_in)
+    table = find_clumps_skimage(image_in, args.prediction_type, args.save_image_as)
 
     # Outline-based image workflow:
     
     
     pd.DataFrame(table).to_csv(f"{args.output_folder}/{Path(args.input_path).stem}.csv")
 
-def find_clumps_skimage(image: PIL.Image): #-> None
-    otsu_trsh_num = threshold_otsu(image)
-    otsu_fill = area_closing(image > otsu_trsh_num, connectivity = square(3), area_threshold = 2500) # Hardcoded dark patch value
-    otsu_invt = skimage.util.invert(image > otsu_trsh_num)
-    
+def find_clumps_skimage(image: PIL.Image, mode:str, saveas: str): #-> None
+    if mode=="outlines":
+        otsu_trsh_num = threshold_otsu(image)
+        otsu_fill = area_closing(image > otsu_trsh_num, connectivity = square(3), area_threshold = 2500) # Hardcoded dark patch value
+        otsu_invt = skimage.util.invert(image > otsu_trsh_num)
 
-    inners = np.logical_and(otsu_fill, otsu_invt)
-    otsu_clr = area_opening(inners, area_threshold = 200)
-    
+        inners = np.logical_and(otsu_fill, otsu_invt)
+        otsu_clr = area_opening(inners, area_threshold = 200)
+        final_image=otsu_clr
+    elif mode=="clumps":
+        image = (image > 0.1)
+        image_numpy = numpy.asarray(image)
 
-    ### FORMER IMAGE PROCESSING STEPS FOR RAW IMAGES/CLUMPS
+        image_closing = skimorph.area_closing(image_numpy, area_threshold = 80) #80
+        image_opening = skimorph.area_opening(image_closing, area_threshold = 120) #120
+        final_image=image_opening
 
-    # image = (image > 0.1)
-    # image_numpy = numpy.asarray(image)
+    if saveas:
+        src.data.save_image(f"reference_figures/{saveas}.png", final_image.astype(numpy.float32))
 
-    # image_closing = skimorph.area_closing(image_numpy, area_threshold = closing_threshold) #80
-    # image_opening = skimorph.area_opening(image_closing, area_threshold = opening_threshold) #120
-
-    
-
-    clumps_map = skimm.label(otsu_clr, connectivity=2) 
+    clumps_map = skimm.label(final_image, connectivity=2) 
     # shape = clumps_map.shape
-
+    print("returning")
     #return skimm.regionprops_table(skimm.label(clumps_map)) #, 'eccentricity'
-    return skimm.regionprops_table(skimm.label(clumps_map), 
-                                   properties = ('label', 
-                                                 'bbox', 
-                                                 'area', 
-                                                 'area_bbox', 
-                                                 'axis_major_length', 
-                                                 'axis_minor_length', 
-                                                 'centroid', 
-                                                 'eccentricity', 
-                                                 'area_convex', 
-                                                 'perimeter',
-                                                 'equivalent_diameter_area',
-                                                 'extent',
-                                                 'orientation')
-                                                 ) #, 'eccentricity'
+    return skimm.regionprops_table(skimm.label(clumps_map)#, 
+                                   #properties = ('label'#, 
+                                                #  'bbox', 
+                                                #  'area', 
+                                                #  'area_bbox', 
+                                                #  'axis_major_length', 
+                                                #  'axis_minor_length', 
+                                                #  'centroid', 
+                                                #  'eccentricity', 
+                                                #  'area_convex', 
+                                                #  'perimeter',
+                                                #  'equivalent_diameter_area',
+                                                #  'extent',
+                                                #  'orientation')
+                                                # )) #, 'eccentricity'
+    )
 
 def get_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
@@ -90,6 +91,18 @@ def get_argparser() -> argparse.ArgumentParser:
         type = str,
         required = True,
         help = 'Which folder to store the output table in.'
+    )
+    parser.add_argument(
+        '--prediction_type',
+        type = str,
+        required = True,
+        choices = ['clumps', 'outlines'],
+        help = 'Whether the mask being read is an outline of the stomata or the stomata themselves.'
+    )
+    parser.add_argument(
+        '--save_image_as',
+        type = str,
+        help = 'Optional - saves an image of the cleaned image to a directory/name.jpg you specify'
     )
     # parser.add_argument(
     #     '--closing_threshold',
