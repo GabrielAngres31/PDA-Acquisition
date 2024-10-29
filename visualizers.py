@@ -10,6 +10,8 @@ import torch
 import os
 
 def main(args:argparse.Namespace) -> bool:
+    # if not args.xmax:
+
     df = pd.read_csv(args.source_data)
     #print(args.source_data)
     #print(df)
@@ -26,7 +28,7 @@ def main(args:argparse.Namespace) -> bool:
             plt.figure(figsize = (8,6))
             plt.hist(df[measure])#, bins=list(range(0, 2000, 120)))
             plt.title(f"{measure}")
-            plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{measure}_histogram_cot6.png")
+            plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{measure}_histogram.png")
             plt.clf()
     if args.scatterplots:
         assert not ("ID" in df), "Too many groups!"
@@ -37,7 +39,7 @@ def main(args:argparse.Namespace) -> bool:
             plt.figure(figsize = (8,6))
             plt.scatter(df[x], df[y])
             plt.axis(xmin=0, ymin=0, xmax=args.xmax, ymax=args.ymax)
-            plt.title(f"{x} vs. {y}")
+            plt.title(f"{x} vs. {y} - {args.save_as}")
             plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{x}_vs_{y}_scatter.png")
             plt.clf()
 
@@ -78,7 +80,7 @@ def main(args:argparse.Namespace) -> bool:
         for plot in plots:
             # fig, ax = joypy.joyplot(df, by="num", column = plot, fade = True)
             fig, ax = fig, ax = joypy.joyplot(df.groupby("ID", sort=False), column = plot, fade = True, color = colors_by_ID)
-            plt.title(f"Ridgeplot of {plot}")
+            plt.title(f"Ridgeplot of {plot} - {args.save_as}")
             plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{plot}_num_ridgeplot.png", bbox_inches = "tight")
             plt.clf()
         # print(str(grouped_by_ID.size()))

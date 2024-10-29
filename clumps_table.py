@@ -38,6 +38,7 @@ def main(args:argparse.Namespace) -> bool:
     pd.DataFrame(table).to_csv(f"{args.output_folder}/{Path(args.input_path).stem}.csv")
 
 def find_clumps_skimage(image: PIL.Image, mode:str, saveas: str): #-> None
+    image = skimage.color.rgb2gray(image)
     if mode=="outlines":
         otsu_trsh_num = threshold_otsu(image)
         otsu_fill = area_closing(image > otsu_trsh_num, connectivity = square(3), area_threshold = 2500) # Hardcoded dark patch value
@@ -47,8 +48,14 @@ def find_clumps_skimage(image: PIL.Image, mode:str, saveas: str): #-> None
         otsu_clr = area_opening(inners, area_threshold = 200)
         final_image=otsu_clr
     elif mode=="clumps":
-        image = (image > 0.1)
-        image_numpy = numpy.asarray(image)
+        
+        #image = (image/255 > 0.95)
+        # print(image)
+        thresh_value = threshold_otsu(image)
+        thresh_image = (image>thresh_value)
+        image_numpy = numpy.asarray(thresh_image)
+
+
 
         image_closing = skimorph.area_closing(image_numpy, area_threshold = 80) #80
         image_opening = skimorph.area_opening(image_closing, area_threshold = 120) #120
@@ -61,22 +68,21 @@ def find_clumps_skimage(image: PIL.Image, mode:str, saveas: str): #-> None
     # shape = clumps_map.shape
     print("returning")
     #return skimm.regionprops_table(skimm.label(clumps_map)) #, 'eccentricity'
-    return skimm.regionprops_table(skimm.label(clumps_map)#, 
-                                   #properties = ('label'#, 
-                                                #  'bbox', 
-                                                #  'area', 
-                                                #  'area_bbox', 
-                                                #  'axis_major_length', 
-                                                #  'axis_minor_length', 
-                                                #  'centroid', 
-                                                #  'eccentricity', 
-                                                #  'area_convex', 
-                                                #  'perimeter',
-                                                #  'equivalent_diameter_area',
-                                                #  'extent',
-                                                #  'orientation')
-                                                # )) #, 'eccentricity'
-    )
+    return skimm.regionprops_table(skimm.label(clumps_map),#, 
+                                   properties = ('label',#, 
+                                                 'bbox', 
+                                                 'area', 
+                                                 #'area_bbox', 
+                                                 'axis_major_length', 
+                                                 'axis_minor_length', 
+                                                 #'centroid', 
+                                                 'eccentricity', 
+                                                 'area_convex', 
+                                                 'perimeter',
+                                                 #'equivalent_diameter_area',
+                                                 #'extent',
+                                                 'orientation')
+                                                ) #, 'eccentricity'
 
 def get_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()

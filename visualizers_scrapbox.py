@@ -7,7 +7,9 @@ import os
 import pandas as pd
 
 import subprocess
+import sys
 
+print(sys.executable)
 
 def scatter_auto():
     for filename in os.listdir("inference/clump_data"):
@@ -89,4 +91,20 @@ def basl_comparator():
     subprocess.run(basl_command, shell=True)
 
 
-basl_comparator()
+# basl_comparator()
+
+dim_list = {"axis_major_length,axis_minor_length":[80,80],
+            "eccentricity,perimeter":[1,250],
+            "area,area_convex":[2500,2500]}
+
+file_list = {"inference/cot1_ANNOT.csv":"cot1", 
+             "inference/cot3_ANNOT.csv":"cot3", 
+             "inference/cot6_ANNOT.csv":"cot6", 
+             "inference/basl-2_5_COT_02_rotated_MAX_basl-2_5dpg_110321_1_2_abaxial_merged_ANNOT.csv":"basl_2",
+             "inference/basl-2_5_COT_03_rotated_MAX_basl-2_5dpg_110321_2_1_abaxial_merged_ANNOT.csv":"basl_3",
+             "inference/basl-2_5_COT_04_rotated_MAX_basl-2_5dpg_110321_2_2_abaxial_merged_ANNOT.csv":"basl_4",
+             }
+
+for file in file_list:
+    for dim in dim_list:
+        subprocess.run(f'python visualizers.py --source_data={file} --scatterplots={dim} --save_as="{file_list[file]}_glance" --xmax={dim_list[dim][0]} --ymax={dim_list[dim][1]}', shell=True)

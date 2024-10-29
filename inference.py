@@ -16,6 +16,9 @@ def main(args:argparse.Namespace) -> bool:
     x     = src.data.load_inputimage(args.input)
     y     = run_patchwise_inference(model, x, args.overlap)
     outf  = os.path.join(args.outputdir, os.path.basename(args.input)+f'{args.outputname}.output.png')
+    # print("DIR_OUTPUT IS:")
+    # print(os.path.dirname(outf))
+    
     os.makedirs(os.path.dirname(outf), exist_ok=True)
     src.data.save_image(outf, y[0,0].numpy())
     return True
@@ -49,7 +52,7 @@ def get_argparser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--outputname', 
         type    = str, 
-        default = './inference/', 
+        default = '', 
         help    = 'Optional suffix before file type'
     )
     return parser

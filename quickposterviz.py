@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt 
 import pandas as pd
 
-df = pd.read_csv("posterstats_amended.csv")
+# df = pd.read_csv("posterstats_amended.csv")
+df = pd.read_csv("inference/match/tables_for_viz/quick_slides_num_ref.csv")
 
 print(df)
 
@@ -17,6 +18,7 @@ dpg_mapping = {#1:"#fde725",
 bar_labels = df.dpg
 bar_colors = [dpg_mapping[i] for i in bar_labels]
 print(bar_colors)
+df["File"] = df["File"].astype("str")
 
 plt.style.use("seaborn-v0_8")
 fig = plt.figure(figsize = (8,6))

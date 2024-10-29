@@ -9,3 +9,11 @@ checkpoints
 cache
 venv
 *.txt
+*.pth
+*.csv
+*.roi
+*.pdn
+*.lif
+*.zip
+*.ald
+*.ijm
