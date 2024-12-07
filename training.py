@@ -17,16 +17,17 @@ def main(args:argparse.Namespace) -> bool:
     print(args.trainingsplit)
     trainfiles = src.data.load_splitfile(args.trainingsplit)
     trainfiles = src.data.cache_file_pairs(
-        trainfiles, args.cachedir, args.patchsize, overlap=32
+        trainfiles, args.cachedir, args.patchsize, args.overlap
     )
     validationfiles = None
     if args.validationsplit is not None:
         validationfiles = src.data.load_splitfile(args.validationsplit)
         validationfiles = src.data.cache_file_pairs(
-            validationfiles, args.cachedir, args.patchsize, overlap=32, clear=False
+            validationfiles, args.cachedir, args.patchsize, args.overlap, clear=False
         )
     
     model = src.unet.UNet()
+    print("AWWAAGA")
     model = src.training_utils.run_training(
         model, 
         trainfiles, 
@@ -35,9 +36,11 @@ def main(args:argparse.Namespace) -> bool:
         args.batchsize,
         args.pos_weight,
         args.checkpointdir, 
+        #args.model_ID,
         args.outputcsv,
         validationfiles,
     )
+    print("HAYUYA")
     return True
 
 
@@ -75,6 +78,19 @@ def get_argparser() -> argparse.ArgumentParser:
         type    = str,
         default = './checkpoints/',
         help    = 'Where to store trained models',
+    )
+    # parser.add_argument(
+    #     'model_ID',
+    #     type = str,
+    #     default = "",
+    #     help = 'Identifier to put before the date in the model name',
+    # )
+
+    parser.add_argument(
+        '--overlap',
+        type    = int,
+        default = 32,
+        help    = 'How much overlap between patches',
     )
     parser.add_argument(
         '--outputcsv',

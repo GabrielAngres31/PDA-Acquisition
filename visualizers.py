@@ -33,11 +33,17 @@ def main(args:argparse.Namespace) -> bool:
     if args.scatterplots:
         assert not ("ID" in df), "Too many groups!"
         plots=args.scatterplots.split("|")
+        cluster_mapping = {1:"#fde725FF",
+                           2:"#21918cFF",
+                           3:"#440154FF"}
         for plot in plots:
             #print(plot)
             x,y = plot.split(",")
             plt.figure(figsize = (8,6))
-            plt.scatter(df[x], df[y])
+            if not ("type" in df):
+                plt.scatter(df[x], df[y])
+            else:
+                plt.scatter(df[x], df[y], c=df["type"].map({3:"#fde725FF", 2:"#21918cFF", 1:"#440154FF"}))
             plt.axis(xmin=0, ymin=0, xmax=args.xmax, ymax=args.ymax)
             plt.title(f"{x} vs. {y} - {args.save_as}")
             plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{x}_vs_{y}_scatter.png")

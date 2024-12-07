@@ -17,10 +17,11 @@ def run_training(
     batchsize:            int,
     pos_weight:           float,
     checkpointdir:        str,
+    # model_ID:             str,
     table_out:            str,
     validation_filepairs: src.data.FilePairs|None = None,
 ):
-    checkpointdir = os.path.join(checkpointdir, time.strftime(f'%Y-%m-%d_%Hh-%Mm-%Ss'))
+    checkpointdir = os.path.join(checkpointdir, time.strftime(f'%Y-%m-%d_%Hh-%Mm-%Ss')) # f"{model_ID}_" + time.strftime(f'%Y-%m-%d_%Hh-%Mm-%Ss'))
     os.makedirs(checkpointdir)
 
     loss_list = []
@@ -54,7 +55,7 @@ def run_training(
             [csv_out_writer.writerow(i) for i in loss_list]
     return module.eval()
 
-
+import torchvision
 def augment(x_batch:torch.Tensor, t_batch:torch.Tensor) -> torch.Tensor:
     '''Perform augmentations on inputs and annotation batches'''
     assert x_batch.ndim == 4 and t_batch.ndim == 4 and len(x_batch) == len(t_batch)
@@ -71,6 +72,12 @@ def augment(x_batch:torch.Tensor, t_batch:torch.Tensor) -> torch.Tensor:
             t_mask  = torch.flip(t_mask, dims=[-1])
         new_x_batch[i] = x_image
         new_t_batch[i] = t_mask
+        
+        x_image = torchvision.transforms.functional.gaussian_blur(
+            x_image, 
+            kernel_size = 3,
+            sigma       = np.random.uniform(0.0, 2.4),
+        )
     return new_x_batch, new_t_batch
 
 

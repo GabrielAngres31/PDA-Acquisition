@@ -93,16 +93,21 @@ def basl_comparator():
 
 # basl_comparator()
 
-dim_list = {"axis_major_length,axis_minor_length":[80,80],
+dim_list = {"axis_major_length,axis_minor_length":[100,100],
             "eccentricity,perimeter":[1,250],
-            "area,area_convex":[2500,2500]}
+            "area,area_convex":[2500,2500],
+            "area,axis_major_length":[3000,100],
+            "area,axis_minor_length":[3000,100]}
 
-file_list = {"inference/cot1_ANNOT.csv":"cot1", 
-             "inference/cot3_ANNOT.csv":"cot3", 
-             "inference/cot6_ANNOT.csv":"cot6", 
-             "inference/basl-2_5_COT_02_rotated_MAX_basl-2_5dpg_110321_1_2_abaxial_merged_ANNOT.csv":"basl_2",
-             "inference/basl-2_5_COT_03_rotated_MAX_basl-2_5dpg_110321_2_1_abaxial_merged_ANNOT.csv":"basl_3",
-             "inference/basl-2_5_COT_04_rotated_MAX_basl-2_5dpg_110321_2_2_abaxial_merged_ANNOT.csv":"basl_4",
+file_list = {#"inference/cot1_ANNOT.csv":"cot1", 
+             #"inference/cot3_ANNOT.csv":"cot3", 
+             #"inference/cot6_ANNOT.csv":"cot6", 
+            #  "inference/basl-2_5_COT_02_rotated_MAX_basl-2_5dpg_110321_1_2_abaxial_merged_ANNOT.csv":"basl_2",
+            #  "inference/basl-2_5_COT_03_rotated_MAX_basl-2_5dpg_110321_2_1_abaxial_merged_ANNOT.csv":"basl_3",
+            #  "inference/basl-2_5_COT_04_rotated_MAX_basl-2_5dpg_110321_2_2_abaxial_merged_ANNOT.csv":"basl_4",
+             "inference/basl-2_5_COT_02_rotated_MAX_basl-2_5dpg_110321_1_2_abaxial_merged_ANNOT_modded.csv":"basl_2",
+             "inference/basl-2_5_COT_03_rotated_MAX_basl-2_5dpg_110321_2_1_abaxial_merged_ANNOT_modded.csv":"basl_3",
+             "inference/basl-2_5_COT_04_rotated_MAX_basl-2_5dpg_110321_2_2_abaxial_merged_ANNOT_modded.csv":"basl_4",
              }
 
 for file in file_list:
