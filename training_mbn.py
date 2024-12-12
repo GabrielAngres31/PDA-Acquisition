@@ -10,25 +10,29 @@ import torchvision
 import src.data
 import src.training_utils_clumpdiff
 import src.unet
+import mbn
 
 
 def main(args:argparse.Namespace) -> bool:
     '''Training entry point'''
-    print(args.trainingsplit)
-    trainfiles = src.data.load_splitfile(args.trainingsplit)
-    trainfiles = src.data.cache_file_pairs(
-        trainfiles, args.cachedir, args.patchsize, args.overlap
-    )
-    validationfiles = None
-    if args.validationsplit is not None:
-        validationfiles = src.data.load_splitfile(args.validationsplit)
-        validationfiles = src.data.cache_file_pairs(
-            validationfiles, args.cachedir, args.patchsize, args.overlap, clear=False
-        )
     
-    model = src.unet.UNet()
-    print("AWWAAGA")
-    model = src.training_utils.run_training(
+    def get_subfolders(path):
+        folders = []
+        for entry in os.scandir(path):
+            if entry.is_dir():
+                folders.append(entry.name)
+        return folders
+    
+    trainfiles = src.data.load_labeled_images(get_subfolders(args.training_folders_parent))
+    validationfiles = None
+    if args.validation_folders_parent is not None:
+        validationfiles - src.data.load_labeled_images(get_subfolders(args.validation_folders_parent))
+    
+    # THE STEPS ABOVE SHOULD GENERATE SOME DATA INSTEAD
+
+    model = mbn.MobileNetV3LC()
+
+    model = src.training_utils_clumpdiff.run_training_mbn(
         model, 
         trainfiles, 
         args.epochs, 
@@ -36,11 +40,9 @@ def main(args:argparse.Namespace) -> bool:
         args.batchsize,
         args.pos_weight,
         args.checkpointdir, 
-        #args.model_ID,
         args.outputcsv,
         validationfiles,
     )
-    print("HAYUYA")
     return True
 
 
@@ -48,49 +50,20 @@ def main(args:argparse.Namespace) -> bool:
 def get_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--trainingsplit', 
-        type     = str, 
-        required = True,
-        help     = '''Path to .csv file containing pairs of input images and 
-        annotations to be used for training'''
+        '--training_folders_parent',
+        type    = str,
+        help = 'Parent folder for labeled folders containing training data.'
     )
     parser.add_argument(
-        '--validationsplit', 
-        type     = str, 
-        required = False,
-        help     = '''Path to .csv file containing pairs of input images and 
-        annotations to be used for validation'''
-    )
-    parser.add_argument(
-        '--patchsize',
-        type    = int,
-        default = 256,
-        help    = 'Size of input patches in pixels'
-    )
-    parser.add_argument(
-        '--cachedir', 
-        type    = str, 
-        default = './cache/', 
-        help    = 'Where to store image patches',
+        '--validation_folders_parent',
+        type    = str,
+        help = 'Parent folder for labeled folders containing validation data.'
     )
     parser.add_argument(
         '--checkpointdir',
         type    = str,
         default = './checkpoints/',
         help    = 'Where to store trained models',
-    )
-    # parser.add_argument(
-    #     'model_ID',
-    #     type = str,
-    #     default = "",
-    #     help = 'Identifier to put before the date in the model name',
-    # )
-
-    parser.add_argument(
-        '--overlap',
-        type    = int,
-        default = 32,
-        help    = 'How much overlap between patches',
     )
     parser.add_argument(
         '--outputcsv',

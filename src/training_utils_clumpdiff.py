@@ -10,15 +10,15 @@ import src.data
 import csv
 
 def run_training_mbn(
-  module: torch.nn.Module,  # Replace with your MobileNet classifier
-  training_filepairs: src.data.FilePairs,
+  module: torch.nn.Module,  # MobileNet Classifier
+  training_folders: src.data.Folders,
   epochs: int,
   learning_rate: float,
   batchsize: int,
   pos_weight: float,
   checkpointdir: str,
   table_out: str = None,
-  validation_filepairs: src.data.FilePairs | None = None,
+  validation_folders: src.data.Folders | None = None,
 ):
   checkpointdir = os.path.join(checkpointdir, time.strftime(f'%Y-%m-%d_%Hh-%Mm-%Ss'))
   os.makedirs(checkpointdir)
@@ -28,11 +28,11 @@ def run_training_mbn(
   module.train()
   optimizer = torch.optim.AdamW(module.parameters(), lr=learning_rate)
   scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, epochs)
-  dataset = src.data.Dataset(training_filepairs)
+  dataset = src.data.Dataset_mbn(training_folders)
   loader = src.data.create_dataloader(dataset, batchsize, shuffle=True)
   vloader = None
-  if validation_filepairs is not None:
-    vdataset = src.data.Dataset(validation_filepairs)
+  if validation_folders is not None:
+    vdataset = src.data.Dataset(validation_folders)
     vloader = src.data.create_dataloader(vdataset, batchsize, shuffle=False)
 
   for e in range(epochs):
@@ -64,7 +64,7 @@ def train_one_epoch_mbn(
   for i, [x, t] in enumerate(loader):
     optimizer.zero_grad()
     y = module(x)
-    loss = torch.nn.functional.binary_cross_entropy_with_logits(
+    loss = torch.nn.functional.cross_entropy(
       y, t, pos_weight=torch.tensor(pos_weight)
     )
     loss.backward()
@@ -80,7 +80,7 @@ def validate_one_epoch_mbn(module: torch.nn.Module, loader: tp.Iterable) -> floa
     with torch.no_grad():
         for i, (x, t) in enumerate(loader):
             y = module(x)
-            loss = torch.nn.functional.binary_cross_entropy_with_logits(y, t)
+            loss = torch.nn.functional.cross_entropy(y, t)
             losses.append(loss.item())
     return np.mean(losses)
 

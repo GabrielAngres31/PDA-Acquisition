@@ -27,7 +27,6 @@ def main(args:argparse.Namespace) -> bool:
         )
     
     model = src.unet.UNet()
-    print("AWWAAGA")
     model = src.training_utils.run_training(
         model, 
         trainfiles, 
@@ -40,7 +39,6 @@ def main(args:argparse.Namespace) -> bool:
         args.outputcsv,
         validationfiles,
     )
-    print("HAYUYA")
     return True
 
 

@@ -105,26 +105,3 @@ def resize_tensor(
     return y
 
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torchvision import models, transforms
-
-# Define the model
-class MobileNetV3LC(nn.Module):
-    def __init__(self, num_classes=2):
-        # super(MobileNetV3LC, self).__init__()
-        self.mobilenet = models.mobilenet_v3_large(weights='DEFAULT', pretrained=True)
-        # Freeze the base model (optional)
-        for param in self.mobilenet.parameters():
-            param.requires_grad = False
-        # Replace the final classification layer
-        self.mobilenet.classifier = nn.Sequential(
-            nn.AdaptiveAvgPool2d((1, 1)),
-            nn.Flatten(),
-            nn.Linear(1024, num_classes)
-        )
-
-    def forward(self, x):
-        x = self.mobilenet(x)
-        return x

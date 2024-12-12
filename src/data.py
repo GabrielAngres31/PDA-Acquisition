@@ -10,6 +10,10 @@ import torchvision
 FilePair  = tp.Tuple[str,str]
 FilePairs = tp.List[FilePair]
 
+Folders = tp.List[str]
+Image_Labeled = tp.Tuple[str, str]
+Images_Labeled = tp.List[Image_Labeled]
+
 def load_splitfile(splitfile:str) -> FilePairs:
     '''Read a .csv file containing paths to input images and annnotations.'''
     text  = open(splitfile, 'r').read()
@@ -28,6 +32,15 @@ def load_splitfile(splitfile:str) -> FilePairs:
         pairs.append((inputpath, annotationpath))
         i+=1
     return pairs
+
+def load_labeled_images(folders:Folders) -> Images_Labeled:
+    '''Take a list of folders and turn them into a list of images labeled with their class (foldernames)'''
+    images_labeled = []
+    for f in Folders:
+        tag = os.path.basename(f)
+        for file in os.listdir(f):
+            images_labeled.append((tag, file))
+    return images_labeled
 
 
 to_tensor = torchvision.transforms.ToTensor()
@@ -109,6 +122,15 @@ class Dataset:
 
         return inputdata, annotationdata
 
+class Dataset_mbn:
+    def init(self, folders:Folders):
+        self.folders = folders
+    
+    def __num__(self):
+        return dict([(os.path.basename(f), os.listdir(f)) for f in self.folders])
+    
+    def __label_mapping__(self):
+        return {os.path.basename(f): i for i, f in enumerate(self.folders)}
 
 def create_dataloader(
     ds:         torch.utils.data.Dataset, 
