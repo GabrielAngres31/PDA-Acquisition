@@ -69,14 +69,15 @@ class UNet(torch.nn.Module):
 
 
 def mobilenet3l_backbone(
-    weights:str|None, input_channels:int = 3
+    # weights:str|None, 
+    input_channels:int = 3
 ) -> tp.Tuple[torch.nn.Module, tp.List[int]]:
-    base = torchvision.models.mobilenet_v3_large(weights=weights).features
+    base = torchvision.models.mobilenet_v3_large(weights='DEFAULT')
     return_layers = {'1':'out0', '3':'out1', '6':'out2', '10':'out3', '16':'out4'}
     backbone = IntermediateLayerGetter(base, return_layers)
     channels = [16, 24, 40, 80, 960]
-    if input_channels != 3:
-        backbone['0'][0] = _clone_conv2d_with_new_input_channels(backbone['0'][0], input_channels)
+    # if input_channels != 3:
+    #     backbone['0'][0] = _clone_conv2d_with_new_input_channels(backbone['0'][0], input_channels)
     return backbone, channels
 
 BACKBONES = {
@@ -85,7 +86,7 @@ BACKBONES = {
     'mobilenet3l': mobilenet3l_backbone,
 }
 
-
+# torchvision.models.mobilenet_v3_large(weights='DEFAULT')
 
 def resize_tensor(
     x:    torch.Tensor, 
@@ -103,3 +104,27 @@ def resize_tensor(
         y = y[0]
     return y
 
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision import models, transforms
+
+# Define the model
+class MobileNetV3LC(nn.Module):
+    def __init__(self, num_classes=2):
+        # super(MobileNetV3LC, self).__init__()
+        self.mobilenet = models.mobilenet_v3_large(weights='DEFAULT', pretrained=True)
+        # Freeze the base model (optional)
+        for param in self.mobilenet.parameters():
+            param.requires_grad = False
+        # Replace the final classification layer
+        self.mobilenet.classifier = nn.Sequential(
+            nn.AdaptiveAvgPool2d((1, 1)),
+            nn.Flatten(),
+            nn.Linear(1024, num_classes)
+        )
+
+    def forward(self, x):
+        x = self.mobilenet(x)
+        return x
