@@ -14,21 +14,24 @@ import src.unet
 
 def main(args:argparse.Namespace) -> bool:
     '''Training entry point'''
-    print(args.trainingfolder)
-    trainfiles = src.data.load_splitfile(args.trainingfolder)
-    trainfiles = src.data.cache_file_pairs(
-        trainfiles, args.cachedir, args.patchsize, args.overlap
-    )
+    trainfiles = src.data.create_dataloader_mbn(args.trainingfolder, batchsize=args.batchsize)
+    # trainfiles = src.data.load_splitfile(args.trainingfolder)
+    # trainfiles = src.data.cache_file_pairs(
+    #     trainfiles, args.cachedir, args.patchsize, args.overlap
+    # )
     validationfiles = None
-    if args.validationsplit is not None:
-        validationfiles = src.data.load_splitfile(args.validationfolder)
-        validationfiles = src.data.cache_file_pairs(
-            validationfiles, args.cachedir, args.patchsize, args.overlap, clear=False
-        )
+
+    if args.validationfolder is not None:
+        validationfiles = src.data.create_dataloader_mbn(args.validationfolder, batchsize=args.batchsize)
+    # if args.validationfiles is not None:
+    #     validationfiles = src.data.load_splitfile(args.validationfolder)
+    #     validationfiles = src.data.cache_file_pairs(
+    #         validationfiles, args.cachedir, args.patchsize, args.overlap, clear=False
+    #     )
     
 
 
-    model = src.unet.UNet() # TODO: CHANGE THE MODEL TO MOBILENET
+    model = torchvision.models.mobilenet_v3_large(weights='DEFAULT')
     model = src.training_utils.run_training_mbn(
         model, 
         trainfiles, 
@@ -60,21 +63,9 @@ def get_argparser() -> argparse.ArgumentParser:
         help     = '''Path to folder containing class-labeled images to be used for validation'''
     )
     parser.add_argument(
-        '--patchsize',
-        type    = int,
-        default = 256,
-        help    = 'Size of input patches in pixels'
-    )
-    parser.add_argument(
-        '--cachedir', 
-        type    = str, 
-        default = './cache/', 
-        help    = 'Where to store image patches',
-    )
-    parser.add_argument(
         '--checkpointdir',
         type    = str,
-        default = './checkpoints/',
+        default = './checkpoints/mbn/',
         help    = 'Where to store trained models',
     )
     # parser.add_argument(
@@ -83,13 +74,6 @@ def get_argparser() -> argparse.ArgumentParser:
     #     default = "",
     #     help = 'Identifier to put before the date in the model name',
     # )
-
-    parser.add_argument(
-        '--overlap',
-        type    = int,
-        default = 32,
-        help    = 'How much overlap between patches',
-    )
     parser.add_argument(
         '--outputcsv',
         type    = str,
@@ -111,13 +95,13 @@ def get_argparser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--batchsize',
         type    = int,
-        default = 8,
+        default = 16,
         help    = 'Number of samples in a batch per training step'
     )
     parser.add_argument(
         '--pos_weight',
         type    = float,
-        default = 5.0,
+        default = 1.0,
         help    = 'Extra training weight on the positive class'
     )
     return parser

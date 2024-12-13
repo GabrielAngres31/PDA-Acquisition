@@ -66,17 +66,17 @@ if __name__ == '__main__':
     print("scround")
     dummy_dataset = "SCD_training_data/mbn_training/classes/"
     test_mbn_dataloader = data.create_dataloader_mbn(
-        ds = torchvision.datasets.ImageFolder(dummy_dataset),
-        batchsize = 32,
-        num_workers = 2
+        ds = torchvision.datasets.ImageFolder(dummy_dataset, transform=data.to_tensor),
+        batchsize = 16,
+        num_workers = 2,
+        shuffle=True
     )
 
     print(isinstance(test_mbn_dataloader, torch.utils.data.DataLoader))
-    print("it's an instance!")
 
 
     print(str(test_mbn_dataloader))
-    for batch in test_mbn_dataloader:
-        print("welp")
-        # images, labels = batch
-        # print(f"Batch Shape: {images.shape}")
+    for i,[x,l] in enumerate(test_mbn_dataloader):
+        images, labels = x, l
+        print(f"Batch Shape: {images.shape}")
+        print(f"Labels: {labels}")

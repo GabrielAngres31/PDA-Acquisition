@@ -137,7 +137,6 @@ def create_dataloader_mbn(
 ) -> torch.utils.data.DataLoader:
     if num_workers == 'auto':
         num_workers = os.cpu_count() or 1
-    print("returning!")
     return torch.utils.data.DataLoader(
         ds, 
         batchsize, 
@@ -145,7 +144,6 @@ def create_dataloader_mbn(
         collate_fn      = getattr(ds, 'collate_fn', None),
         num_workers     = num_workers, 
         pin_memory      = True,
-        transform = to_tensor
         **kw
     )
 
