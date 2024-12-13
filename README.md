@@ -19,17 +19,24 @@ python training.py --trainingsplit=splits/train_0.csv
 #run inference on a file (adjust paths)
 python inference.py --model=checkpoints/2024-06-27_11h-31m-26s/last.e029.pth --input=SCD_training_data/source_images/BASE/cot6.tif --overlap=32
 
-#show insufficiently confident positives in blue and false positives in orange
+# Show insufficiently confident positives in blue and false positives in orange.
+# Requires two annotation files to compare, either hand-generated or machine-generated.
+# Images must be BLACK background, WHITE features
 python errorviz.py --ground_truth=SCD_training_data/source_images/ANNOTATION/cot6_STOMATA_MASKS.tiff  --model_predict=inference/cot6.tif.output.png --show=1
 
-#obtain aggregate data on non-black clump sizes
-# NOTE: Will be replaced by clumps_table.py which generates the table and a separate library of helper functions to generate the figures.
-python clumpfinder.py --input_path=inference/cot6.tif.output.png --closing_threshold=80 --opening_threshold=120 --scatter_plot=1 --area_histogram=1
-python clumpfinder.py --input_path=source_images/ANNOTATION/cot6_STOMATA_MASKS.tif --closing_threshold=80 --opening_threshold=120 --scatter_plot=1 --area_histogram=1
-python clumpfinder.py --input_path=inference/cot6.tif.output.png --closing_threshold=80 --opening_threshold=120 --properties="label,area,axis_major_length,axis_minor_length,centroid,eccentricity,extent,bbox"
+# Obtain aggregate data on non-black clump sizes
 
-# Create ridgeplot of measures
-python visualizers.py --source_data=inference/clump_data/aggregate.csv --ridgeplots="area,axis_major_length,axis_minor_length,eccentricity,extent"
+python clumps_table.py --input_path="C:\Users\Gabriel\Documents\GitHub\PDA-Acquisition\only_pored\ANNOT\basl-2_5_COT_04_rotated_MAX_basl-2_5dpg_110321_2_2_abaxial_merged_ANNOT.png" --output_folder="inference" --prediction_type="clumps" --filter_type="otsu" --save_image_as="basl-2_5_04_128_ANNOT"
+
+# Create scatterplots of measures
+python visualizers.py --source_data=inference/basl-2_5_COT_02_rotated_MAX_basl-2_5dpg_110321_1_2_abaxial_merged_ANNOT_modded.csv --scatterplots="axis_major_length,axis_minor_length|eccentricity,perimeter|area,axis_minor_length|area,axis_major_length" --save_as="basl2-5-02_ANNOT_glance"
+
+# Create ridgeplots of measures
+# YOU MUST HAVE AN ID COLUMN - data comes from multiple leaves
+python visualizers.py --source_data=inference/clump_data/aggregate_folders/aggregate.csv --ridgeplots="area,axis_major_length,axis_minor_length,eccentricity,extent"
+
+# Create histograms of measures
+python visualizers.py --source_data=inference/clump_data/cot6_STOMATA_MASKS.csv --histograms="area,axis_major_length,axis_minor_length,eccentricity"
 ```
 
 

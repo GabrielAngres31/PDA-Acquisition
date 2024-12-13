@@ -82,7 +82,7 @@ def augment(x_batch:torch.Tensor, t_batch:torch.Tensor) -> torch.Tensor:
 
 
 def train_one_epoch(
-    module:     torch.nn.Module, 
+    module:     torch.nn.Module, # TODO: ENSURE CORRECT MODULE (MBN)
     loader:     tp.Iterable, 
     optimizer:  torch.optim.Optimizer,
     pos_weight: float = 5.0,
@@ -111,3 +111,106 @@ def validate_one_epoch(module:torch.nn.Module, loader:tp.Iterable) -> float:
         losses.append(loss.item())
     return np.mean(losses)
 
+# ----- MBN training code
+
+def run_training_mbn(
+    module:               torch.nn.Module, 
+    training_filefolders:   src.data.FilePairs, # TYPE THE CORRECT DATA
+    epochs:               int,
+    learning_rate:        float,
+    batchsize:            int,
+    pos_weight:           float,
+    checkpointdir:        str,
+    # model_ID:             str,
+    table_out:            str,
+    validation_filefolders: src.data.FilePairs|None = None,
+):
+    checkpointdir = os.path.join(checkpointdir, time.strftime(f'%Y-%m-%d_%Hh-%Mm-%Ss')) # f"{model_ID}_" + time.strftime(f'%Y-%m-%d_%Hh-%Mm-%Ss'))
+    os.makedirs(checkpointdir)
+
+    loss_list = []
+
+    module.train()
+    optimizer = torch.optim.AdamW(module.parameters(), lr=learning_rate)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, epochs)
+    dataset   = src.data.Dataset(training_filefolders)
+    loader    = src.data.create_dataloader_mbn(dataset, batchsize, shuffle=True)
+    vloader   = None
+    if validation_filefolders is not None:
+        vdataset = src.data.Dataset(validation_filefolders)
+        vloader  = src.data.create_dataloader_mbn(vdataset, batchsize, shuffle=False)
+    
+    for e in range(epochs):
+        loss = train_one_epoch_mbn(module, loader, optimizer, pos_weight)
+        scheduler.step()
+        if vloader is not None:
+            vloss = validate_one_epoch_mbn(module, vloader)
+        print(
+            f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" }'
+        )
+        torch.save(module, os.path.join(checkpointdir, f'last.e{e:03d}.pth'))
+        if table_out:
+            loss_list.append(f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" },')
+    
+    if table_out:
+        with open(f'{checkpointdir}{table_out}.csv', 'w', newline='') as csv_out:
+            csv_out_writer = csv.writer(csv_out, delimiter=',',
+                                quotechar='\"', quoting=csv.QUOTE_MINIMAL)
+            [csv_out_writer.writerow(i) for i in loss_list]
+    return module.eval()
+
+import torchvision
+def augment_mbn(x_batch:torch.Tensor, t_batch:torch.Tensor) -> torch.Tensor:
+    '''Perform augmentations on inputs and annotation batches'''
+    assert x_batch.ndim == 4 and t_batch.ndim == 4 and len(x_batch) == len(t_batch)
+
+    new_x_batch = x_batch.clone()
+    new_t_batch = t_batch.clone()
+    for i, (x_image, t_mask) in enumerate(zip(x_batch, t_batch)):
+        k = np.random.randint(0,4)
+        x_image = torch.rot90(x_image, k, dims=(-1,-2))
+        t_mask  = torch.rot90(t_mask,  k, dims=(-1,-2))
+
+        if np.random.random() < 0.5:
+            x_image = torch.flip(x_image, dims=[-1])
+            t_mask  = torch.flip(t_mask, dims=[-1])
+        new_x_batch[i] = x_image
+        new_t_batch[i] = t_mask
+        
+        # x_image = torchvision.transforms.functional.gaussian_blur(
+        #     x_image, 
+        #     kernel_size = 3,
+        #     sigma       = np.random.uniform(0.0, 2.4),
+        # )
+    return new_x_batch, new_t_batch
+
+
+def train_one_epoch_mbn(
+    module:     torch.nn.Module, 
+    loader:     tp.Iterable, 
+    optimizer:  torch.optim.Optimizer,
+    pos_weight: float = 5.0,
+) -> float:
+    losses = []
+    for i,[x,t] in enumerate(loader):
+        x,t  = augment(x,t)
+        optimizer.zero_grad()
+        y    = module(x)
+        loss = torch.nn.functional.cross_entropy(
+            y, t, pos_weight=torch.tensor(pos_weight)
+        )
+        loss.backward()
+        optimizer.step()
+
+        losses.append(loss.item())
+        print(f'{i:3d}/{len(loader)} loss={loss.item():.4f}', end='\r')
+    return np.mean(losses)
+
+def validate_one_epoch_mbn(module:torch.nn.Module, loader:tp.Iterable) -> float:
+    losses = []
+    for i,[x,t] in enumerate(loader):
+        with torch.no_grad():
+            y    = module(x)
+        loss = torch.nn.functional.cross_entropy(y, t)
+        losses.append(loss.item())
+    return np.mean(losses)

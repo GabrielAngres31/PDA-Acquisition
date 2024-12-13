@@ -8,31 +8,28 @@ import torch
 import torchvision
 
 import src.data
-import src.training_utils_clumpdiff
+import src.training_utils
 import src.unet
-import mbn
 
 
 def main(args:argparse.Namespace) -> bool:
     '''Training entry point'''
-    
-    def get_subfolders(path):
-        folders = []
-        for entry in os.scandir(path):
-            if entry.is_dir():
-                folders.append(entry.name)
-        return folders
-    
-    trainfiles = src.data.load_labeled_images(get_subfolders(args.training_folders_parent))
+    print(args.trainingfolder)
+    trainfiles = src.data.load_splitfile(args.trainingfolder)
+    trainfiles = src.data.cache_file_pairs(
+        trainfiles, args.cachedir, args.patchsize, args.overlap
+    )
     validationfiles = None
-    if args.validation_folders_parent is not None:
-        validationfiles - src.data.load_labeled_images(get_subfolders(args.validation_folders_parent))
+    if args.validationsplit is not None:
+        validationfiles = src.data.load_splitfile(args.validationfolder)
+        validationfiles = src.data.cache_file_pairs(
+            validationfiles, args.cachedir, args.patchsize, args.overlap, clear=False
+        )
     
-    # THE STEPS ABOVE SHOULD GENERATE SOME DATA INSTEAD
 
-    model = mbn.MobileNetV3LC()
 
-    model = src.training_utils_clumpdiff.run_training_mbn(
+    model = src.unet.UNet() # TODO: CHANGE THE MODEL TO MOBILENET
+    model = src.training_utils.run_training_mbn(
         model, 
         trainfiles, 
         args.epochs, 
@@ -40,6 +37,7 @@ def main(args:argparse.Namespace) -> bool:
         args.batchsize,
         args.pos_weight,
         args.checkpointdir, 
+        #args.model_ID,
         args.outputcsv,
         validationfiles,
     )
@@ -50,20 +48,47 @@ def main(args:argparse.Namespace) -> bool:
 def get_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--training_folders_parent',
-        type    = str,
-        help = 'Parent folder for labeled folders containing training data.'
+        '--trainingfolder', 
+        type     = str, 
+        required = True,
+        help     = '''Path to folder containing class-labeled images to be used for training'''
     )
     parser.add_argument(
-        '--validation_folders_parent',
-        type    = str,
-        help = 'Parent folder for labeled folders containing validation data.'
+        '--validationfolder', 
+        type     = str, 
+        required = False,
+        help     = '''Path to folder containing class-labeled images to be used for validation'''
+    )
+    parser.add_argument(
+        '--patchsize',
+        type    = int,
+        default = 256,
+        help    = 'Size of input patches in pixels'
+    )
+    parser.add_argument(
+        '--cachedir', 
+        type    = str, 
+        default = './cache/', 
+        help    = 'Where to store image patches',
     )
     parser.add_argument(
         '--checkpointdir',
         type    = str,
         default = './checkpoints/',
         help    = 'Where to store trained models',
+    )
+    # parser.add_argument(
+    #     'model_ID',
+    #     type = str,
+    #     default = "",
+    #     help = 'Identifier to put before the date in the model name',
+    # )
+
+    parser.add_argument(
+        '--overlap',
+        type    = int,
+        default = 32,
+        help    = 'How much overlap between patches',
     )
     parser.add_argument(
         '--outputcsv',

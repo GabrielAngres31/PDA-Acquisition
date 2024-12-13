@@ -10,10 +10,6 @@ import torchvision
 FilePair  = tp.Tuple[str,str]
 FilePairs = tp.List[FilePair]
 
-Folders = tp.List[str]
-Image_Labeled = tp.Tuple[str, str]
-Images_Labeled = tp.List[Image_Labeled]
-
 def load_splitfile(splitfile:str) -> FilePairs:
     '''Read a .csv file containing paths to input images and annnotations.'''
     text  = open(splitfile, 'r').read()
@@ -32,16 +28,6 @@ def load_splitfile(splitfile:str) -> FilePairs:
         pairs.append((inputpath, annotationpath))
         i+=1
     return pairs
-
-def load_labeled_images(folders:Folders) -> Images_Labeled:
-    '''Take a list of folders and turn them into a list of images labeled with their class (foldernames)'''
-    images_labeled = []
-    for f in Folders:
-        tag = os.path.basename(f)
-        for file in os.listdir(f):
-            images_labeled.append((tag, file))
-    return images_labeled
-
 
 to_tensor = torchvision.transforms.ToTensor()
 
@@ -122,16 +108,6 @@ class Dataset:
 
         return inputdata, annotationdata
 
-class Dataset_mbn:
-    def init(self, folders:Folders):
-        self.folders = folders
-    
-    def __num__(self):
-        return dict([(os.path.basename(f), os.listdir(f)) for f in self.folders])
-    
-    def __label_mapping__(self):
-        return {os.path.basename(f): i for i, f in enumerate(self.folders)}
-
 def create_dataloader(
     ds:         torch.utils.data.Dataset, 
     batchsize:  int, 
@@ -152,7 +128,26 @@ def create_dataloader(
         **kw
     )
 
-
+def create_dataloader_mbn(
+        ds:     torchvision.datasets.ImageFolder,
+        batchsize:  int,
+        shuffle:    bool=False,
+        num_workers:int|tp.Literal['auto'] = 'auto', 
+        **kw
+) -> torch.utils.data.DataLoader:
+    if num_workers == 'auto':
+        num_workers = os.cpu_count() or 1
+    print("returning!")
+    return torch.utils.data.DataLoader(
+        ds, 
+        batchsize, 
+        shuffle, 
+        collate_fn      = getattr(ds, 'collate_fn', None),
+        num_workers     = num_workers, 
+        pin_memory      = True,
+        transform = to_tensor
+        **kw
+    )
 
 def grid_for_patches(
     imageshape:tp.Tuple[int,int]|torch.Size, patchsize:int, slack:int
@@ -215,3 +210,5 @@ def stitch_overlapping_patches(
         out[...,di[0]:di[2], di[1]:di[3]] = patch[...,gi[0]:gi[2], gi[1]:gi[3]]
     return out
 
+if __name__ == '__main__':
+    pass
