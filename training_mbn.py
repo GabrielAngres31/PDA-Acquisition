@@ -14,7 +14,7 @@ import src.unet
 
 def main(args:argparse.Namespace) -> bool:
     '''Training entry point'''
-    trainfiles = src.data.create_dataloader_mbn(args.trainingfolder, batchsize=args.batchsize)
+    trainfiles = args.trainingfolder
     # trainfiles = src.data.load_splitfile(args.trainingfolder)
     # trainfiles = src.data.cache_file_pairs(
     #     trainfiles, args.cachedir, args.patchsize, args.overlap
@@ -22,7 +22,7 @@ def main(args:argparse.Namespace) -> bool:
     validationfiles = None
 
     if args.validationfolder is not None:
-        validationfiles = src.data.create_dataloader_mbn(args.validationfolder, batchsize=args.batchsize)
+        validationfiles = args.validationfolder,
     # if args.validationfiles is not None:
     #     validationfiles = src.data.load_splitfile(args.validationfolder)
     #     validationfiles = src.data.cache_file_pairs(
@@ -32,6 +32,7 @@ def main(args:argparse.Namespace) -> bool:
 
 
     model = torchvision.models.mobilenet_v3_large(weights='DEFAULT')
+    assert isinstance(trainfiles, tp.Iterable), "WOOPS"
     model = src.training_utils.run_training_mbn(
         model, 
         trainfiles, 

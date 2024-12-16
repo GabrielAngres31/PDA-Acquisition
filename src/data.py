@@ -107,6 +107,19 @@ class Dataset:
         assert inputdata.shape[-2:] == annotationdata.shape[-2:]
 
         return inputdata, annotationdata
+    
+class Dataset_mbn:
+    '''mbn Dataset Class'''
+    def __init__(self, files):
+        self.files = files
+
+    def __len__(self):
+        pass
+
+    def __getitem(self, i:int):
+        file = self.files[i]
+        file_tensor = to_tensor(file)
+        return file_tensor
 
 def create_dataloader(
     ds:         torch.utils.data.Dataset, 
@@ -135,6 +148,7 @@ def create_dataloader_mbn(
         num_workers:int|tp.Literal['auto'] = 'auto', 
         **kw
 ) -> torch.utils.data.DataLoader:
+    print("running this - DEBUG")
     if num_workers == 'auto':
         num_workers = os.cpu_count() or 1
     return torch.utils.data.DataLoader(

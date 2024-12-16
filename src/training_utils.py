@@ -115,7 +115,7 @@ def validate_one_epoch(module:torch.nn.Module, loader:tp.Iterable) -> float:
 
 def run_training_mbn(
     module:               torch.nn.Module, 
-    training_files, #:   src.data.FilePairs, # TYPE THE CORRECT DATA
+    training_folders:     torchvision.datasets.ImageFolder, 
     epochs:               int,
     learning_rate:        float,
     batchsize:            int,
@@ -133,11 +133,11 @@ def run_training_mbn(
     module.train()
     optimizer = torch.optim.AdamW(module.parameters(), lr=learning_rate)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, epochs)
-    dataset   = src.data.Dataset(training_files)
+    dataset   = torchvision.datasets.ImageFolder(training_folders)
     loader    = src.data.create_dataloader_mbn(dataset, batchsize, shuffle=True)
     vloader   = None
     if validation_files is not None:
-        vdataset = src.data.Dataset(validation_files)
+        vdataset = torchvision.datasets.ImageFolder(validation_files)
         vloader  = src.data.create_dataloader_mbn(vdataset, batchsize, shuffle=False)
     
     for e in range(epochs):
@@ -189,6 +189,11 @@ def train_one_epoch_mbn(
 ) -> float:
     losses = []
     assert str(loader)[1:39] == "torch.utils.data.dataloader.DataLoader", f"{str(loader)[1:39]} is not 'torch.utils.data.dataloader.DataLoader'"
+    # print("Well, is it subscriptable?")
+    for batch in loader:
+        data, labels = batch
+        print(data)
+        print(labels)
     for i,[x,l] in enumerate(loader):
         print("a")
         x  = augment_mbn(x)
