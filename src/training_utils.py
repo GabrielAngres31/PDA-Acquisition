@@ -133,11 +133,11 @@ def run_training_mbn(
     module.train()
     optimizer = torch.optim.AdamW(module.parameters(), lr=learning_rate)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, epochs)
-    dataset   = torchvision.datasets.ImageFolder(training_folders)
+    dataset   = torchvision.datasets.ImageFolder(training_folders, transform=src.data.to_tensor)
     loader    = src.data.create_dataloader_mbn(dataset, batchsize, shuffle=True)
     vloader   = None
     if validation_files is not None:
-        vdataset = torchvision.datasets.ImageFolder(validation_files)
+        vdataset = torchvision.datasets.ImageFolder(validation_files, transform=src.data.to_tensor)
         vloader  = src.data.create_dataloader_mbn(vdataset, batchsize, shuffle=False)
     
     for e in range(epochs):
@@ -166,8 +166,11 @@ def augment_mbn(x_batch:torch.Tensor) -> torch.Tensor:
     new_x_batch = x_batch.clone()
     
     for i, (x_image) in enumerate(zip(x_batch)):
+        # print(i)
+        # print(x_image[0])
         k = np.random.randint(0,4)
-        x_image = torch.rot90(x_image, k, dims=(-1,-2))
+        # x_image = tuple(torch.rot90(x_image[0], k, dims=(-1,-2)))
+        x_image = torch.rot90(x_image[0], k, dims=(-1,-2))
 
         if np.random.random() < 0.5:
             x_image = torch.flip(x_image, dims=[-1])
@@ -190,20 +193,16 @@ def train_one_epoch_mbn(
     losses = []
     assert str(loader)[1:39] == "torch.utils.data.dataloader.DataLoader", f"{str(loader)[1:39]} is not 'torch.utils.data.dataloader.DataLoader'"
     # print("Well, is it subscriptable?")
-    for batch in loader:
-        data, labels = batch
-        print(data)
-        print(labels)
     for i,[x,l] in enumerate(loader):
-        print("a")
+        # print("a")
         x  = augment_mbn(x)
-        print("a")
+        # print("a")
         optimizer.zero_grad()
-        print("a")
+        # print("a")
         y    = module(x)
-        print("a")
+        # print("a")
         loss = torch.nn.functional.cross_entropy(
-            y, l, pos_weight=torch.tensor(pos_weight)
+            y, l
         )
         loss.backward()
         optimizer.step()

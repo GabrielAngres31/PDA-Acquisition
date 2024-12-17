@@ -62,21 +62,42 @@ import torch
 import torchvision
 
 
-if __name__ == '__main__':
-    print("scround")
-    dummy_dataset = "SCD_training_data/mbn_training/classes/"
-    test_mbn_dataloader = data.create_dataloader_mbn(
-        ds = torchvision.datasets.ImageFolder(dummy_dataset, transform=data.to_tensor),
-        batchsize = 16,
-        num_workers = 2,
-        shuffle=True
-    )
+# if __name__ == '__main__':
+#     print("scround")
+#     dummy_dataset = "SCD_training_data/mbn_training/classes/"
+#     test_mbn_dataloader = data.create_dataloader_mbn(
+#         ds = torchvision.datasets.ImageFolder(dummy_dataset, transform=data.to_tensor),
+#         batchsize = 16,
+#         num_workers = 2,
+#         shuffle=True
+#     )
 
-    print(isinstance(test_mbn_dataloader, torch.utils.data.DataLoader))
+#     print(isinstance(test_mbn_dataloader, torch.utils.data.DataLoader))
 
 
-    print(str(test_mbn_dataloader))
-    for i,[x,l] in enumerate(test_mbn_dataloader):
-        images, labels = x, l
-        print(f"Batch Shape: {images.shape}")
-        print(f"Labels: {labels}")
+#     print(str(test_mbn_dataloader))
+#     for i,[x,l] in enumerate(test_mbn_dataloader):
+#         images, labels = x, l
+#         print(f"Batch Shape: {images.shape}")
+#         print(f"Labels: {labels}")
+
+annotpath = "only_pored/ANNOT"
+basepath = "only_pored/BASE"
+
+
+annotset = set([os.path.basename(i) for i in os.listdir(annotpath)])
+baseset = set([os.path.basename(i) for i in os.listdir(basepath)])
+
+diff = list(annotset-baseset)
+
+for d in diff:
+    a = True
+    b = True
+    if d not in annotset:
+        a = False
+        print(f"{d} is not present in annotset")
+    if d not in baseset:
+        assert d in annotset
+        b = False
+        print(f"{d} is not present in baseset")
+    assert a or b, "Welp"
