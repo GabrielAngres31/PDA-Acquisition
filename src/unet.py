@@ -69,7 +69,7 @@ class UNet(torch.nn.Module):
 
 
 def mobilenet3l_backbone(
-    # weights:str|None, 
+    weights:str|None, 
     input_channels:int = 3
 ) -> tp.Tuple[torch.nn.Module, tp.List[int]]:
     base = torchvision.models.mobilenet_v3_large(weights='DEFAULT')
