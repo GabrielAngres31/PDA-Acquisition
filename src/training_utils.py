@@ -75,8 +75,8 @@ def augment(x_batch:torch.Tensor, t_batch:torch.Tensor) -> torch.Tensor:
         
         x_image = torchvision.transforms.functional.gaussian_blur(
             x_image, 
-            kernel_size = 3,
-            sigma       = np.random.uniform(0.0, 2.4),
+            kernel_size = np.random.choice([3, 5, 7]),
+            sigma       = np.random.uniform(0.0, 3),
         )
     return new_x_batch, new_t_batch
 
