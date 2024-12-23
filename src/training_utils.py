@@ -4,6 +4,8 @@ import typing as tp
 
 import numpy as np
 import torch
+import torchvision
+from torchvision import transforms as tf
 
 import src.data
 
@@ -24,7 +26,10 @@ def run_training(
     checkpointdir = os.path.join(checkpointdir, time.strftime(f'%Y-%m-%d_%Hh-%Mm-%Ss')) # f"{model_ID}_" + time.strftime(f'%Y-%m-%d_%Hh-%Mm-%Ss'))
     os.makedirs(checkpointdir)
 
-    loss_list = []
+    mean_loss_list = []
+    all_loss_list = []
+    mean_vloss_list = []
+    all_vloss_list = []
 
     module.train()
     optimizer = torch.optim.AdamW(module.parameters(), lr=learning_rate)
@@ -35,24 +40,45 @@ def run_training(
     if validation_filepairs is not None:
         vdataset = src.data.Dataset(validation_filepairs)
         vloader  = src.data.create_dataloader(vdataset, batchsize, shuffle=False)
-    
+    print("Begun run_training")
     for e in range(epochs):
-        loss = train_one_epoch(module, loader, optimizer, pos_weight)
+        loss_info = train_one_epoch(module, loader, optimizer, pos_weight)
+        loss, loss_all = loss_info["mean"], loss_info["losses"]
         scheduler.step()
         if vloader is not None:
-            vloss = validate_one_epoch(module, vloader)
+            vloss_info = validate_one_epoch(module, vloader)
+            vloss, vloss_all = vloss_info["mean"], loss_info["losses"]
+        
         print(
             f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" }'
         )
         torch.save(module, os.path.join(checkpointdir, f'last.e{e:03d}.pth'))
         if table_out:
-            loss_list.append(f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" },')
+            mean_loss_list.append(f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" },')
+            [all_loss_list.append(f'{e}\t{l:.5f}') for l in loss_all]
+            [all_vloss_list.append(f'{e}\t{l:.5f}') for l in vloss_all]
+        print("write Z")
+
+
     
     if table_out:
         with open(f'{checkpointdir}{table_out}.csv', 'w', newline='') as csv_out:
             csv_out_writer = csv.writer(csv_out, delimiter=',',
                                 quotechar='\"', quoting=csv.QUOTE_MINIMAL)
-            [csv_out_writer.writerow(i) for i in loss_list]
+            [csv_out_writer.writerow([i]) for i in mean_loss_list]
+        with open(f'{checkpointdir}{table_out}_all.csv', 'w', newline='') as csv_all_out:
+            csv_out_all_writer = csv.writer(csv_all_out, delimiter=',',
+                                quotechar='\"', quoting=csv.QUOTE_MINIMAL)
+            [csv_out_all_writer.writerow([i]) for i in all_loss_list]
+        with open(f'{checkpointdir}{table_out}_V.csv', 'w', newline='') as csv_out_v:
+            csv_out_writer_v = csv.writer(csv_out_v, delimiter=',',
+                                quotechar='\"', quoting=csv.QUOTE_MINIMAL)
+            [csv_out_writer_v.writerow([i]) for i in mean_vloss_list]
+        with open(f'{checkpointdir}{table_out}_all_V.csv', 'w', newline='') as csv_all_out_v:
+            csv_out_all_writer_v = csv.writer(csv_all_out_v, delimiter=',',
+                                quotechar='\"', quoting=csv.QUOTE_MINIMAL)
+            [csv_out_all_writer_v.writerow([i]) for i in all_vloss_list]
+        
     return module.eval()
 
 import torchvision
@@ -73,11 +99,26 @@ def augment(x_batch:torch.Tensor, t_batch:torch.Tensor) -> torch.Tensor:
         new_x_batch[i] = x_image
         new_t_batch[i] = t_mask
         
-        x_image = torchvision.transforms.functional.gaussian_blur(
-            x_image, 
-            kernel_size = np.random.choice([3, 5, 7]),
-            sigma       = np.random.uniform(0.0, 3),
-        )
+        transform_code = np.random.randint(1,4)
+        noise = transform_code >> 1
+        blur = transform_code & 1
+
+        # if np.random.random() < 0.5:
+        if noise:
+            gauss_noise = tf.v2.GaussianNoise()
+            x_image=gauss_noise(x_image)
+            pass #NOISING
+
+        # if np.random.random() < 0.5:
+        if blur:
+            x_image = torchvision.transforms.functional.gaussian_blur(
+                x_image, 
+                kernel_size = int(np.random.choice([3, 5, 7])),
+                sigma       = np.random.uniform(0.0, 3),
+            )
+        
+
+
     return new_x_batch, new_t_batch
 
 
@@ -100,7 +141,7 @@ def train_one_epoch(
 
         losses.append(loss.item())
         print(f'{i:3d}/{len(loader)} loss={loss.item():.4f}', end='\r')
-    return np.mean(losses)
+    return {"mean":np.mean(losses), "losses":losses}
 
 def validate_one_epoch(module:torch.nn.Module, loader:tp.Iterable) -> float:
     losses = []
@@ -109,7 +150,7 @@ def validate_one_epoch(module:torch.nn.Module, loader:tp.Iterable) -> float:
             y    = module(x)
         loss = torch.nn.functional.binary_cross_entropy_with_logits(y, t)
         losses.append(loss.item())
-    return np.mean(losses)
+    return {"mean":np.mean(losses), "losses":losses}
 
 # ----- MBN training code
 
@@ -139,9 +180,12 @@ def run_training_mbn(
     if validation_files is not None:
         vdataset = torchvision.datasets.ImageFolder(validation_files, transform=src.data.to_tensor)
         vloader  = src.data.create_dataloader_mbn(vdataset, batchsize, shuffle=False)
-    
+
     for e in range(epochs):
-        loss = train_one_epoch_mbn(module, loader, optimizer, pos_weight)
+        loss_info = train_one_epoch_mbn(module, loader, optimizer, pos_weight)
+
+        loss, losses = loss_info["mean"], loss_info["losses"]
+
         scheduler.step()
         if vloader is not None:
             vloss = validate_one_epoch_mbn(module, vloader)
@@ -151,6 +195,11 @@ def run_training_mbn(
         torch.save(module, os.path.join(checkpointdir, f'last.e{e:03d}.pth'))
         if table_out:
             loss_list.append(f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" },')
+            
+            with open(f'{checkpointdir}{table_out}_cloud.csv', 'w', newline='') as csv_points_out:
+                csv_points_writer = csv.writer(csv_points_out, delimiter=',',
+                                    quotechar='\"', quoting=csv.QUOTE_MINIMAL)
+                [csv_points_writer.writerow([f"Epoch: {e:3d}", l]) for l in losses]
     
     if table_out:
         with open(f'{checkpointdir}{table_out}.csv', 'w', newline='') as csv_out:

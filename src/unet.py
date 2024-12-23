@@ -72,7 +72,7 @@ def mobilenet3l_backbone(
     weights:str|None, 
     input_channels:int = 3
 ) -> tp.Tuple[torch.nn.Module, tp.List[int]]:
-    base = torchvision.models.mobilenet_v3_large(weights='DEFAULT')
+    base = torchvision.models.mobilenet_v3_large(weights='DEFAULT').features
     return_layers = {'1':'out0', '3':'out1', '6':'out2', '10':'out3', '16':'out4'}
     backbone = IntermediateLayerGetter(base, return_layers)
     channels = [16, 24, 40, 80, 960]
