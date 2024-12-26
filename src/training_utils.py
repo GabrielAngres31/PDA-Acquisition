@@ -5,7 +5,8 @@ import typing as tp
 import numpy as np
 import torch
 import torchvision
-from torchvision import transforms as tf
+import torchvision.transforms.v2 as tfv2
+# from torchvision import transforms as tf
 
 import src.data
 
@@ -103,11 +104,29 @@ def augment(x_batch:torch.Tensor, t_batch:torch.Tensor) -> torch.Tensor:
         noise = transform_code >> 1
         blur = transform_code & 1
 
+        def add_black_squares(img_tensor, num_squares=3):
+
+            height, width, channels = img_tensor.shape
+            def add_single_square():
+                
+                x = torch.randint(0, width - 2, (1,)).item() 
+                y = torch.randint(0, height - 2, (1,)).item()
+
+                square = torch.zeros((3, 3, channels))
+                img_tensor[y:y+3, x:x+3, :] = square
+
+            for _ in range(num_squares):                
+                add_single_square()
+            return img_tensor
+        
+        if np.random.random() < 0.05:
+            x_image = add_black_squares(x_image, num_squares=3)
+
         # if np.random.random() < 0.5:
         if noise:
-            gauss_noise = tf.v2.GaussianNoise()
+            gauss_noise = tfv2.GaussianNoise()
             x_image=gauss_noise(x_image)
-            pass #NOISING
+            # pass #NOISING
 
         # if np.random.random() < 0.5:
         if blur:
@@ -116,7 +135,7 @@ def augment(x_batch:torch.Tensor, t_batch:torch.Tensor) -> torch.Tensor:
                 kernel_size = int(np.random.choice([3, 5, 7])),
                 sigma       = np.random.uniform(0.0, 3),
             )
-        
+            
 
 
     return new_x_batch, new_t_batch
@@ -128,13 +147,47 @@ def train_one_epoch(
     optimizer:  torch.optim.Optimizer,
     pos_weight: float = 5.0,
 ) -> float:
+
+    import torch.nn.functional as F
+
+    def weighted_binary_cross_entropy_with_logits(logits, targets, weights):
+        """
+        Calculates binary cross entropy with logits with weights.
+
+        Args:
+            logits: Predicted logits.
+            targets: Ground truth targets (0 or 1).
+            weights: Weights for each pixel.
+
+        Returns:
+            Weighted binary cross entropy loss.
+        """
+        loss = torch.nn.functional.binary_cross_entropy_with_logits(logits, targets, reduction='none')
+        weighted_loss = loss * weights
+        return torch.mean(weighted_loss)
+
+    def distance_weights(image_size:tuple, center_weight:float=5.0, edge_weight:float=1.0):
+        height, width = image_size
+        y_coords, x_coords = torch.meshgrid(torch.arange(height), torch.arange(width), indexing='ij')
+        center_y, center_x = height // 2, width // 2
+        
+        distances = torch.sqrt( (y_coords - center_y) ** 2 + (x_coords - center_x) ** 2 )
+        max_distance = torch.max(distances)
+        normalized_distances = distances / max_distance
+        
+        weights = center_weight - (center_weight - edge_weight) * normalized_distances
+        return weights
+       
     losses = []
     for i,[x,t] in enumerate(loader):
         x,t  = augment(x,t)
         optimizer.zero_grad()
         y    = module(x)
-        loss = torch.nn.functional.binary_cross_entropy_with_logits(
-            y, t, pos_weight=torch.tensor(pos_weight)
+        # loss = torch.nn.functional.binary_cross_entropy_with_logits(
+        #     y, t, pos_weight=torch.tensor(pos_weight)
+        # )
+        loss = weighted_binary_cross_entropy_with_logits(
+            y, t, distance_weights(tuple(x.size()[2:]))
         )
         loss.backward()
         optimizer.step()
