@@ -57,12 +57,15 @@ def run_training(
         if table_out:
             mean_loss_list.append(f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" },')
             [all_loss_list.append(f'{e}\t{l:.5f}') for l in loss_all]
-            [all_vloss_list.append(f'{e}\t{l:.5f}') for l in vloss_all]
-        print("write Z")
+            [all_vloss_list.append(f'{e}\t{v:.5f}') for v in vloss_all]
 
 
     
     if table_out:
+        print(mean_loss_list)
+        print(all_loss_list)
+        print(mean_vloss_list)
+        print(all_vloss_list)
         with open(f'{checkpointdir}{table_out}.csv', 'w', newline='') as csv_out:
             csv_out_writer = csv.writer(csv_out, delimiter=',',
                                 quotechar='\"', quoting=csv.QUOTE_MINIMAL)
