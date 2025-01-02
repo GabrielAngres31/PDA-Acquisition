@@ -3,11 +3,44 @@ from tkinter import filedialog
 from tkinter import messagebox
 import pandas as pd
 from PIL import Image, ImageTk
+import os
 
 class StomataGUI:
     def __init__(self, root):
+
+
+        # Load Config options
+        self.configFilePath = "stomata_gui_config.txt"
+
+        with open(self.configFilePath, 'r') as file:
+            lines = file.readlines()
+            self.config_properties = dict([(v for v in line.strip().split("=")) for line in lines])
+        # print(self.config_properties)
+            
+
         self.root = root
         self.root.title("Image Importer")
+
+        self.menubar = tk.Menu(root)
+        self.filemenu = tk.Menu(self.menubar, tearoff=0)
+
+        def donothing(): l=0
+
+        self.filemenu.add_command(label="Load Base", command=self.import_BASE_dialog)
+        self.filemenu.add_command(label="Load Annot", command=self.import_ANNOT_dialog)
+        self.filemenu.add_command(label="Load CSV", command=self.import_CSV_dialog)
+        self.filemenu.add_command(label="Set Recents", command=self.set_recents)
+        self.filemenu.add_command(label="Set Paired Files", command=self.set_paired_files)
+
+        
+
+        self.filemenu.add_command(label="Paired Files", command=donothing)
+        # self.filemenu.add_command(label="Save", command=donothing)
+        self.filemenu.add_separator()
+        self.filemenu.add_command(label="Exit", command=root.quit)
+        self.menubar.add_cascade(label="File", menu=self.filemenu)
+
+        self.root.config(menu = self.menubar)
 
         self.window_sidelength = 128
 
@@ -20,18 +53,19 @@ class StomataGUI:
         self.canvas_overlay = tk.Canvas(root, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
         self.canvas_overlay.grid(row=0, column=2, padx=10, pady=10)
 
-        self.button_import_base = tk.Button(root, text="Import Base Image", command=self.import_BASE)
+        self.button_import_base = tk.Button(root, text="Import Base Image", command=self.import_BASE_dialog)
         self.button_import_base.grid(row=1, column=0, padx=10, pady=10)
 
-        self.button_import_annot = tk.Button(root, text="Import Annotation", command=self.import_ANNOT)
+        self.button_import_annot = tk.Button(root, text="Import Annotation", command=self.import_ANNOT_dialog)
         self.button_import_annot.grid(row=1, column=1, padx=10, pady=10)
 
-        self.button_import_csv = tk.Button(root, text="Import CSV", command=self.import_CSV)
+        self.button_import_csv = tk.Button(root, text="Import CSV", command=self.import_CSV_dialog)
         self.button_import_csv.grid(row=1, column=2, padx=10, pady=10)
 
         self.image_base = None
         self.image_annot = None
         self.image_overlay = None
+
         self.bbox_coords = [0, 0, self.window_sidelength, self.window_sidelength]
         self.photo = None
         self.bbox_number = tk.IntVar()
@@ -39,6 +73,8 @@ class StomataGUI:
         self.max_number = 0
         self.df_coords = None
         self.notes_list = []
+
+        self.opacity_lower_bound = 0
 
         self.bbox_entry = tk.Entry(root, textvariable=self.bbox_number, width=4)
         self.bbox_entry.grid(row=2, column=0, padx=3, pady=10, ipadx=0, ipady=0)
@@ -63,6 +99,17 @@ class StomataGUI:
         self.button_mark_triple = tk.Button(root, text="x3")
         self.button_mark_triple.grid(row=3, column=2, padx=5, pady=10)
 
+        if "recent_BASE" in self.config_properties and self.config_properties["recent_BASE"]:
+            self.import_BASE(self.config_properties["recent_BASE"])
+        if "recent_ANNOT" in self.config_properties and self.config_properties["recent_ANNOT"]:
+            self.import_ANNOT(self.config_properties["recent_ANNOT"])
+        if "recent_CSV" in self.config_properties and self.config_properties["recent_CSV"]:            
+            self.import_CSV(self.config_properties["recent_CSV"])
+
+
+    def set_property(self, property, value):
+        self.config_properties[property] = value
+
     def x0(self): 
         return -self.bbox_coords[0]
 
@@ -86,36 +133,43 @@ class StomataGUI:
     
     def yD(self):
         return self.yc()+self.window_sidelength//2
+    
 
-
-
-    def import_BASE(self):
+    def import_BASE_dialog(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.tif")], initialdir="only_pored/BASE/")
         if file_path:
+            self.import_BASE(file_path)
+    def import_BASE(self, file_path):
             self.import_image(self.canvas_base, file_path, 'BASE')
             self.update_overlay()
+            self.set_property("recent_BASE", file_path)
 
-    def import_ANNOT(self):
+    def import_ANNOT_dialog(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.tif")], initialdir="only_pored/ANNOT/")
         if file_path:
-            self.import_image(self.canvas_annot, file_path, 'ANNOT')
-            self.update_overlay()
+            self.import_ANNOT(file_path)
+    def import_ANNOT(self, file_path):
+        self.import_image(self.canvas_annot, file_path, 'ANNOT')
+        self.update_overlay()
+        self.set_property("recent_ANNOT", file_path)
 
-    def import_CSV(self):
+    def import_CSV_dialog(self):
         file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")], initialdir="inference/")
         if file_path:
             try:
-
-                self.df_coords = pd.read_csv(file_path)
-                self.max_number = len(self.df_coords)
-                self.bbox_number.set(1) 
-                self.notes_list = ["NONE"] * self.max_number
-                print("BRUH")
-                self.update_bbox_coords(self.df_coords)
-                self.update_images()
-                self.update_overlay()
+                self.import_CSV(file_path)
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to read CSV: {e}")
+    def import_CSV(self, file_path):
+        print(f"{file_path}")
+        self.df_coords = pd.read_csv(file_path, encoding='utf8')
+        self.max_number = len(self.df_coords)
+        self.bbox_number.set(1) 
+        self.notes_list = ["NONE"] * self.max_number
+        self.update_bbox_coords(self.df_coords)
+        self.update_images()
+        self.update_overlay()
+        self.set_property("recent_CSV", file_path)
 
     def update_bbox_coords(self, df_coords):
         if self.bbox_number.get() < len(df_coords) and self.bbox_number.get() >= 1:
@@ -132,9 +186,12 @@ class StomataGUI:
             messagebox.showwarning("Warning", "Bounding box number is out of range!")
 
     def import_image(self, canvas, file_path, image_type):
-        img = Image.open(file_path)
-        self.update_image(canvas, img, image_type)
-        print(f"Imported Image {image_type} to {-self.x0()}, {-self.y0()}")
+        try:
+            img = Image.open(file_path)
+            self.update_image(canvas, img, image_type)
+            print(f"Imported Image {image_type} to {-self.x0()}, {-self.y0()}")
+        except:
+            print(f"Could not import image. Check your filepath: {file_path}")
 
     def update_image(self, canvas, img, image_type):
         if image_type == 'BASE':
@@ -182,7 +239,14 @@ class StomataGUI:
             self.update_images()
         else:
             self.bbox_number.set(placeholder)
+    
+    def set_recents(self):
+        with open(self.configFilePath, 'w') as file:
+            for k in self.config_properties:
+                file.write(f"{k}={self.config_properties[k]}\n")
 
+    def set_paired_files(self):
+        pass
 
 if __name__ == "__main__":
     root = tk.Tk()

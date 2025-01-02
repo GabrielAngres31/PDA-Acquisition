@@ -106,7 +106,7 @@ basepath = "only_pored/BASE"
 #         print(f"{d} is not present in baseset")
 #     assert a or b, "Welp"
 
-filelist = [os.path.abspath(file) for file in glob.glob(os.path.join(annotpath, "*"))]
+# filelist = [os.path.abspath(file) for file in glob.glob(os.path.join(annotpath, "*"))]
 
 # current_csv = pd.read_csv("splits/pores_only.csv")
 # current_set = set([row.iloc[1].strip(" ") for index, row in current_csv.iterrows()])
@@ -177,4 +177,46 @@ def tile_and_blur(image_path):
 
 # Example usage
 image_path = "SCD_training_data/mbn_training/Untitled.png"
-tile_and_blur(image_path)
+# tile_and_blur(image_path)
+
+
+import csv
+import os
+import shutil
+
+def copy_files_from_csv(csv_file, destination_folder):
+  """
+  Reads filepaths from a CSV file and copies the corresponding files to a new folder.
+
+  Args:
+    csv_file: Path to the CSV file containing the filepaths.
+    destination_folder: Path to the destination folder for the copied files.
+  """
+
+  if not os.path.exists(destination_folder):
+    os.makedirs(destination_folder)
+
+  with open(csv_file, 'r') as f:
+    reader = csv.reader(f)
+    next(reader)  # Skip header row if present
+
+    for row in reader:
+      try:
+        for filepath in [row[0].strip(" "), row[1].strip(" ")]:
+
+            filename = os.path.basename(filepath)
+            destination_path = os.path.join(destination_folder, filename)
+
+            shutil.copy2(filepath, destination_path)
+            print(f"Copied {filepath} to {destination_path}")
+
+      except FileNotFoundError:
+        print(f"File not found: {filepath}")
+      except Exception as e:
+        print(f"Error copying {filepath}: {e}")
+
+if __name__ == "__main__":
+  csv_file = "splits/pores_only_val_12-2024.csv"  # Replace with the actual path to your CSV file
+  destination_folder = "to_zip_PDA_Acq_val_12-2024"  # Replace with the desired destination folder
+
+  copy_files_from_csv(csv_file, destination_folder)
