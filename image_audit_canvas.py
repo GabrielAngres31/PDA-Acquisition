@@ -15,7 +15,7 @@ class audit_canvas():
 import tkinter as tk
 
 class PixelCanvas:
-    def __init__(self, master, width, height, base_section=None, annot_section=None, pixel_size=7):
+    def __init__(self, master, width, height, base_section=None, annot_section=None, pixel_size=5):
         self.master = master
         self.width = width
         self.height = height
@@ -28,8 +28,9 @@ class PixelCanvas:
         self.testimage = ImageTk.PhotoImage(Image.open("zeta_maxnoise.png"))
         
         self.drawcolor = "white"
+        self.pivotbit = 1
 
-        self.canvas = tk.Canvas(master, width=width * pixel_size, height=height * pixel_size, bg="black", cursor="plus")
+        self.canvas = tk.Canvas(master, width=width * pixel_size*3, height=height * pixel_size, bg="black", cursor="plus")
         self.canvas.pack()
       
         self.canvas.image = self.testimage
@@ -44,8 +45,11 @@ class PixelCanvas:
 
     def placeholder_drawimage(self, imgpath):
         if os.path.exists(imgpath):
-            img = ImageTk.PhotoImage(Image.open(imgpath))
-            img_placeholder = self.canvas.create_image(0, 0, image=img)
+            img = ImageTk.PhotoImage(Image.open(imgpath).resize((64*2*self.pixel_size,64*2*self.pixel_size), Image.Resampling.LANCZOS))
+            img_placeholder_BASE = self.canvas.create_image(0, 0, image=img)
+            img_placeholder_OVERLAY = self.canvas.create_image(self.width*self.pixel_size*2, 0, image=img)
+            img_placeholder_ANNOT = self.canvas.create_image(self.width, 0, image=img)
+
             self.canvas.image = img
         else:
             print(f"Error: Image file not found: {imgpath}")
@@ -55,11 +59,16 @@ class PixelCanvas:
         self.drawcolor=color
 
     def draw_pixel(self, event):
+        color_num_dict = {0:"black", 1:"white"}
+        if event.num != "??":
+            self.pivot_bit = 1-(int(event.num) >> 1)
 
         # print(event.num)
-        if event.num == 1:
+        # if event.num == 1:
+        if self.pivot_bit:
             self.setdrawcolor("white")
-        if event.num == 3:
+        # if event.num == 3:
+        else:
             self.setdrawcolor("black")
 
         x = event.x // self.pixel_size
@@ -67,14 +76,13 @@ class PixelCanvas:
         # print(self.drawcolor)
 
         if 0 <= x < self.width and 0 <= y < self.height:
-            x1 = x * self.pixel_size
-            y1 = y * self.pixel_size
-            x2 = x1 + self.pixel_size
-            y2 = y1 + self.pixel_size
+            x1 = x//2 * self.pixel_size * 2
+            y1 = y//2 * self.pixel_size * 2
+            x2 = x1 + self.pixel_size * 2
+            y2 = y1 + self.pixel_size * 2
             self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, outline=self.drawcolor)
-            self.matrix_annotcanvas[y, x]
-
-
+            self.canvas.create_rectangle(x1+self.width*self.pixel_size, y1, x2+self.width*self.pixel_size, y2, fill=self.drawcolor, outline=self.drawcolor)
+            self.matrix_annotcanvas[y, x] = self.pivot_bit
 
 root = tk.Tk()
 canvas = PixelCanvas(root, 64, 64)
