@@ -20,20 +20,22 @@ class PixelCanvas:
         self.width = width
         self.height = height
         self.pixel_size = pixel_size
+        self.corr_height = self.height*self.pixel_size 
+        self.corr_width = self.width*self.pixel_size
 
         self.matrix_basecanvas = np.zeros((height, width), dtype=int)
         self.matrix_annotcanvas = np.zeros((height, width), dtype=int)
         self.matrix_overlaycanvas = np.zeros((height, width), dtype=int)
 
-        self.testimage = ImageTk.PhotoImage(Image.open("zeta_maxnoise.png"))
+        # self.testimage = ImageTk.PhotoImage(Image.open("zeta_maxnoise.png"))
         
         self.drawcolor = "white"
         self.pivotbit = 1
 
-        self.canvas = tk.Canvas(master, width=width * pixel_size*3, height=height * pixel_size, bg="black", cursor="plus")
+        self.canvas = tk.Canvas(master, width=self.corr_width*3, height=self.corr_height, bg="black", cursor="plus")
         self.canvas.pack()
       
-        self.canvas.image = self.testimage
+        # self.canvas.image = self.testimage
 
         self.canvas.bind("<Button-1>", self.draw_pixel)
         self.canvas.bind("<B1-Motion>", self.draw_pixel)
@@ -45,9 +47,9 @@ class PixelCanvas:
 
     def placeholder_drawimage(self, imgpath):
         if os.path.exists(imgpath):
-            img = ImageTk.PhotoImage(Image.open(imgpath).resize((64*2*self.pixel_size,64*2*self.pixel_size), Image.Resampling.LANCZOS))
+            img = ImageTk.PhotoImage(Image.open(imgpath).resize((self.corr_width*2,self.corr_height*2), Image.Resampling.LANCZOS))
             img_placeholder_BASE = self.canvas.create_image(0, 0, image=img)
-            img_placeholder_OVERLAY = self.canvas.create_image(self.width*self.pixel_size*2, 0, image=img)
+            img_placeholder_OVERLAY = self.canvas.create_image(self.corr_width*2, 0, image=img)
             img_placeholder_ANNOT = self.canvas.create_image(self.width, 0, image=img)
 
             self.canvas.image = img
@@ -86,7 +88,7 @@ class PixelCanvas:
 
 root = tk.Tk()
 canvas = PixelCanvas(root, 64, 64)
-canvas.placeholder_drawimage("zeta_maxnoise.png")
+canvas.placeholder_drawimage("canvas_placeholder_test.png")
 root.mainloop()
 
 
