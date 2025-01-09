@@ -193,30 +193,49 @@ def copy_files_from_csv(csv_file, destination_folder):
     destination_folder: Path to the destination folder for the copied files.
   """
 
-  if not os.path.exists(destination_folder):
-    os.makedirs(destination_folder)
+#   if not os.path.exists(destination_folder):
+#     os.makedirs(destination_folder)
 
-  with open(csv_file, 'r') as f:
-    reader = csv.reader(f)
-    next(reader)  # Skip header row if present
+#   with open(csv_file, 'r') as f:
+#     reader = csv.reader(f)
+#     next(reader)  # Skip header row if present
 
-    for row in reader:
-      try:
-        for filepath in [row[0].strip(" "), row[1].strip(" ")]:
+#     for row in reader:
+#       try:
+#         for filepath in [row[0].strip(" "), row[1].strip(" ")]:
 
-            filename = os.path.basename(filepath)
-            destination_path = os.path.join(destination_folder, filename)
+#             filename = os.path.basename(filepath)
+#             destination_path = os.path.join(destination_folder, filename)
 
-            shutil.copy2(filepath, destination_path)
-            print(f"Copied {filepath} to {destination_path}")
+#             shutil.copy2(filepath, destination_path)
+#             print(f"Copied {filepath} to {destination_path}")
 
-      except FileNotFoundError:
-        print(f"File not found: {filepath}")
-      except Exception as e:
-        print(f"Error copying {filepath}: {e}")
+#       except FileNotFoundError:
+#         print(f"File not found: {filepath}")
+#       except Exception as e:
+#         print(f"Error copying {filepath}: {e}")
 
-if __name__ == "__main__":
-  csv_file = "splits/pores_only_val_12-2024.csv"  # Replace with the actual path to your CSV file
-  destination_folder = "to_zip_PDA_Acq_val_12-2024"  # Replace with the desired destination folder
+# if __name__ == "__main__":
+#   csv_file = "splits/pores_only_val_12-2024.csv"  # Replace with the actual path to your CSV file
+#   destination_folder = "to_zip_PDA_Acq_val_12-2024"  # Replace with the desired destination folder
 
-  copy_files_from_csv(csv_file, destination_folder)
+#   copy_files_from_csv(csv_file, destination_folder)
+
+# for i in range(1, 9):
+#   print(i)
+#   subprocess.run(f'python inference.py --model=checkpoints/2024-12-23_17h-07m-06s/last.e029.pth --input="only_pored/AZD_test/base_images/MAX_1uMAZD_ADM100_ML1pmCherry-RCI2A_5dpg_102324.lif--1uMAZD_{i}_1_Merged.tif" --overlap=128 --outputname="_AZD_jan2025_1uMAZD_{i}_1"', shell=True)
+# for i in range(1, 6):
+#    print(i)
+#    subprocess.run(f'python inference.py --model=checkpoints/2024-12-23_17h-07m-06s/last.e029.pth --input="only_pored/AZD_test/base_images/MAX_100nMAZD_ADM100_ML1pmCherry-RCI2A_5dpg_102324.lif--100nMAZD_{i}_1_Merged.tif" --overlap=128 --outputname="_AZD_jan2025_100nMAZD_{i}_1"', shell=True)
+#    subprocess.run(f'python inference.py --model=checkpoints/2024-12-23_17h-07m-06s/last.e029.pth --input="only_pored/AZD_test/base_images/MAX_DMSO_ADM100_ML1pmCherry-RCI2A_5dpg_102324.lif--DMSO_{i}_1_Merged.tif" --overlap=128 --outputname="_AZD_jan2025_DMSO_{i}_1"', shell=True)
+#    subprocess.run(f'python inference.py --model=checkpoints/2024-12-23_17h-07m-06s/last.e029.pth --input="only_pored/AZD_test/base_images/MAX_250nMAZD_ADM100_ML1pmCherry-RCI2A_5dpg_102324.lif--250nMAZD_{i}_1_Merged.tif" --overlap=128 --outputname="_AZD_jan2025_250nMAZD_{i}_1"', shell=True)
+
+
+
+# for i in range(1, 9):
+#   subprocess.run(f"python clumps_table.py --input_path=inference/MAX_1uMAZD_ADM100_ML1pmCherry-RCI2A_5dpg_102324.lif--1uMAZD_{i}_1_Merged.tif_AZD_jan2025_1uMAZD_{i}_1.output.png --prediction_type=clumps --filter_type=otsu --save_image_as=AZD_1uM_{i}_1 --output_folder=only_pored/AZD_test/inference_jan_2025", shell=True)
+# for i in range(1, 6):
+#   subprocess.run(f"python clumps_table.py --input_path=inference/MAX_250nMAZD_ADM100_ML1pmCherry-RCI2A_5dpg_102324.lif--250nMAZD_{i}_1_Merged.tif_AZD_jan2025_250nMAZD_{i}_1.output.png --prediction_type=clumps --filter_type=otsu --save_image_as=AZD_250nM_{i}_1 --output_folder=only_pored/AZD_test/inference_jan_2025", shell=True)
+#   subprocess.run(f"python clumps_table.py --input_path=inference/MAX_100nMAZD_ADM100_ML1pmCherry-RCI2A_5dpg_102324.lif--100nMAZD_{i}_1_Merged.tif_AZD_jan2025_100nMAZD_{i}_1.output.png --prediction_type=clumps --filter_type=otsu --save_image_as=AZD_100nM_{i}_1 --output_folder=only_pored/AZD_test/inference_jan_2025", shell=True)
+#   subprocess.run(f"python clumps_table.py --input_path=inference/MAX_DMSO_ADM100_ML1pmCherry-RCI2A_5dpg_102324.lif--DMSO_{i}_1_Merged.tif_AZD_jan2025_DMSO_{i}_1.output.png --prediction_type=clumps --filter_type=otsu --save_image_as=AZD_DMSO_{i}_1 --output_folder=only_pored/AZD_test/inference_jan_2025", shell=True)
+

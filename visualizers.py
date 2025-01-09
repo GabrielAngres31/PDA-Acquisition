@@ -25,13 +25,34 @@ def main(args:argparse.Namespace) -> bool:
             # plt.show()
             #print(clump_info_dict)
             #assert 'area' in table.keys(), "Area is not listed in this table!"
+            
             plt.figure(figsize = (8,6))
             plt.hist(df[measure])#, bins=list(range(0, 2000, 120)))
             plt.title(f"{measure}")
             plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{measure}_histogram.png")
             plt.clf()
+
+    def scatter_hist(x, y, ax, ax_histx, ax_histy):
+    # no labels
+        ax_histx.tick_params(axis="x", labelbottom=False)
+        ax_histy.tick_params(axis="y", labelleft=False)
+
+        # the scatter plot:
+        ax.scatter(x, y)
+
+        # now determine nice limits by hand:
+        binwidth = 0.25
+        xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
+        lim = (int(xymax/binwidth) + 1) * binwidth
+
+        bins = np.arange(-lim, lim + binwidth, binwidth)
+        ax_histx.hist(x, bins=bins)
+        ax_histy.hist(y, bins=bins, orientation='horizontal')
+
+
     if args.scatterplots:
         assert not ("ID" in df), "Too many groups!"
+        num = len(df)
         plots=args.scatterplots.split("|")
         cluster_mapping = {1:"#fde725FF",
                            2:"#21918cFF",
@@ -39,14 +60,54 @@ def main(args:argparse.Namespace) -> bool:
         for plot in plots:
             #print(plot)
             x,y = plot.split(",")
+            """ This section is for normal scatter plotting"""
             plt.figure(figsize = (8,6))
             if not ("type" in df):
                 plt.scatter(df[x], df[y])
             else:
                 plt.scatter(df[x], df[y], c=df["type"].map({3:"#fde725FF", 2:"#21918cFF", 1:"#440154FF"}))
             plt.axis(xmin=0, ymin=0, xmax=args.xmax, ymax=args.ymax)
+            plt.text(0.5, 0.5, f'N = {num}', ha='right')
             plt.title(f"{x} vs. {y} - {args.save_as}")
             plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{x}_vs_{y}_scatter.png")
+            plt.clf()
+            """This section is for having histograms on the sides"""\
+            """Code from https://matplotlib.org/stable/gallery/lines_bars_and_markers/scatter_hist.html"""
+            # fig = plt.figure(figsize=(6, 6))
+            # # Add a gridspec with two rows and two columns and a ratio of 1 to 4 between
+            # # the size of the marginal Axes and the main Axes in both directions.
+            # # Also adjust the subplot parameters for a square plot.
+            # gs = fig.add_gridspec(2, 2,  width_ratios=(4, 1), height_ratios=(1, 4),
+            #                     left=0.1, right=0.9, bottom=0.1, top=0.9,
+            #                     wspace=0.05, hspace=0.05)
+            # # Create the Axes.
+            # ax = fig.add_subplot(gs[1, 0])
+            # ax_histx = fig.add_subplot(gs[0, 0], sharex=ax)
+            # ax_histy = fig.add_subplot(gs[1, 1], sharey=ax)
+            # # Draw the scatter plot and marginals.
+            # scatter_hist(x, y, ax, ax_histx, ax_histy)
+            # plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{x}_vs_{y}_scatter_w-hist.png")
+            plt.clf()
+
+    if args.density_heatmaps:
+        assert not ("ID" in df), "Too many groups!"
+        num = len(df)
+        plots=args.density_heatmaps.split("|")
+
+        for plot in plots:
+            #print(plot)
+            x,y = plot.split(",")
+            """ This section is for normal scatter plotting"""
+            plt.figure(figsize = (8,6))
+            if not ("type" in df):
+                plt.hist2d(df[x], df[y], cmap="viridis", bins=40, range=[[0, args.xmax],[0, args.ymax]])
+                # plt.hexbin(df[x], df[y], cmap="viridis", gridsize=40, bins='log', extent=(0, args.xmax, 0, args.ymax))
+            # else:
+            #     plt.hist2d(df[x], df[y], c=df["type"].map({3:"#fde725FF", 2:"#21918cFF", 1:"#440154FF"}))
+            plt.axis(xmin=0, ymin=0, xmax=args.xmax, ymax=args.ymax)
+            plt.text(0.5, 0.5, f'N = {num}', ha='right')
+            plt.title(f"{x} vs. {y} - {args.save_as}")
+            plt.savefig(f"reference_figures/visualizers_test/{args.save_as}_{x}_vs_{y}_hex_density_heatmap.png")
             plt.clf()
 
     if args.ridgeplots:
@@ -61,6 +122,12 @@ def main(args:argparse.Namespace) -> bool:
                    5:"#31688eFF", 
                    6:"#443983FF", 
                    7:"#440154FF"}
+        AZD_mapping = {
+            1:"#fde725FF",
+            2:"#35b779FF",
+            3:"#31688eFF",
+            4:"#440154FF"
+        }
 
         sorted_count_by_id = df.groupby("ID").size().sort_values(ascending=True)
         sortcount_to_dict = dict(zip([k for k in sorted_count_by_id.keys()], 
@@ -104,7 +171,8 @@ def get_argparser() -> argparse.ArgumentParser:
     parser.add_argument('--source_data', type=str, required=True, help='Path to image data table')
     parser.add_argument('--histograms', type=str, help='Sets of histograms to build and save')
     parser.add_argument('--scatterplots', type=str, help='Sets of scatterplots to build and save')
-    parser.add_argument('--ridgeplots', type=str, help='Sets of ridgeplots to build')
+    parser.add_argument('--ridgeplots', type=str, help='Sets of ridgeplots to build and save')
+    parser.add_argument('--density_heatmaps', type=str, help='Sets of density heatmaps to build and save')
     parser.add_argument('--save_as', type=str, help='File name to save to')
     parser.add_argument('--xmax', type=int, help='Length of X axis for scatterplots')
     parser.add_argument('--ymax', type=int, help='Length of Y axis for scatterplots')
