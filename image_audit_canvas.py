@@ -85,13 +85,13 @@ class PixelCanvas:
         img_overlay_bas = img_base
         img_overlay_ann = img_overlay_ann.convert("RGBA")
         img_overlay_bas = img_overlay_bas.convert("RGBA")
-        # img_overlay_ann.putalpha(80)
-        # img_overlay_bas.putalpha(255)
+        img_overlay_ann.putalpha(40)
+        img_overlay_bas.putalpha(255)
 
 
         full_overlay = img_overlay_bas
-        # Image.Image.paste(full_overlay, mask=img_overlay_ann, mode='multiply')
-        Image.blend(full_overlay, img_overlay_ann, 1)
+        # Image.Image.paste(full_overlay, img_overlay_ann)
+        full_overlay = Image.blend(full_overlay, img_overlay_ann, 0.25)
 
         full_overlay_tk = ImageTk.PhotoImage(full_overlay)
 
