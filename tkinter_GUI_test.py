@@ -1,6 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog
-from tkinter import messagebox
+from tkinter import filedialog, messagebox, ttk
 import pandas as pd
 from PIL import Image, ImageTk
 import os
@@ -10,58 +9,69 @@ class StomataGUI:
 
 
         # Load Config options
+        ### Read config file
         self.configFilePath = "stomata_gui_config.txt"
-
+         
         with open(self.configFilePath, 'r') as file:
             lines = file.readlines()
             self.config_properties = dict([(v for v in line.strip().split("=")) for line in lines])
-        # print(self.config_properties)
-            
+        print(self.config_properties)
 
+        # Window Setup
         self.root = root
         self.root.title("Image Importer")
 
         self.menubar = tk.Menu(root)
+        self.root.config(menu = self.menubar)
         self.filemenu = tk.Menu(self.menubar, tearoff=0)
 
+        main_tab_control = ttk.Notebook(root)
+        image_compare_tab = ttk.Frame(main_tab_control)
+        inference_tab = ttk.Frame(main_tab_control)
+
+        main_tab_control.add(inference_tab, text='Inference (WIP)')
+        main_tab_control.add(image_compare_tab, text='Annotator')
+        
+        main_tab_control.pack(expand=1, fill="both")
+
         def donothing(): l=0
+
+        # Make the "File" Menu Options                
+        self.menubar.add_cascade(label="File", menu=self.filemenu)
 
         self.filemenu.add_command(label="Load Base", command=self.import_BASE_dialog)
         self.filemenu.add_command(label="Load Annot", command=self.import_ANNOT_dialog)
         self.filemenu.add_command(label="Load CSV", command=self.import_CSV_dialog)
         self.filemenu.add_command(label="Set Recents", command=self.set_recents)
         self.filemenu.add_command(label="Set Paired Files", command=self.set_paired_files)
-
-        
-
         self.filemenu.add_command(label="Paired Files", command=donothing)
-        # self.filemenu.add_command(label="Save", command=donothing)
         self.filemenu.add_separator()
         self.filemenu.add_command(label="Exit", command=root.quit)
-        self.menubar.add_cascade(label="File", menu=self.filemenu)
 
-        self.root.config(menu = self.menubar)
+        self.window_sidelength = 148
 
-        self.window_sidelength = 128
 
-        self.canvas_base = tk.Canvas(root, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
-        self.canvas_base.grid(row=0, column=0, padx=10, pady=10)
+        # Set up canvases
+        self.canvas_base = tk.Canvas(image_compare_tab, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
+        self.canvas_base.grid(row=0, column=0, padx=10, pady=20)
 
-        self.canvas_annot = tk.Canvas(root, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
-        self.canvas_annot.grid(row=0, column=1, padx=10, pady=10)
+        self.canvas_annot = tk.Canvas(image_compare_tab, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
+        self.canvas_annot.grid(row=0, column=1, padx=10, pady=20)
 
-        self.canvas_overlay = tk.Canvas(root, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
-        self.canvas_overlay.grid(row=0, column=2, padx=10, pady=10)
+        self.canvas_overlay = tk.Canvas(image_compare_tab, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
+        self.canvas_overlay.grid(row=0, column=2, padx=10, pady=20)
 
-        self.button_import_base = tk.Button(root, text="Import Base Image", command=self.import_BASE_dialog)
+        # Set up Buttons
+        self.button_import_base = tk.Button(image_compare_tab, text="Import Base Image", command=self.import_BASE_dialog)
         self.button_import_base.grid(row=1, column=0, padx=10, pady=10)
 
-        self.button_import_annot = tk.Button(root, text="Import Annotation", command=self.import_ANNOT_dialog)
+        self.button_import_annot = tk.Button(image_compare_tab, text="Import Annotation", command=self.import_ANNOT_dialog)
         self.button_import_annot.grid(row=1, column=1, padx=10, pady=10)
 
-        self.button_import_csv = tk.Button(root, text="Import CSV", command=self.import_CSV_dialog)
+        self.button_import_csv = tk.Button(image_compare_tab, text="Import CSV", command=self.import_CSV_dialog)
         self.button_import_csv.grid(row=1, column=2, padx=10, pady=10)
 
+        # Setup Variables
         self.image_base = None
         self.image_annot = None
         self.image_overlay = None
@@ -75,29 +85,37 @@ class StomataGUI:
         self.notes_list = []
 
         self.opacity_lower_bound = 0
+        
+        self.advance_on_label=tk.IntVar()
 
-        self.bbox_entry = tk.Entry(root, textvariable=self.bbox_number, width=4)
+        # Clump ID Entry
+        self.bbox_entry = tk.Entry(image_compare_tab, textvariable=self.bbox_number, width=4)
         self.bbox_entry.grid(row=2, column=0, padx=3, pady=10, ipadx=0, ipady=0)
-        # self.bbox_entry.insert(0, str(self.bbox_number))  # Initialize with current bbox_number
+
         self.bbox_entry.bind("<Enter>", self.change_value)
 
-        # self.bbox_text_max = tk.Label(root, text = "/")
-        # self.bbox_text_max.grid(row=2, column=0, padx=6, pady=10, ipadx=4, ipady=0)
-
-        self.button_decrement = tk.Button(root, text="-", command=self.decrement_bbox)
+        # +/- (>>/<<) buttons
+        self.button_decrement = tk.Button(image_compare_tab, text="-", command=self.decrement_bbox)
         self.button_decrement.grid(row=2, column=1, padx=5, pady=10)
 
-        self.button_increment = tk.Button(root, text="+", command=self.increment_bbox)
+        self.button_increment = tk.Button(image_compare_tab, text="+", command=self.increment_bbox)
         self.button_increment.grid(row=2, column=2, padx=5, pady=10)
 
-        self.button_mark_single = tk.Button(root, text="x1")
-        self.button_mark_single.grid(row=3, column=0, padx=5, pady=10)
+        # Advance checkbox
+        self.checkbox_advance = tk.Checkbutton(image_compare_tab, text="Advance on Label", variable=self.advance_on_label, command=lambda:print(self.advance_on_label.get()))
+        self.checkbox_advance.grid(row=3, column=1, padx=5, pady=10)
 
-        self.button_mark_double = tk.Button(root, text="x2")
-        self.button_mark_double.grid(row=3, column=1, padx=5, pady=10)
+        # Label Buttons
+        self.button_mark_single = tk.Button(image_compare_tab, text="Edge", command=lambda: self.mark_note("Edge"))
+        self.button_mark_single.grid(row=4, column=0, padx=5, pady=10)
 
-        self.button_mark_triple = tk.Button(root, text="x3")
-        self.button_mark_triple.grid(row=3, column=2, padx=5, pady=10)
+        self.button_mark_double = tk.Button(image_compare_tab, text="Cluster", command=lambda: self.mark_note("Cluster"))
+        self.button_mark_double.grid(row=4, column=1, padx=5, pady=10)
+
+        self.button_mark_triple = tk.Button(image_compare_tab, text="ERROR", command=lambda: self.mark_note("ERROR"))
+        self.button_mark_triple.grid(row=4, column=2, padx=5, pady=10)
+
+
 
         if "recent_BASE" in self.config_properties and self.config_properties["recent_BASE"]:
             self.import_BASE(self.config_properties["recent_BASE"])
@@ -105,6 +123,8 @@ class StomataGUI:
             self.import_ANNOT(self.config_properties["recent_ANNOT"])
         if "recent_CSV" in self.config_properties and self.config_properties["recent_CSV"]:            
             self.import_CSV(self.config_properties["recent_CSV"])
+
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
 
     def set_property(self, property, value):
@@ -136,40 +156,48 @@ class StomataGUI:
     
 
     def import_BASE_dialog(self):
-        file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.tif")], initialdir="only_pored/BASE/")
+        file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.tif")], initialdir=self.config_properties['dir_BASE'])
         if file_path:
             self.import_BASE(file_path)
     def import_BASE(self, file_path):
             self.import_image(self.canvas_base, file_path, 'BASE')
             self.update_overlay()
             self.set_property("recent_BASE", file_path)
+            self.set_property("dir_BASE", os.path.dirname(file_path))
 
     def import_ANNOT_dialog(self):
-        file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.tif")], initialdir="only_pored/ANNOT/")
+        file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.tif")], initialdir=self.config_properties['dir_ANNOT'])
         if file_path:
             self.import_ANNOT(file_path)
     def import_ANNOT(self, file_path):
         self.import_image(self.canvas_annot, file_path, 'ANNOT')
         self.update_overlay()
         self.set_property("recent_ANNOT", file_path)
+        self.set_property("dir_ANNOT", os.path.dirname(file_path))
 
     def import_CSV_dialog(self):
-        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")], initialdir="inference/")
+        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")], initialdir=self.config_properties['dir_CSV'])
         if file_path:
             try:
                 self.import_CSV(file_path)
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to read CSV: {e}")
+
     def import_CSV(self, file_path):
         print(f"{file_path}")
         self.df_coords = pd.read_csv(file_path, encoding='utf8')
         self.max_number = len(self.df_coords)
         self.bbox_number.set(1) 
-        self.notes_list = ["NONE"] * self.max_number
+        try: 
+            self.notes_list = self.df_coords["Notes"]
+        except:
+            print("Writing Notes Column: ")
+            self.notes_list = ["NONE"] * self.max_number
         self.update_bbox_coords(self.df_coords)
         self.update_images()
         self.update_overlay()
         self.set_property("recent_CSV", file_path)
+        self.set_property("dir_CSV", os.path.dirname(file_path))
 
     def update_bbox_coords(self, df_coords):
         if self.bbox_number.get() < len(df_coords) and self.bbox_number.get() >= 1:
@@ -207,11 +235,17 @@ class StomataGUI:
 
     def update_overlay(self):
         if self.image_base and self.image_annot:
-            result = Image.blend(self.image_base.convert("L"), self.image_annot.convert("L"), alpha=0.37)
-            self.image_overlay = ImageTk.PhotoImage(result)
-            self.canvas_overlay.delete("all")
-            self.canvas_overlay.create_image(self.xD(), self.yD(), anchor=tk.NW, image=self.image_overlay)
-            self.canvas_overlay.image = self.image_overlay
+            try:
+                assert self.image_base.size == self.image_annot.size, f"There's an image shape mismatch! Base: {self.image_base.size} || Annot: {self.image_annot.size}"
+                result = Image.blend(self.image_base.convert("L"), self.image_annot.convert("L"), alpha=0.37)
+                self.image_overlay = ImageTk.PhotoImage(result)
+                self.canvas_overlay.delete("all")
+                self.canvas_overlay.create_image(self.xD(), self.yD(), anchor=tk.NW, image=self.image_overlay)
+                self.canvas_overlay.image = self.image_overlay
+            except: 
+                print("Image dimension mismatch or other problem detected. Clearing Canvas.")
+                self.canvas_overlay.delete("all")
+
 
     def update_images(self):
         if hasattr(self, 'df_coords') and hasattr(self, 'bbox_number') and self.bbox_number.get() < len(self.df_coords) and self.bbox_number.get() >= 0:
@@ -244,9 +278,60 @@ class StomataGUI:
         with open(self.configFilePath, 'w') as file:
             for k in self.config_properties:
                 file.write(f"{k}={self.config_properties[k]}\n")
+    
+    def update_csv_notes(self):
+        write_path = self.config_properties['recent_CSV']
+        self.df_coords.to_csv(write_path)
 
     def set_paired_files(self):
+        #TODO
         pass
+
+    def mark_note(self, note_text):
+        print(note_text)
+        index = self.bbox_number.get()-1
+        try:
+            print(note_text)
+            if self.notes_list[index] == "NONE": 
+                print(self.notes_list[index])
+                self.notes_list[index] = note_text
+                print(self.notes_list[index])
+            elif note_text in self.notes_list[index]:
+                print(self.notes_list[index])
+                pass
+            else:
+                print(self.notes_list[index])
+                self.notes_list[index] = self.notes_list[index] + f", {note_text}"
+                print(self.notes_list[index])
+            if self.advance_on_label.get():
+                self.increment_bbox()
+        except:
+            print("Something went wrong! Hopefully nothing got broken...")
+        
+        # TODO: write to self.notes_list
+        # On window close, write self.notes_list to the file!
+    
+    def note_summary_stats(self):
+        # for item in list(set(self.notes_list)):
+        #     print(list(set(self.notes_list)))
+        #     print(item)
+        #     print(self.notes_list.count(item))
+        unique_items = {}
+        for item in self.notes_list:
+            if item in unique_items:
+                unique_items[item] += 1
+            else:
+                unique_items[item] = 1
+        print(unique_items)
+    
+    def on_closing(self):
+        print("Window is closing...")
+        self.df_coords["Notes"] = self.notes_list
+        self.update_csv_notes()
+        self.note_summary_stats()
+        self.set_recents()
+        self.root.destroy()  # Close the window
+
 
 if __name__ == "__main__":
     root = tk.Tk()

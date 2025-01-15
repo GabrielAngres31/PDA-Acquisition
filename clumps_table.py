@@ -121,7 +121,7 @@ def get_argparser() -> argparse.ArgumentParser:
         choices = ['confidence', 'otsu'],
         help = 'Whether to filter on absolute pixel brightness or the otsu threshold.'
     )
-    parser.add_argument(
+    parser.add_argument( 
         '--save_image_as',
         type = str,
         help = 'Optional - saves an image of the cleaned image to a directory/name.jpg you specify'

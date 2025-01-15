@@ -32,7 +32,7 @@ class PixelCanvas:
         self.drawcolor = "white"
         self.pivotbit = 1
 
-        self.canvas = tk.Canvas(master, width=self.corr_width*3, height=self.corr_height, bg="black", cursor="plus")
+        self.canvas = tk.Canvas(master, width=self.corr_width*3.25, height=self.corr_height, bg="black", cursor="plus", borderwidth=1)
         self.canvas.pack()
       
         # self.canvas.image = self.testimage
@@ -48,9 +48,12 @@ class PixelCanvas:
     def placeholder_drawimage(self, imgpath):
         if os.path.exists(imgpath):
             img = ImageTk.PhotoImage(Image.open(imgpath).resize((self.corr_width*2,self.corr_height*2), Image.Resampling.LANCZOS))
-            img_placeholder_BASE = self.canvas.create_image(0, 0, image=img)
-            img_placeholder_OVERLAY = self.canvas.create_image(self.corr_width*2, 0, image=img)
-            img_placeholder_ANNOT = self.canvas.create_image(self.width, 0, image=img)
+
+            img_placeholder_BASE = self.canvas.create_image(self.corr_width+10, 0, image=img)
+            img_placeholder_ANNOT = self.canvas.create_image(2*self.corr_width+20, 0, image=img)
+            img_placeholder_OVERLAY = self.canvas.create_image(self.corr_width*3+30, 0, image=img)
+
+
 
             self.canvas.image = img
         else:
