@@ -60,6 +60,49 @@ class PixelCanvas:
             print(f"Error: Image file not found: {imgpath}")
 
     
+    def draw_initial_canvas(self, imgpath_dict):
+        # def prep_image(img_path):
+        #     img = ImageTk.PhotoImage(Image.open(img_path).resize((self.corr_width*2,self.corr_height*2), Image.Resampling.LANCZOS))
+        #     self.canvas.image = img
+        #     return img
+        
+        # img_placeholder_BASE = self.canvas.create_image(self.corr_width+10, 0, image=prep_image(imgpath_dict['base']))
+        # img_placeholder_ANNOT = self.canvas.create_image(2*self.corr_width+20, 0, image=prep_image(imgpath_dict['annot']))
+
+        # self.canvas.image = img_placeholder_BASE
+        # img_placeholder_OVERLAY = self.canvas.create_image(3*self.corr_width+30, 0, image=prep_image(imgpath_dict['overlay']))
+        img_base = Image.open(imgpath_dict['base']).resize((self.corr_width, self.corr_height), Image.Resampling.LANCZOS)
+        img_annot = Image.open(imgpath_dict['annot']).resize((self.corr_width, self.corr_height), Image.Resampling.LANCZOS)
+        img_base_tk = ImageTk.PhotoImage(img_base)
+        img_annot_tk = ImageTk.PhotoImage(img_annot)
+        self.canvas.create_image(0, 0, anchor = tk.NW, image=img_base_tk)
+        self.canvas.create_image(self.corr_width+10, 0, anchor = tk.NW, image=img_annot_tk)
+        # self.canvas.create_image(2*self.corr_width+20, 0, anchor = tk.NW, image=img_base_tk)
+
+        # overlay_func = lambda b, a: 
+
+        img_overlay_ann = img_annot
+        img_overlay_bas = img_base
+        img_overlay_ann = img_overlay_ann.convert("RGBA")
+        img_overlay_bas = img_overlay_bas.convert("RGBA")
+        # img_overlay_ann.putalpha(80)
+        # img_overlay_bas.putalpha(255)
+
+
+        full_overlay = img_overlay_bas
+        # Image.Image.paste(full_overlay, mask=img_overlay_ann, mode='multiply')
+        Image.blend(full_overlay, img_overlay_ann, 1)
+
+        full_overlay_tk = ImageTk.PhotoImage(full_overlay)
+
+        self.canvas.create_image(2*self.corr_width+20, 0, anchor=tk.NW, image=full_overlay_tk)
+        # self.canvas.create_image(2*self.corr_width+20, 0, anchor=tk.NW, image=img_annot_tk)
+
+        self.canvas.image_base=img_base_tk
+        self.canvas.image_annot=img_annot_tk
+        self.canvas.image_overlay=full_overlay_tk
+
+    
     def setdrawcolor(self, color):
         self.drawcolor=color
 
@@ -91,7 +134,8 @@ class PixelCanvas:
 
 root = tk.Tk()
 canvas = PixelCanvas(root, 64, 64)
-canvas.placeholder_drawimage("canvas_placeholder_test.png")
+# canvas.placeholder_drawimage("canvas_placeholder_test.png")
+canvas.draw_initial_canvas({'base':'test_stomata_viz_BASE.png', 'annot':'test_stomata_viz_ANNOT.png',})
 root.mainloop()
 
 
