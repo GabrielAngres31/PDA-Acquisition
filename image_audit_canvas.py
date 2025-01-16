@@ -15,7 +15,7 @@ class audit_canvas():
 import tkinter as tk
 
 class PixelCanvas:
-    def __init__(self, master, width, height, margin=16, base_section=None, annot_section=None, pixel_size=4):
+    def __init__(self, master, width, height, margin=12, base_section=None, annot_section=None, pixel_size=4):
         self.master = master
         self.width = width
         self.height = height
@@ -137,28 +137,28 @@ class PixelCanvas:
         # print(self.drawcolor)
 
         if self.margin//self.pixel_size <= y < (self.corr_height+self.margin)//self.pixel_size:
-            print(f"{x}, {y}")
+            # print(f"{x}, {y}")
             # if self.margin <= x < self.width+self.margin:
             if base_bound_corr['left_bound'] <= x < base_bound_corr['right_bound']:
                 x1 = (x+self.width) * self.pixel_size + self.margin
                 y1 = y * self.pixel_size
                 x2 = x1 + self.pixel_size
                 y2 = y1 + self.pixel_size
-                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, outline=self.drawcolor)
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, width=0) #, outline=self.drawcolor)
             # if self.width+self.margin*2 <= x < self.width*2+self.margin*2:
             if annot_bound_corr['left_bound'] <= x < annot_bound_corr['right_bound']:
                 x1 = x * self.pixel_size
                 y1 = y * self.pixel_size
                 x2 = x1 + self.pixel_size 
                 y2 = y1 + self.pixel_size 
-                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, outline=self.drawcolor)
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, width=0, outline=self.drawcolor)
             # if self.width*2+self.margin*2 <= x < self.width*3+self.margin*2:
             if overlay_bound_corr['left_bound'] <= x < overlay_bound_corr['right_bound']:
                 x1 = (x-self.width) * self.pixel_size - self.margin
                 y1 = y * self.pixel_size
                 x2 = x1 + self.pixel_size
                 y2 = y1 + self.pixel_size
-                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, outline=self.drawcolor)
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, width=0, outline=self.drawcolor)
             # self.canvas.create_rectangle(x1+self.width*self.pixel_size, y1, x2+self.width*self.pixel_size, y2, fill=self.drawcolor, outline=self.drawcolor)
             # self.matrix_annotcanvas[y, x-self.width] = self.pivot_bit
 
