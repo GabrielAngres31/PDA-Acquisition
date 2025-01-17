@@ -21,8 +21,13 @@ class PixelCanvas:
         self.height = height
         self.margin = margin
         self.pixel_size = pixel_size
+        self.pixel_size_INV = 1/self.pixel_size
         self.corr_height = self.height*self.pixel_size 
         self.corr_width = self.width*self.pixel_size
+
+        self.color_dict = {1:"white", 0:"black"}
+
+        self.last_pixel = [0,0]
 
         self.matrix_basecanvas = np.zeros((height, width), dtype=int)
         self.matrix_annotcanvas = np.zeros((height, width), dtype=int)
@@ -45,6 +50,14 @@ class PixelCanvas:
         self.canvas.bind("<Button-3>", self.draw_pixel)
         self.canvas.bind("<B3-Motion>", self.draw_pixel)
         self.canvas.bind("<ButtonRelease-3>", self.draw_pixel)
+
+        self.base_bound =    {"upper_bound":self.margin, "lower_bound":self.corr_height+self.margin, "left_bound":self.margin,                  "right_bound":self.corr_width  +self.margin}
+        self.annot_bound =   {"upper_bound":self.margin, "lower_bound":self.corr_height+self.margin, "left_bound":self.margin*2 + self.corr_width,   "right_bound":self.corr_width*2+self.margin*2}
+        self.overlay_bound = {"upper_bound":self.margin, "lower_bound":self.corr_height+self.margin, "left_bound":self.margin*3 + self.corr_width*2, "right_bound":self.corr_width*3+self.margin*3}
+
+        self.base_bound_corr = dict(zip([key for key in self.base_bound],[self.base_bound[key]//self.pixel_size for key in self.base_bound]))
+        self.annot_bound_corr = dict(zip([key for key in self.annot_bound],[self.annot_bound[key]//self.pixel_size for key in self.annot_bound]))
+        self.overlay_bound_corr = dict(zip([key for key in self.overlay_bound],[self.overlay_bound[key]//self.pixel_size for key in self.overlay_bound]))
 
     def placeholder_drawimage(self, imgpath):
         if os.path.exists(imgpath):
@@ -110,57 +123,55 @@ class PixelCanvas:
         self.drawcolor=color
 
     def draw_pixel(self, event):
-        color_num_dict = {0:"black", 1:"white"}
+
         if event.num != "??":
-            self.pivot_bit = 1-(int(event.num) >> 1)
+            # self.pivot_bit = 1-(int(event.num) >> 1)
+            self.setdrawcolor(self.color_dict[1-(int(event.num) >> 1)])
 
         # print(event.num)
         # if event.num == 1:
-        if self.pivot_bit:
-            self.setdrawcolor("white")
-        # if event.num == 3:
-        else:
-            self.setdrawcolor("black")
+        # if self.pivot_bit:
+        #     self.setdrawcolor("white")
+        # # if event.num == 3:
+        # else:
+        #     self.setdrawcolor("black")
 
         x = event.x // self.pixel_size
         y = event.y // self.pixel_size
 
-        base_bound =    {"upper_bound":self.margin, "lower_bound":self.corr_height+self.margin, "left_bound":self.margin,                  "right_bound":self.corr_width  +self.margin}
-        annot_bound =   {"upper_bound":self.margin, "lower_bound":self.corr_height+self.margin, "left_bound":self.margin*2 + self.corr_width,   "right_bound":self.corr_width*2+self.margin*2}
-        overlay_bound = {"upper_bound":self.margin, "lower_bound":self.corr_height+self.margin, "left_bound":self.margin*3 + self.corr_width*2, "right_bound":self.corr_width*3+self.margin*3}
-
-        base_bound_corr = dict(zip([key for key in base_bound],[base_bound[key]//self.pixel_size for key in base_bound]))
-        annot_bound_corr = dict(zip([key for key in annot_bound],[annot_bound[key]//self.pixel_size for key in annot_bound]))
-        overlay_bound_corr = dict(zip([key for key in overlay_bound],[overlay_bound[key]//self.pixel_size for key in overlay_bound]))
+        if y == self.last_pixel[1]:
+            if x == self.last_pixel[0]:
+                return None
 
 
         # print(self.drawcolor)
 
-        if self.margin//self.pixel_size <= y < (self.corr_height+self.margin)//self.pixel_size:
+        # if self.margin//self.pixel_size <= y < (self.corr_height+self.margin)//self.pixel_size:
+        if self.margin <= y*self.pixel_size < (self.corr_height+self.margin):
             # print(f"{x}, {y}")
             # if self.margin <= x < self.width+self.margin:
-            if base_bound_corr['left_bound'] <= x < base_bound_corr['right_bound']:
+            if self.base_bound_corr['left_bound'] <= x < self.base_bound_corr['right_bound']:
                 x1 = (x+self.width) * self.pixel_size + self.margin
                 y1 = y * self.pixel_size
                 x2 = x1 + self.pixel_size
                 y2 = y1 + self.pixel_size
-                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, width=0) #, outline=self.drawcolor)
-            # if self.width+self.margin*2 <= x < self.width*2+self.margin*2:
-            if annot_bound_corr['left_bound'] <= x < annot_bound_corr['right_bound']:
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, width=0)
+
+            elif self.annot_bound_corr['left_bound'] <= x < self.annot_bound_corr['right_bound']:
                 x1 = x * self.pixel_size
                 y1 = y * self.pixel_size
                 x2 = x1 + self.pixel_size 
                 y2 = y1 + self.pixel_size 
-                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, width=0, outline=self.drawcolor)
-            # if self.width*2+self.margin*2 <= x < self.width*3+self.margin*2:
-            if overlay_bound_corr['left_bound'] <= x < overlay_bound_corr['right_bound']:
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, width=0)
+
+            elif self.overlay_bound_corr['left_bound'] <= x < self.overlay_bound_corr['right_bound']:
                 x1 = (x-self.width) * self.pixel_size - self.margin
                 y1 = y * self.pixel_size
                 x2 = x1 + self.pixel_size
                 y2 = y1 + self.pixel_size
-                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, width=0, outline=self.drawcolor)
-            # self.canvas.create_rectangle(x1+self.width*self.pixel_size, y1, x2+self.width*self.pixel_size, y2, fill=self.drawcolor, outline=self.drawcolor)
-            # self.matrix_annotcanvas[y, x-self.width] = self.pivot_bit
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, width=0)
+            
+            self.last_pixel = [x, y]
 
 root = tk.Tk()
 canvas = PixelCanvas(root, 64, 64)

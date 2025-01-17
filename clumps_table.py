@@ -62,9 +62,9 @@ def find_clumps_skimage(image: PIL.Image, mode:str, filter_mode:str, saveas: str
 
 
             print("Closing...")
-            image_closing = skimorph.area_closing(image_numpy, area_threshold = 80) #80
+            image_closing = skimorph.area_closing(image_numpy, area_threshold = 0) #80
             print("Opening...")
-            image_opening = skimorph.area_opening(image_closing, area_threshold = 120) #120
+            image_opening = skimorph.area_opening(image_closing, area_threshold = 0) #120
             final_image=image_opening
     elif filter_mode == "confidence":
         final_image = image/255 > 0.87
