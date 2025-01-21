@@ -8,10 +8,6 @@ import os
 
 import typing
 
-class audit_canvas():
-    pass
-
-
 import tkinter as tk
 
 class PixelCanvas:
@@ -29,11 +25,16 @@ class PixelCanvas:
         self.annot_section = annot_section
 
         self.base_section_array = np.array(self.base_section)
-        print(self.base_section)
+        # print(self.base_section)
         self.annot_section_array = np.array(self.annot_section)
-        print(self.annot_section_array)
+        # print(self.annot_section_array)
 
-        self.color_dict = {1:"white", 0:"black"}
+        # self.color_dict = {1:"white", 0:"black"}
+        # self.drawcolor = "white"
+        self.color_dict = {1:"#FFFFFF", 0:"#000000"}
+        self.drawcolor = "#FFFFFF"
+        self.pivotbit = 1
+        self.overlay_alpha = 40
 
         self.last_pixel = [0,0]
 
@@ -45,8 +46,7 @@ class PixelCanvas:
 
         # self.testimage = ImageTk.PhotoImage(Image.open("zeta_maxnoise.png"))
         
-        self.drawcolor = "white"
-        self.pivotbit = 1
+
 
         self.canvas = tk.Canvas(master, width=self.corr_width*3+4*self.margin, height=self.corr_height+2*self.margin, bg="gray", cursor="plus", borderwidth=1)
         self.canvas.pack()
@@ -104,18 +104,17 @@ class PixelCanvas:
         img_overlay_bas = img_base
         img_overlay_ann = img_overlay_ann.convert("RGBA")
         img_overlay_bas = img_overlay_bas.convert("RGBA")
-        img_overlay_ann.putalpha(40)
+        img_overlay_ann.putalpha(self.overlay_alpha)
         img_overlay_bas.putalpha(255)
 
 
         full_overlay = img_overlay_bas
-        # Image.Image.paste(full_overlay, img_overlay_ann)
+
         full_overlay = Image.blend(full_overlay, img_overlay_ann, 0.25)
 
         full_overlay_tk = ImageTk.PhotoImage(full_overlay)
 
         self.canvas.create_image(2*self.corr_width+self.margin*3, self.margin, anchor=tk.NW, image=full_overlay_tk)
-        # self.canvas.create_image(2*self.corr_width+20, 0, anchor=tk.NW, image=img_annot_tk)
 
         self.canvas.image_base=img_base_tk
         self.canvas.image_annot=img_annot_tk
@@ -124,20 +123,13 @@ class PixelCanvas:
     
     def setdrawcolor(self, color):
         self.drawcolor=color
+        self.drawcolor_w_alpha = None
 
     def draw_pixel(self, event):
 
         if event.num != "??":
-            # self.pivot_bit = 1-(int(event.num) >> 1)
-            self.setdrawcolor(self.color_dict[1-(int(event.num) >> 1)])
-
-        # print(event.num)
-        # if event.num == 1:
-        # if self.pivot_bit:
-        #     self.setdrawcolor("white")
-        # # if event.num == 3:
-        # else:
-        #     self.setdrawcolor("black")
+            self.pivot_bit = 1-(int(event.num) >> 1)
+            self.setdrawcolor(self.color_dict[self.pivot_bit])
 
         x = event.x // self.pixel_size
         y = event.y // self.pixel_size
@@ -146,13 +138,8 @@ class PixelCanvas:
             if x == self.last_pixel[0]:
                 return None
 
-
-        # print(self.drawcolor)
-
-        # if self.margin//self.pixel_size <= y < (self.corr_height+self.margin)//self.pixel_size:
         if self.margin <= y*self.pixel_size < (self.corr_height+self.margin):
-            # print(f"{x}, {y}")
-            # if self.margin <= x < self.width+self.margin:
+
             if self.base_bound_corr['left_bound'] <= x < self.base_bound_corr['right_bound']:
                 x1 = (x+self.width) * self.pixel_size + self.margin
                 y1 = y * self.pixel_size
@@ -173,12 +160,13 @@ class PixelCanvas:
                 x2 = x1 + self.pixel_size
                 y2 = y1 + self.pixel_size
                 self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, width=0)
+
             
+
             self.last_pixel = [x, y]
+            self.annot_section_array[int(y-self.margin/self.pixel_size)%self.height][int(x-self.margin/self.pixel_size)%self.width] = self.pivot_bit
 
 root = tk.Tk()
-# canvas = PixelCanvas(root, 64, 64, base_section=Image.open('test_stomata_viz_BASE.png'), annot_section=Image.open('test_stomata_viz_ANNOT.png'))
 canvas = PixelCanvas(root, 64, 64, base_section=Image.open('test_stomata_viz_BASE.png'), annot_section=Image.open('test_stomata_viz_ANNOT.png'))
-# canvas.placeholder_drawimage("canvas_placeholder_test.png")
-# canvas.draw_initial_canvas({'base':'test_stomata_viz_BASE.png', 'annot':'test_stomata_viz_ANNOT.png',})
+np.set_printoptions(threshold=np.inf)
 root.mainloop()
