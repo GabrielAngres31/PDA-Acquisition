@@ -9,9 +9,12 @@ import os
 import typing
 
 import tkinter as tk
+import argparse
+
+np.set_printoptions(threshold=np.inf)
 
 class PixelCanvas:
-    def __init__(self, master, width, height, margin=12, base_section=None, annot_section=None, pixel_size=4):
+    def __init__(self, master, width, height, margin=12, base_section_path=None, annot_section_path=None, pixel_size=4):
         self.master = master
         self.width = width
         self.height = height
@@ -21,12 +24,21 @@ class PixelCanvas:
         self.corr_height = self.height*self.pixel_size 
         self.corr_width = self.width*self.pixel_size
 
-        self.base_section = base_section
-        self.annot_section = annot_section
+        self.base_section = Image.open(base_section_path)
+        self.annot_section = Image.open(annot_section_path)
 
         self.base_section_array = np.array(self.base_section)
         # print(self.base_section)
-        self.annot_section_array = np.array(self.annot_section)
+        self.annot_section_array = np.asarray(self.annot_section, dtype=np.uint8)
+        self.annot_section_array_copy_out = np.copy(self.annot_section_array)
+
+        base_section_shape = self.base_section_array.shape
+        annot_section_shape = self.annot_section_array.shape
+        assert base_section_shape==(width, height), f"Base Image has improper dimensions: {base_section_shape} instead of ({width}, {height})"
+        assert annot_section_shape==(width, height, 3), f"Base Image has improper dimensions: {annot_section_shape} instead of ({width}, {height})"
+        print("annot_section_array")
+        print(self.annot_section_array.shape)
+        # self.annot_section.show()
         # print(self.annot_section_array)
 
         # self.color_dict = {1:"white", 0:"black"}
@@ -71,33 +83,25 @@ class PixelCanvas:
 
         self.draw_initial_canvas()
 
-    # def placeholder_drawimage(self, imgpath):
-    #     if os.path.exists(imgpath):
-    #         img = ImageTk.PhotoImage(Image.open(imgpath).resize((self.corr_width*2,self.corr_height*2), Image.Resampling.LANCZOS))
-
-    #         img_placeholder_BASE =    self.canvas.create_image(  self.corr_width +  self.margin, self.margin, anchor=tk.NW, image=img)
-    #         img_placeholder_ANNOT =   self.canvas.create_image(2*self.corr_width +3*self.margin, self.margin, anchor=tk.NW, image=img)
-    #         img_placeholder_OVERLAY = self.canvas.create_image(3*self.corr_width +5*self.margin, self.margin, anchor=tk.NW, image=img)
-    #         # TODO: How do i...change the image position
-
-
-
-
-    #         self.canvas.image = img
-    #     else:
-    #         print(f"Error: Image file not found: {imgpath}")
-
-    
-    # def draw_initial_canvas(self, imgpath_dict):
     def draw_initial_canvas(self):
         # img_base = Image.open(imgpath_dict['base']).resize((self.corr_width, self.corr_height), Image.Resampling.LANCZOS)
         # img_annot = Image.open(imgpath_dict['annot']).resize((self.corr_width, self.corr_height), Image.Resampling.LANCZOS)
-        img_base =  self.base_section.resize(( self.corr_width, self.corr_height), Image.Resampling.LANCZOS)
-        img_annot = self.annot_section.resize((self.corr_width, self.corr_height), Image.Resampling.LANCZOS)
-        img_base_tk = ImageTk.PhotoImage(img_base)
-        img_annot_tk = ImageTk.PhotoImage(img_annot)
-        self.canvas.create_image(self.margin,                   self.margin, anchor = tk.NW, image=img_base_tk)
-        self.canvas.create_image(self.corr_width+self.margin*2, self.margin, anchor = tk.NW, image=img_annot_tk)
+        if np.max(self.annot_section_array) == 1:
+            array_annot = Image.fromarray(self.annot_section_array*255, mode="L")
+        else:
+            array_annot = Image.fromarray(self.annot_section_array, mode="RGB") # Weird hacky way to get image to display properly. Image MUST BE JPG
+
+
+        # array_annot.show()
+
+        img_base =  self.base_section.resize(( self.corr_width, self.corr_height), Image.Resampling.NEAREST)
+        # img_annot = self.annot_section.resize((self.corr_width, self.corr_height), Image.Resampling.LANCZOS)
+        img_annot = array_annot.resize((self.corr_width, self.corr_height), Image.Resampling.NEAREST)
+
+        self.img_base_tk = ImageTk.PhotoImage(img_base)
+        self.img_annot_tk = ImageTk.PhotoImage(img_annot)
+        self.canvas.create_image(self.margin,                   self.margin, anchor = tk.NW, image=self.img_base_tk)
+        self.canvas.create_image(self.corr_width+self.margin*2, self.margin, anchor = tk.NW, image=self.img_annot_tk)
 
 
         img_overlay_ann = img_annot
@@ -116,8 +120,8 @@ class PixelCanvas:
 
         self.canvas.create_image(2*self.corr_width+self.margin*3, self.margin, anchor=tk.NW, image=full_overlay_tk)
 
-        self.canvas.image_base=img_base_tk
-        self.canvas.image_annot=img_annot_tk
+        self.canvas.image_base=self.img_base_tk
+        self.canvas.image_annot=self.img_annot_tk
         self.canvas.image_overlay=full_overlay_tk
 
     
@@ -162,11 +166,62 @@ class PixelCanvas:
                 self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, width=0)
 
             
-
             self.last_pixel = [x, y]
-            self.annot_section_array[int(y-self.margin/self.pixel_size)%self.height][int(x-self.margin/self.pixel_size)%self.width] = self.pivot_bit
+            # print(self.annot_section_array_copy_out)
+            self.annot_section_array_copy_out[int(y-self.margin/self.pixel_size)%self.height][int(x-self.margin/self.pixel_size)%self.width] = [self.pivot_bit]*3
 
-root = tk.Tk()
-canvas = PixelCanvas(root, 64, 64, base_section=Image.open('test_stomata_viz_BASE.png'), annot_section=Image.open('test_stomata_viz_ANNOT.png'))
-np.set_printoptions(threshold=np.inf)
-root.mainloop()
+            img_overlay_ann = self.img_annot
+            # img_overlay_bas = self.img_base
+            img_overlay_ann = img_overlay_ann.convert("RGBA")
+            # img_overlay_bas = img_overlay_bas.convert("RGBA")
+            img_overlay_ann.putalpha(self.overlay_alpha)
+            img_overlay_bas.putalpha(255)
+
+
+            full_overlay = img_overlay_bas
+
+            full_overlay = Image.blend(full_overlay, img_overlay_ann, 0.25)
+
+            full_overlay_tk = ImageTk.PhotoImage(full_overlay)
+
+            self.canvas.create_image(2*self.corr_width+self.margin*3, self.margin, anchor=tk.NW, image=full_overlay_tk)
+
+        
+
+def get_argparser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--base_path',
+        type = str,
+        default = "test_stomata_viz_BASE.png",
+        #required = True,
+        help = 'Image section for Base.'
+    )
+    parser.add_argument(
+        '--annot_path',
+        type = str,
+        default = "fuzzy_test.jpg",
+        #required = True,
+        help = 'Image section for Annot.'
+    )
+
+    return parser
+
+def main(args:argparse.Namespace) -> bool:
+    
+    root = tk.Tk()
+    # canvas = PixelCanvas(root, 64, 64, base_section=Image.open('test_stomata_viz_BASE.png'), annot_section=Image.open('test_stomata_viz_ANNOT.jpg'))
+    # canvas = PixelCanvas(root, 64, 64, base_section=Image.open('test_stomata_viz_BASE.png'), annot_section=Image.open('fuzzy_test.jpg'))
+    canvas = PixelCanvas(root, 64, 64, base_section_path=args.base_path, annot_section_path=args.annot_path)
+    root.mainloop()
+
+    Image.save()
+
+    #return True
+
+if __name__ == '__main__':
+    args = get_argparser().parse_args()
+    ok   = main(args)
+    if ok:
+        print('Done')
+

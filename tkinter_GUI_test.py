@@ -3,6 +3,8 @@ from tkinter import filedialog, messagebox, ttk
 import pandas as pd
 from PIL import Image, ImageTk
 import os
+import image_audit_canvas
+import subprocess
 
 class StomataGUI:
     def __init__(self, root):
@@ -42,9 +44,11 @@ class StomataGUI:
         self.filemenu.add_command(label="Load Base", command=self.import_BASE_dialog)
         self.filemenu.add_command(label="Load Annot", command=self.import_ANNOT_dialog)
         self.filemenu.add_command(label="Load CSV", command=self.import_CSV_dialog)
+        self.filemenu.add_command(label="Edit Annotation...", command=self.open_window_edit)
         self.filemenu.add_command(label="Set Recents", command=self.set_recents)
         self.filemenu.add_command(label="Set Paired Files", command=self.set_paired_files)
         self.filemenu.add_command(label="Paired Files", command=donothing)
+        
         self.filemenu.add_separator()
         self.filemenu.add_command(label="Exit", command=root.quit)
 
@@ -230,6 +234,7 @@ class StomataGUI:
         self.photo = ImageTk.PhotoImage(img)
         canvas.delete("all")
         canvas.create_image(self.xD(), self.yD(), anchor=tk.NW, image=self.photo)
+        print(self.xc(), self.yc())
         canvas.image = self.photo
         print(f"Updated Images to {-self.x0()}, {-self.y0()}")
 
@@ -323,6 +328,25 @@ class StomataGUI:
             else:
                 unique_items[item] = 1
         print(unique_items)
+
+    def open_window_edit(self):
+        window_size = 64
+        crop_coords = (-(self.xc()+window_size//2), -(self.yc()+window_size//2), -(self.xc()-window_size//2), -(self.yc()-window_size//2))
+        print(crop_coords)
+        save_base = self.image_base.crop(crop_coords)
+        save_annot = self.image_annot.crop(crop_coords)
+        # Get the two images
+        
+        
+        
+        # Save the two images to that folder with defined names
+        save_base.convert("L").save("annotation_helper_files/save_base_file.png")
+        save_annot.convert("RGB").save("annotation_helper_files/save_annot_file.jpg")
+        # Pass the paths as an arg to the subprocess command
+        edit_root = tk.Toplevel(self.root)
+        canvas = image_audit_canvas.PixelCanvas(edit_root, window_size, window_size, base_section_path="annotation_helper_files/save_base_file.png", annot_section_path="annotation_helper_files/save_annot_file.jpg")
+        # subprocess.run("python image_audit_canvas.py --base_path=annotation_helper_files/save_base_file.png --annot_path=annotation_helper_files/save_annot_file.jpg", shell=True)        
+
     
     def on_closing(self):
         print("Window is closing...")
@@ -333,7 +357,7 @@ class StomataGUI:
         self.root.destroy()  # Close the window
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": #
     root = tk.Tk()
     app = StomataGUI(root)
     root.mainloop()
