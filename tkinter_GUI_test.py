@@ -331,6 +331,7 @@ class StomataGUI:
 
     def open_window_edit(self):
         window_size = 64
+        pixel_size=6
         crop_coords = (-(self.xc()+window_size//2), -(self.yc()+window_size//2), -(self.xc()-window_size//2), -(self.yc()-window_size//2))
         print(crop_coords)
         save_base = self.image_base.crop(crop_coords)
@@ -344,7 +345,7 @@ class StomataGUI:
         save_annot.convert("RGB").save("annotation_helper_files/save_annot_file.jpg")
         # Pass the paths as an arg to the subprocess command
         edit_root = tk.Toplevel(self.root)
-        canvas = image_audit_canvas.PixelCanvas(edit_root, window_size, window_size, base_section_path="annotation_helper_files/save_base_file.png", annot_section_path="annotation_helper_files/save_annot_file.jpg")
+        canvas = image_audit_canvas.PixelCanvas(edit_root, window_size, window_size, base_section_path="annotation_helper_files/save_base_file.png", annot_section_path="annotation_helper_files/save_annot_file.jpg", pixel_size=pixel_size)
         # subprocess.run("python image_audit_canvas.py --base_path=annotation_helper_files/save_base_file.png --annot_path=annotation_helper_files/save_annot_file.jpg", shell=True)        
 
     
