@@ -12,7 +12,7 @@ class StomataGUI:
 
         # Load Config options
         ### Read config file
-        self.configFilePath = "stomata_gui_config.txt"
+        self.configFilePath = "annotation_helper_files/stomata_gui_config.txt"
          
         with open(self.configFilePath, 'r') as file:
             lines = file.readlines()
@@ -26,6 +26,8 @@ class StomataGUI:
         self.menubar = tk.Menu(root)
         self.root.config(menu = self.menubar)
         self.filemenu = tk.Menu(self.menubar, tearoff=0)
+        self.editmenu = tk.Menu(self.menubar, tearoff=0)
+        self.manamenu = tk.Menu(self.menubar, tearoff=0)
 
         main_tab_control = ttk.Notebook(root)
         image_compare_tab = ttk.Frame(main_tab_control)
@@ -40,17 +42,23 @@ class StomataGUI:
 
         # Make the "File" Menu Options                
         self.menubar.add_cascade(label="File", menu=self.filemenu)
+        self.menubar.add_cascade(label="Edit", menu=self.editmenu)
+        self.menubar.add_cascade(label="Manage", menu=self.manamenu)
 
         self.filemenu.add_command(label="Load Base", command=self.import_BASE_dialog)
         self.filemenu.add_command(label="Load Annot", command=self.import_ANNOT_dialog)
         self.filemenu.add_command(label="Load CSV", command=self.import_CSV_dialog)
-        self.filemenu.add_command(label="Edit Annotation...", command=self.open_window_edit)
-        self.filemenu.add_command(label="Set Recents", command=self.set_recents)
-        self.filemenu.add_command(label="Set Paired Files", command=self.set_paired_files)
-        self.filemenu.add_command(label="Paired Files", command=donothing)
-        
         self.filemenu.add_separator()
         self.filemenu.add_command(label="Exit", command=root.quit)
+
+        self.editmenu.add_command(label="Edit Annotation...", command=self.open_window_edit)
+        self.editmenu.add_command(label="Confirm Annotation", command=self.confirm_annot) 
+
+        self.manamenu.add_command(label="Paired Files (WIP)", command=donothing)
+        self.manamenu.add_separator()
+        self.manamenu.add_command(label="Set Recents (WIP)", command=self.set_recents)
+        self.manamenu.add_command(label="Set Paired Files (WIP)", command=self.set_paired_files)
+
 
         self.window_sidelength = 148
 
@@ -87,6 +95,8 @@ class StomataGUI:
         self.max_number = 0
         self.df_coords = None
         self.notes_list = []
+        self.confirm_annot_num = 0
+        self.confirm_annot_bbox_coords = [0, 0, 0, 0]
 
         self.opacity_lower_bound = 0
         
@@ -327,18 +337,19 @@ class StomataGUI:
                 unique_items[item] += 1
             else:
                 unique_items[item] = 1
-        print(unique_items)
+        # print(unique_items)
 
     def open_window_edit(self):
         window_size = 64
         pixel_size=6
         crop_coords = (-(self.xc()+window_size//2), -(self.yc()+window_size//2), -(self.xc()-window_size//2), -(self.yc()-window_size//2))
-        print(crop_coords)
+        # print(crop_coords)
         save_base = self.image_base.crop(crop_coords)
         save_annot = self.image_annot.crop(crop_coords)
         # Get the two images
         
-        
+        self.confirm_annot_num = self.bbox_number
+        self.confirm_annot_bbox_coords = self.bbox_coords
         
         # Save the two images to that folder with defined names
         save_base.convert("L").save("annotation_helper_files/save_base_file.png")
@@ -347,6 +358,10 @@ class StomataGUI:
         edit_root = tk.Toplevel(self.root)
         canvas = image_audit_canvas.PixelCanvas(edit_root, window_size, window_size, base_section_path="annotation_helper_files/save_base_file.png", annot_section_path="annotation_helper_files/save_annot_file.jpg", pixel_size=pixel_size)
         # subprocess.run("python image_audit_canvas.py --base_path=annotation_helper_files/save_base_file.png --annot_path=annotation_helper_files/save_annot_file.jpg", shell=True)        
+    
+    def confirm_annot(self):
+        print(self.confirm_annot_num)
+        print(self.confirm_annot_bbox_coords)
 
     
     def on_closing(self):

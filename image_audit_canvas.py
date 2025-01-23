@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import tkinter as tk
+from tkinter import messagebox
 import numpy as np
 from PIL import Image, ImageTk
 import os
@@ -84,6 +85,8 @@ class PixelCanvas:
 
         self.draw_initial_canvas()
 
+        self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
+
     def draw_initial_canvas(self):
         # img_base = Image.open(imgpath_dict['base']).resize((self.corr_width, self.corr_height), Image.Resampling.LANCZOS)
         # img_annot = Image.open(imgpath_dict['annot']).resize((self.corr_width, self.corr_height), Image.Resampling.LANCZOS)
@@ -162,16 +165,10 @@ class PixelCanvas:
             self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, width=0)
             
             self.last_pixel = [x, y]
-            #print(self.last_pixel)
-            #print(int(y-self.margin/2*self.pixel_size)%self.height, int(x-self.margin/2*self.pixel_size)%self.width)
-
-            # print(self.annot_section_array_copy_out)
-            # array_x = int(x - 2*self.margin)%self.width
-            # array_y = int(y +   self.margin)%self.height
             array_x = (x1-(2*self.corr_margin+self.pixel_size*self.width))//self.pixel_size
-            array_y = (y1-self.corr_margin-self.height*self.pixel_size)//self.pixel_size
+            array_y = (y1-   self.corr_margin-self.height*self.pixel_size)//self.pixel_size
             
-            print(x1, y1, self.width, self.width*self.pixel_size, array_x, array_y)
+            # print(x1, y1, self.width, self.width*self.pixel_size, array_x, array_y)
 
             self.annot_section_array_copy_out[array_y][array_x] = [self.pivot_bit*255]*3
             
@@ -181,7 +178,17 @@ class PixelCanvas:
             annot_copy_update.putalpha(self.overlay_alpha)
             self.update_overlay(base_img = self.img_overlay_bas, annot_img = annot_copy_update)
 
-            # REDRAW LIVE OVERLAY
+    def get_annot_result(self):
+        return self.annot__section_array
+    
+    def on_closing(self):
+        res=messagebox.askokcancel('Exit Application', 'Commit changes to image?')
+        # print(res)
+        if res:
+            Image.fromarray(self.annot_section_array_copy_out, mode="RGB").save("annotation_helper_files/changed_annot_file.jpg")
+            self.master.destroy()
+        else :
+            messagebox.askokcancel('Return', 'Returning to main application')
         
 
 def get_argparser() -> argparse.ArgumentParser:
