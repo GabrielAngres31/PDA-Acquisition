@@ -95,8 +95,10 @@ class StomataGUI:
         self.max_number = 0
         self.df_coords = None
         self.notes_list = []
+
         self.confirm_annot_num = 0
         self.confirm_annot_bbox_coords = [0, 0, 0, 0]
+        self.confirm_annot_corner = [0, 0]
 
         self.opacity_lower_bound = 0
         
@@ -119,6 +121,10 @@ class StomataGUI:
         self.checkbox_advance = tk.Checkbutton(image_compare_tab, text="Advance on Label", variable=self.advance_on_label, command=lambda:print(self.advance_on_label.get()))
         self.checkbox_advance.grid(row=3, column=1, padx=5, pady=10)
 
+        # Current Label
+        self.current_labels = tk.Label(image_compare_tab, text=0)
+        self.current_labels.grid(row=3, column=0, padx=5, pady=10)
+
         # Label Buttons
         self.button_mark_single = tk.Button(image_compare_tab, text="Edge", command=lambda: self.mark_note("Edge"))
         self.button_mark_single.grid(row=4, column=0, padx=5, pady=10)
@@ -128,6 +134,17 @@ class StomataGUI:
 
         self.button_mark_triple = tk.Button(image_compare_tab, text="ERROR", command=lambda: self.mark_note("ERROR"))
         self.button_mark_triple.grid(row=4, column=2, padx=5, pady=10)
+
+        self.button_mark_single = tk.Button(image_compare_tab, text="Pore", command=lambda: self.mark_note("Pore"))
+        self.button_mark_single.grid(row=5, column=0, padx=5, pady=10)
+
+        self.button_mark_triple = tk.Button(image_compare_tab, text="No Pore", command=lambda: self.mark_note("Nope"))
+        self.button_mark_triple.grid(row=5, column=2, padx=5, pady=10)
+
+        self.button_mark_triple = tk.Button(image_compare_tab, text="Unsure", command=lambda: self.mark_note("Unsure"))
+        self.button_mark_triple.grid(row=5, column=1, padx=5, pady=10)
+
+
 
 
 
@@ -220,9 +237,7 @@ class StomataGUI:
                 df_coords['bbox-0'][self.bbox_number.get()-1], 
                 df_coords['bbox-3'][self.bbox_number.get()-1], 
                 df_coords['bbox-2'][self.bbox_number.get()-1]]
-            # self.bbox_entry.delete(0, tk.END)
-            # self.bbox_entry.insert(0, str(self.bbox_number))
-            # self.bbox_number.set(1)
+            self.current_labels.config(text=self.notes_list[self.bbox_number.get()-1])
 
         else:
             messagebox.showwarning("Warning", "Bounding box number is out of range!")
@@ -342,6 +357,7 @@ class StomataGUI:
     def open_window_edit(self):
         window_size = 64
         pixel_size=6
+        global crop_coords 
         crop_coords = (-(self.xc()+window_size//2), -(self.yc()+window_size//2), -(self.xc()-window_size//2), -(self.yc()-window_size//2))
         # print(crop_coords)
         save_base = self.image_base.crop(crop_coords)
@@ -350,6 +366,8 @@ class StomataGUI:
         
         self.confirm_annot_num = self.bbox_number
         self.confirm_annot_bbox_coords = self.bbox_coords
+        self.confirm_annot_corner = [-self.xc(), -self.yc()]
+        
         
         # Save the two images to that folder with defined names
         save_base.convert("L").save("annotation_helper_files/save_base_file.png")
@@ -360,8 +378,10 @@ class StomataGUI:
         # subprocess.run("python image_audit_canvas.py --base_path=annotation_helper_files/save_base_file.png --annot_path=annotation_helper_files/save_annot_file.jpg", shell=True)        
     
     def confirm_annot(self):
-        print(self.confirm_annot_num)
-        print(self.confirm_annot_bbox_coords)
+        img_repaste = Image.open("annotation_helper_files/changed_annot_file.jpg")
+        self.image_annot.paste(img_repaste, [crop_coords[0], crop_coords[1]])
+
+
 
     
     def on_closing(self):
@@ -370,6 +390,7 @@ class StomataGUI:
         self.update_csv_notes()
         self.note_summary_stats()
         self.set_recents()
+        self.image_annot.save(self.config_properties["recent_ANNOT"])
         self.root.destroy()  # Close the window
 
 
