@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 import tqdm
-
+import shutil
 # print(glob.glob("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/only_pored/BASE/*.tif"))
 # print(glob.glob("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/only_pored/BASE/*"))
 
@@ -239,3 +239,20 @@ def copy_files_from_csv(csv_file, destination_folder):
 #   subprocess.run(f"python clumps_table.py --input_path=inference/MAX_100nMAZD_ADM100_ML1pmCherry-RCI2A_5dpg_102324.lif--100nMAZD_{i}_1_Merged.tif_AZD_jan2025_100nMAZD_{i}_1.output.png --prediction_type=clumps --filter_type=otsu --save_image_as=AZD_100nM_{i}_1 --output_folder=only_pored/AZD_test/inference_jan_2025", shell=True)
 #   subprocess.run(f"python clumps_table.py --input_path=inference/MAX_DMSO_ADM100_ML1pmCherry-RCI2A_5dpg_102324.lif--DMSO_{i}_1_Merged.tif_AZD_jan2025_DMSO_{i}_1.output.png --prediction_type=clumps --filter_type=otsu --save_image_as=AZD_DMSO_{i}_1 --output_folder=only_pored/AZD_test/inference_jan_2025", shell=True)
 
+# with open('splits/pores_only_test_12-2024.csv', newline='') as csvfile:
+
+#     spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+
+#     for row in spamreader:
+#         row = [i.strip(" ") for i in row]
+#         row = [i.strip(",") for i in row]
+#         print(row)
+#         shutil.copy(row[0], f"pore_nopore_test_folder/BASE/{os.path.basename(row[0])}")
+#         shutil.copy(row[1], f"pore_nopore_test_folder/ANNOT_former/{os.path.basename(row[0])}")
+#         subprocess.run(f"python clumps_table.py --input_path={row[1]} --output_folder=pore_nopore_test_folder/clumps --prediction_type=clumps --filter_type=otsu", shell=True)
+
+for path in glob.glob("AZD_source/ANNOT_prep/*.png"):
+    subprocess.run(f"python clumps_table.py --input_path={path} --output_folder=AZD_source/clumps --prediction_type=clumps --filter_type=confidence", shell=True)
+    pass
+
+        # print(', '.join(row))

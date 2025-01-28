@@ -1,3 +1,5 @@
+# Import necessary packages
+
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 import pandas as pd
@@ -6,12 +8,15 @@ import os
 import image_audit_canvas
 import subprocess
 
+
+
 class StomataGUI:
     def __init__(self, root):
 
-
         # Load Config options
         ### Read config file
+        ### Loads: Recent BASE, ANNOT, and CSV files
+        ### TODO: 
         self.configFilePath = "annotation_helper_files/stomata_gui_config.txt"
          
         with open(self.configFilePath, 'r') as file:
@@ -23,15 +28,17 @@ class StomataGUI:
         self.root = root
         self.root.title("Image Importer")
 
+        # Navigable Tabs
+        main_tab_control = ttk.Notebook(root)
+        image_compare_tab = ttk.Frame(main_tab_control)
+        inference_tab = ttk.Frame(main_tab_control)
+
+        ### Menu Bars
         self.menubar = tk.Menu(root)
         self.root.config(menu = self.menubar)
         self.filemenu = tk.Menu(self.menubar, tearoff=0)
         self.editmenu = tk.Menu(self.menubar, tearoff=0)
         self.manamenu = tk.Menu(self.menubar, tearoff=0)
-
-        main_tab_control = ttk.Notebook(root)
-        image_compare_tab = ttk.Frame(main_tab_control)
-        inference_tab = ttk.Frame(main_tab_control)
 
         main_tab_control.add(inference_tab, text='Inference (WIP)')
         main_tab_control.add(image_compare_tab, text='Annotator')
@@ -40,7 +47,7 @@ class StomataGUI:
 
         def donothing(): l=0
 
-        # Make the "File" Menu Options                
+        ### "File" Menu Options                
         self.menubar.add_cascade(label="File", menu=self.filemenu)
         self.menubar.add_cascade(label="Edit", menu=self.editmenu)
         self.menubar.add_cascade(label="Manage", menu=self.manamenu)
@@ -50,16 +57,21 @@ class StomataGUI:
         self.filemenu.add_command(label="Load CSV", command=self.import_CSV_dialog)
         self.filemenu.add_separator()
         self.filemenu.add_command(label="Exit", command=root.quit)
-
+        
+        ### "Edit" Menu Options     
         self.editmenu.add_command(label="Edit Annotation...", command=self.open_window_edit)
         self.editmenu.add_command(label="Confirm Annotation", command=self.confirm_annot) 
+        image_compare_tab.bind("<Shift_L>", lambda event: self.confirm_annot)
+        self.editmenu.add_command(label="Confirm Notes", command=self.confirm_notes) 
+        image_compare_tab.bind("<q>", lambda event: self.confirm_notes)
 
+        ### Manager Menu Options
         self.manamenu.add_command(label="Paired Files (WIP)", command=donothing)
         self.manamenu.add_separator()
-        self.manamenu.add_command(label="Set Recents (WIP)", command=self.set_recents)
+        self.manamenu.add_command(label="Set Recents", command=self.set_recents)
         self.manamenu.add_command(label="Set Paired Files (WIP)", command=self.set_paired_files)
 
-
+        # Hardcoded window sidelength
         self.window_sidelength = 148
 
 
@@ -89,10 +101,10 @@ class StomataGUI:
         self.image_overlay = None
 
         self.bbox_coords = [0, 0, self.window_sidelength, self.window_sidelength]
-        self.photo = None
+        self.photo = None # Placeholder for image updating
         self.bbox_number = tk.IntVar()
         self.bbox_number.set(1)
-        self.max_number = 0
+        self.max_number = 0 # How many clumps there are
         self.df_coords = None
         self.notes_list = []
 
@@ -127,26 +139,40 @@ class StomataGUI:
 
         # Label Buttons
         self.button_mark_single = tk.Button(image_compare_tab, text="Edge", command=lambda: self.mark_note("Edge"))
+        image_compare_tab.bind("<a>", lambda event: self.mark_note("Edge"))
         self.button_mark_single.grid(row=4, column=0, padx=5, pady=10)
 
         self.button_mark_double = tk.Button(image_compare_tab, text="Cluster", command=lambda: self.mark_note("Cluster"))
+        image_compare_tab.bind("<s>", lambda event: self.mark_note("Cluster")) 
         self.button_mark_double.grid(row=4, column=1, padx=5, pady=10)
 
         self.button_mark_triple = tk.Button(image_compare_tab, text="ERROR", command=lambda: self.mark_note("ERROR"))
+        image_compare_tab.bind("<d>", lambda event: self.mark_note("ERROR"))        
         self.button_mark_triple.grid(row=4, column=2, padx=5, pady=10)
 
         self.button_mark_single = tk.Button(image_compare_tab, text="Pore", command=lambda: self.mark_note("Pore"))
+        image_compare_tab.bind("<z>", lambda event: self.mark_note("Pore"))
         self.button_mark_single.grid(row=5, column=0, padx=5, pady=10)
 
+        self.button_mark_triple = tk.Button(image_compare_tab, text="Unsure", command=lambda: self.mark_note("Unsure"))
+        image_compare_tab.bind("<x>", lambda event: self.mark_note("Unsure"))
+        self.button_mark_triple.grid(row=5, column=1, padx=5, pady=10)
+        
         self.button_mark_triple = tk.Button(image_compare_tab, text="No Pore", command=lambda: self.mark_note("Nope"))
+        image_compare_tab.bind("<c>", lambda event: self.mark_note("No Pore"))
         self.button_mark_triple.grid(row=5, column=2, padx=5, pady=10)
 
-        self.button_mark_triple = tk.Button(image_compare_tab, text="Unsure", command=lambda: self.mark_note("Unsure"))
-        self.button_mark_triple.grid(row=5, column=1, padx=5, pady=10)
+        image_compare_tab.bind("<Control_L>", self.clear_notes)
 
 
 
 
+
+        # Load recent files if the configuration options exist
+
+        ## BASE File
+        ## ANNOT File
+        ## Clumps CSV
 
         if "recent_BASE" in self.config_properties and self.config_properties["recent_BASE"]:
             self.import_BASE(self.config_properties["recent_BASE"])
@@ -157,35 +183,40 @@ class StomataGUI:
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-
+    # Set config properties during function calls
     def set_property(self, property, value):
         self.config_properties[property] = value
 
+    # Upper left corner of clump bounding box
     def x0(self): 
         return -self.bbox_coords[0]
 
     def y0(self):
         return -self.bbox_coords[1]
     
+    # Low right corner of clump bounding box
     def x1(self): 
         return -self.bbox_coords[2]
 
     def y1(self):
         return -self.bbox_coords[3]
 
+    # Center pixel
     def xc(self):
         return (self.x0()+self.x1())//2
     
     def yc(self):
         return (self.y0()+self.y1())//2
-        
+    
+    # Fixed-size window centered on chunk, upper left corner
     def xD(self):
         return self.xc()+self.window_sidelength//2
     
     def yD(self):
         return self.yc()+self.window_sidelength//2
     
-
+    # File Dialogs
+    ### Get the BASE file (dialog and autofunction)
     def import_BASE_dialog(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.tif")], initialdir=self.config_properties['dir_BASE'])
         if file_path:
@@ -196,6 +227,7 @@ class StomataGUI:
             self.set_property("recent_BASE", file_path)
             self.set_property("dir_BASE", os.path.dirname(file_path))
 
+    ### Get the ANNOT file (dialog and autofunction)
     def import_ANNOT_dialog(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.tif")], initialdir=self.config_properties['dir_ANNOT'])
         if file_path:
@@ -206,6 +238,7 @@ class StomataGUI:
         self.set_property("recent_ANNOT", file_path)
         self.set_property("dir_ANNOT", os.path.dirname(file_path))
 
+    ### Get the CSV file (dialog and autofunction)
     def import_CSV_dialog(self):
         file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")], initialdir=self.config_properties['dir_CSV'])
         if file_path:
@@ -213,7 +246,6 @@ class StomataGUI:
                 self.import_CSV(file_path)
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to read CSV: {e}")
-
     def import_CSV(self, file_path):
         print(f"{file_path}")
         self.df_coords = pd.read_csv(file_path, encoding='utf8')
@@ -230,18 +262,20 @@ class StomataGUI:
         self.set_property("recent_CSV", file_path)
         self.set_property("dir_CSV", os.path.dirname(file_path))
 
+    # Change current bbox coords for focused clump
     def update_bbox_coords(self, df_coords):
-        if self.bbox_number.get() < len(df_coords) and self.bbox_number.get() >= 1:
+        if self.bbox_number.get() < len(df_coords)+1 and self.bbox_number.get() >= 1:
             self.bbox_coords = [
                 df_coords['bbox-1'][self.bbox_number.get()-1], 
                 df_coords['bbox-0'][self.bbox_number.get()-1], 
                 df_coords['bbox-3'][self.bbox_number.get()-1], 
                 df_coords['bbox-2'][self.bbox_number.get()-1]]
             self.current_labels.config(text=self.notes_list[self.bbox_number.get()-1])
-
+            print(self.bbox_number.get())
         else:
             messagebox.showwarning("Warning", "Bounding box number is out of range!")
 
+    # Import an image for display
     def import_image(self, canvas, file_path, image_type):
         try:
             img = Image.open(file_path)
@@ -249,7 +283,8 @@ class StomataGUI:
             print(f"Imported Image {image_type} to {-self.x0()}, {-self.y0()}")
         except:
             print(f"Could not import image. Check your filepath: {file_path}")
-
+        
+    # Change image on a given canvas
     def update_image(self, canvas, img, image_type):
         if image_type == 'BASE':
             self.image_base = img
@@ -263,6 +298,7 @@ class StomataGUI:
         canvas.image = self.photo
         print(f"Updated Images to {-self.x0()}, {-self.y0()}")
 
+    # Change the computed overlay
     def update_overlay(self):
         if self.image_base and self.image_annot:
             try:
@@ -276,26 +312,31 @@ class StomataGUI:
                 print("Image dimension mismatch or other problem detected. Clearing Canvas.")
                 self.canvas_overlay.delete("all")
 
-
+    # Update BASE, ANNOT, and OVERLAY on bbox change
     def update_images(self):
-        if hasattr(self, 'df_coords') and hasattr(self, 'bbox_number') and self.bbox_number.get() < len(self.df_coords) and self.bbox_number.get() >= 0:
+        if hasattr(self, 'df_coords') and hasattr(self, 'bbox_number') and self.bbox_number.get() < len(self.df_coords)+1 and self.bbox_number.get() >= 0:
             self.update_bbox_coords(self.df_coords)
             self.update_image(self.canvas_base, self.image_base, "BASE")
             self.update_image(self.canvas_annot, self.image_annot, "ANNOT")
             self.update_overlay()
 
+    # Go one clump back
     def decrement_bbox(self):
         if hasattr(self, 'df_coords') and self.bbox_number.get() > 1:
+            print("-1")
             s = int(self.bbox_entry.get())
             self.bbox_number.set(s-1)
             self.update_images()
 
+    # Go one clump forward
     def increment_bbox(self):
-        if hasattr(self, 'df_coords') and self.bbox_number.get() < len(self.df_coords) + 1:
+        if hasattr(self, 'df_coords') and self.bbox_number.get() < len(self.df_coords):
+            print("+1")
             s = int(self.bbox_entry.get())
             self.bbox_number.set(s+1)
             self.update_images()
 
+    # Move to an arbitrary clump (user input)
     def change_value(self, event):
         placeholder = self.bbox_number.get()
         if hasattr(self, 'df_coords') and self.bbox_number.get() > 0 and self.bbox_number.get() < len(self.df_coords) + 1:
@@ -304,15 +345,18 @@ class StomataGUI:
         else:
             self.bbox_number.set(placeholder)
     
+    # Set recent files to current workspace files
     def set_recents(self):
         with open(self.configFilePath, 'w') as file:
             for k in self.config_properties:
                 file.write(f"{k}={self.config_properties[k]}\n")
     
+    # Write annotation notes to CSV file
     def update_csv_notes(self):
         write_path = self.config_properties['recent_CSV']
         self.df_coords.to_csv(write_path)
 
+    # Lets you associate three files (BASE, ANNOT, CSV) together so you can load them with a single click. Does nothing right now.
     def set_paired_files(self):
         #TODO
         pass
@@ -336,11 +380,24 @@ class StomataGUI:
             if self.advance_on_label.get():
                 self.increment_bbox()
         except:
-            print("Something went wrong! Hopefully nothing got broken...")
+            print("Something went wrong while trying to __SET the label__! Hopefully nothing got broken...")
         
         # TODO: write to self.notes_list
         # On window close, write self.notes_list to the file!
     
+    def clear_notes(self, event):
+        index = self.bbox_number.get()-1
+        try:
+            if self.notes_list[index] != "NONE": 
+                print(self.notes_list[index])
+                self.notes_list[index] = "NONE"
+                print("Cleared!")
+                print(self.notes_list[index])
+            if self.advance_on_label.get():
+                self.increment_bbox()
+        except:
+            print("Something went wrong while trying to __CLEAR the label__! Hopefully nothing got broken...")
+
     def note_summary_stats(self):
         # for item in list(set(self.notes_list)):
         #     print(list(set(self.notes_list)))
@@ -380,8 +437,11 @@ class StomataGUI:
     def confirm_annot(self):
         img_repaste = Image.open("annotation_helper_files/changed_annot_file.jpg")
         self.image_annot.paste(img_repaste, [crop_coords[0], crop_coords[1]])
+        img_repaste.show()
 
-
+    def confirm_notes(self, event):
+        self.image_annot.save(self.config_properties["recent_ANNOT"])
+        print("--| Confirmed Notes!")
 
     
     def on_closing(self):
