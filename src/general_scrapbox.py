@@ -10,6 +10,8 @@ import pandas as pd
 
 import tqdm
 import shutil
+
+from PIL import Image
 # print(glob.glob("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/only_pored/BASE/*.tif"))
 # print(glob.glob("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/only_pored/BASE/*"))
 
@@ -251,8 +253,69 @@ def copy_files_from_csv(csv_file, destination_folder):
 #         shutil.copy(row[1], f"pore_nopore_test_folder/ANNOT_former/{os.path.basename(row[0])}")
 #         subprocess.run(f"python clumps_table.py --input_path={row[1]} --output_folder=pore_nopore_test_folder/clumps --prediction_type=clumps --filter_type=otsu", shell=True)
 
-for path in glob.glob("AZD_source/ANNOT_prep/*.png"):
-    subprocess.run(f"python clumps_table.py --input_path={path} --output_folder=AZD_source/clumps --prediction_type=clumps --filter_type=confidence", shell=True)
-    pass
+# for path in glob.glob("AZD_source/ANNOT_prep/*.png"):
+#     subprocess.run(f"python clumps_table.py --input_path={path} --output_folder=AZD_source/clumps --prediction_type=clumps --filter_type=confidence", shell=True)
+#     pass
 
         # print(', '.join(row))
+
+# Make Trio Files
+
+# Get CSV Files
+
+# Assemble TrioClips
+# Sort into folder
+# Run FOR loop
+
+# for path in glob.glob("pore_nopore_test_folder/BASE/*.*"):
+#     print(os.path.basename(path))
+# for annot_path in glob.glob("pore_nopore_test_folder/clumps/*.*"):
+#     print(os.path.basename(annot_path)[:-len("_ANNOT.csv")])
+
+csvlist = [os.path.basename(p) for p in glob.glob("pore_nopore_test_folder/clumps/*.*")]
+
+trio_list = [[f"pore_nopore_test_folder/BASE/{pth[:-len('_ANNOT.csv')]}.tif", f"pore_nopore_test_folder/ANNOT_former/{pth[:-len('_ANNOT.csv')]}.tif", f"pore_nopore_test_folder/clumps/{pth}",] for pth in csvlist]
+
+for t in trio_list:
+    for p in t:
+        assert os.path.isfile(p), f"Could not be found: {p}"
+
+
+# for t in trio_list:
+#     base_file, annot_file, csv_file = t[0], t[1], t[2]
+#     # LOAD BASE IMAGE
+#     base_img = Image.open(base_file)
+#     # LOAD ANNOT IMAGE (maybe not now)
+
+#     # with open(csv_file, 'r') as csv_reader:
+#     #     header_row = next(csv_reader)
+#     #     for i, row in enumerate(csv_reader):
+#     #         row = row.strip().split(",")
+#     #         type = row[14]
+#     #         # print(type)
+#     #         clump_num = int(row[2])
+#     #         # print(clump_num)
+#     #         # check if the folder exists
+#     #         y0, x0, y1, x1 = int(row[3]), int(row[4]), int(row[5]), int(row[6])
+#     #         yc, xc = (y1+y0)//2, (x1+x0)//2
+#     #         yK, xK = yc-32, xc-32
+#     #         crop = base_img.crop([xc-36, yc-36, xc+36, yc+36])
+#     #         crop.save(f"andrew_doublecheck/{type}/{os.path.basename(base_file)[:-4]}_{clump_num:04d}.png")
+#     df = pd.read_csv(csv_file)
+#     for index, row in df.iterrows():
+#         type = row["Notes"]
+#         # print(type)
+#         clump_num = int(row["label"])
+#         # print(clump_num)
+#         # check if the folder exists
+#         y0, x0, y1, x1 = int(row["bbox-0"]), int(row["bbox-1"]), int(row["bbox-2"]), int(row["bbox-3"])
+#         yc, xc = (y1+y0)//2, (x1+x0)//2
+#         yK, xK = yc-32, xc-32
+#         crop = base_img.crop([xc-36, yc-36, xc+36, yc+36])
+#         crop.save(f"andrew_doublecheck/{type}/{os.path.basename(base_file)[:-4]}_{clump_num:04d}.png")
+
+
+# Get a window of size 72 around each stomata by BBOX
+
+for file in glob.glob("AZD_2025/start_tifs/*.tif"):
+  subprocess.run(f'python inference.py --model=checkpoints/2024-12-23_17h-07m-06s/last.e029.pth --input="{file}" --overlap=128 --outputname="_INF"', shell=True)

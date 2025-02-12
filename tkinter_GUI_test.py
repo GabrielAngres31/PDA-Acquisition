@@ -40,9 +40,10 @@ class StomataGUI:
         self.editmenu = tk.Menu(self.menubar, tearoff=0)
         self.manamenu = tk.Menu(self.menubar, tearoff=0)
 
-        main_tab_control.add(inference_tab, text='Inference (WIP)')
+
         main_tab_control.add(image_compare_tab, text='Annotator')
-        
+        main_tab_control.add(inference_tab, text='Inference (WIP)')
+
         main_tab_control.pack(expand=1, fill="both")
 
         def donothing(): l=0
@@ -63,7 +64,7 @@ class StomataGUI:
         self.editmenu.add_command(label="Confirm Annotation", command=self.confirm_annot) 
         image_compare_tab.bind("<Shift_L>", lambda event: self.confirm_annot)
         self.editmenu.add_command(label="Confirm Notes", command=self.confirm_notes) 
-        image_compare_tab.bind("<q>", lambda event: self.confirm_notes)
+        self.root.bind("<Alt-L>", lambda event: self.confirm_notes(event=event))
 
         ### Manager Menu Options
         self.manamenu.add_command(label="Paired Files (WIP)", command=donothing)
@@ -74,31 +75,36 @@ class StomataGUI:
         # Hardcoded window sidelength
         self.window_sidelength = 148
 
+        # Set up FileTitle
+        self.file_label = tk.Label(image_compare_tab, text=os.path.basename(self.config_properties["recent_BASE"]))
+        self.file_label.grid(row=0, column=1, padx=10, pady=8)
 
         # Set up canvases
         self.canvas_base = tk.Canvas(image_compare_tab, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
-        self.canvas_base.grid(row=0, column=0, padx=10, pady=20)
+        self.canvas_base.grid(row=1, column=0, padx=10, pady=8)
 
         self.canvas_annot = tk.Canvas(image_compare_tab, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
-        self.canvas_annot.grid(row=0, column=1, padx=10, pady=20)
+        self.canvas_annot.grid(row=1, column=1, padx=10, pady=8)
 
         self.canvas_overlay = tk.Canvas(image_compare_tab, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
-        self.canvas_overlay.grid(row=0, column=2, padx=10, pady=20)
+        self.canvas_overlay.grid(row=1, column=2, padx=10, pady=8)
 
         # Set up Buttons
         self.button_import_base = tk.Button(image_compare_tab, text="Import Base Image", command=self.import_BASE_dialog)
-        self.button_import_base.grid(row=1, column=0, padx=10, pady=10)
+        self.button_import_base.grid(row=2, column=0, padx=10, pady=10)
 
         self.button_import_annot = tk.Button(image_compare_tab, text="Import Annotation", command=self.import_ANNOT_dialog)
-        self.button_import_annot.grid(row=1, column=1, padx=10, pady=10)
+        self.button_import_annot.grid(row=2, column=1, padx=10, pady=10)
 
         self.button_import_csv = tk.Button(image_compare_tab, text="Import CSV", command=self.import_CSV_dialog)
-        self.button_import_csv.grid(row=1, column=2, padx=10, pady=10)
+        self.button_import_csv.grid(row=2, column=2, padx=10, pady=10)
 
         # Setup Variables
         self.image_base = None
         self.image_annot = None
         self.image_overlay = None
+
+        self.current_annot_path = ""
 
         self.bbox_coords = [0, 0, self.window_sidelength, self.window_sidelength]
         self.photo = None # Placeholder for image updating
@@ -118,49 +124,49 @@ class StomataGUI:
 
         # Clump ID Entry
         self.bbox_entry = tk.Entry(image_compare_tab, textvariable=self.bbox_number, width=4)
-        self.bbox_entry.grid(row=2, column=0, padx=3, pady=10, ipadx=0, ipady=0)
+        self.bbox_entry.grid(row=3, column=0, padx=3, pady=10, ipadx=0, ipady=0)
 
-        self.bbox_entry.bind("<Enter>", self.change_value)
+        # self.bbox_entry.bind("<Enter>", self.change_value)
 
         # +/- (>>/<<) buttons
-        self.button_decrement = tk.Button(image_compare_tab, text="-", command=self.decrement_bbox)
-        self.button_decrement.grid(row=2, column=1, padx=5, pady=10)
+        self.button_decrement = tk.Button(image_compare_tab, text="<<", command=self.decrement_bbox)
+        self.button_decrement.grid(row=3, column=1, padx=5, pady=10)
 
-        self.button_increment = tk.Button(image_compare_tab, text="+", command=self.increment_bbox)
-        self.button_increment.grid(row=2, column=2, padx=5, pady=10)
+        self.button_increment = tk.Button(image_compare_tab, text=">>", command=self.increment_bbox)
+        self.button_increment.grid(row=3, column=2, padx=5, pady=10)
 
         # Advance checkbox
         self.checkbox_advance = tk.Checkbutton(image_compare_tab, text="Advance on Label", variable=self.advance_on_label, command=lambda:print(self.advance_on_label.get()))
-        self.checkbox_advance.grid(row=3, column=1, padx=5, pady=10)
+        self.checkbox_advance.grid(row=4, column=1, padx=5, pady=10)
 
         # Current Label
         self.current_labels = tk.Label(image_compare_tab, text=0)
-        self.current_labels.grid(row=3, column=0, padx=5, pady=10)
+        self.current_labels.grid(row=5, column=0, padx=5, pady=10)
 
         # Label Buttons
         self.button_mark_single = tk.Button(image_compare_tab, text="Edge", command=lambda: self.mark_note("Edge"))
         image_compare_tab.bind("<a>", lambda event: self.mark_note("Edge"))
-        self.button_mark_single.grid(row=4, column=0, padx=5, pady=10)
+        self.button_mark_single.grid(row=5, column=0, padx=5, pady=10)
 
         self.button_mark_double = tk.Button(image_compare_tab, text="Cluster", command=lambda: self.mark_note("Cluster"))
         image_compare_tab.bind("<s>", lambda event: self.mark_note("Cluster")) 
-        self.button_mark_double.grid(row=4, column=1, padx=5, pady=10)
+        self.button_mark_double.grid(row=5, column=1, padx=5, pady=10)
 
         self.button_mark_triple = tk.Button(image_compare_tab, text="ERROR", command=lambda: self.mark_note("ERROR"))
         image_compare_tab.bind("<d>", lambda event: self.mark_note("ERROR"))        
-        self.button_mark_triple.grid(row=4, column=2, padx=5, pady=10)
+        self.button_mark_triple.grid(row=5, column=2, padx=5, pady=10)
 
         self.button_mark_single = tk.Button(image_compare_tab, text="Pore", command=lambda: self.mark_note("Pore"))
         image_compare_tab.bind("<z>", lambda event: self.mark_note("Pore"))
-        self.button_mark_single.grid(row=5, column=0, padx=5, pady=10)
+        self.button_mark_single.grid(row=6, column=0, padx=5, pady=10)
 
         self.button_mark_triple = tk.Button(image_compare_tab, text="Unsure", command=lambda: self.mark_note("Unsure"))
         image_compare_tab.bind("<x>", lambda event: self.mark_note("Unsure"))
-        self.button_mark_triple.grid(row=5, column=1, padx=5, pady=10)
+        self.button_mark_triple.grid(row=6, column=1, padx=5, pady=10)
         
         self.button_mark_triple = tk.Button(image_compare_tab, text="No Pore", command=lambda: self.mark_note("Nope"))
         image_compare_tab.bind("<c>", lambda event: self.mark_note("No Pore"))
-        self.button_mark_triple.grid(row=5, column=2, padx=5, pady=10)
+        self.button_mark_triple.grid(row=6, column=2, padx=5, pady=10)
 
         image_compare_tab.bind("<Control_L>", self.clear_notes)
 
@@ -226,6 +232,7 @@ class StomataGUI:
             self.update_overlay()
             self.set_property("recent_BASE", file_path)
             self.set_property("dir_BASE", os.path.dirname(file_path))
+            self.file_label.config(text=os.path.basename(file_path))
 
     ### Get the ANNOT file (dialog and autofunction)
     def import_ANNOT_dialog(self):
@@ -235,6 +242,7 @@ class StomataGUI:
     def import_ANNOT(self, file_path):
         self.import_image(self.canvas_annot, file_path, 'ANNOT')
         self.update_overlay()
+        self.current_annot_path = file_path
         self.set_property("recent_ANNOT", file_path)
         self.set_property("dir_ANNOT", os.path.dirname(file_path))
 
@@ -291,10 +299,12 @@ class StomataGUI:
         elif image_type == 'ANNOT':
             self.image_annot = img
 
+
         self.photo = ImageTk.PhotoImage(img)
+        # img.show()
         canvas.delete("all")
         canvas.create_image(self.xD(), self.yD(), anchor=tk.NW, image=self.photo)
-        print(self.xc(), self.yc())
+        # print(self.xc(), self.yc())
         canvas.image = self.photo
         print(f"Updated Images to {-self.x0()}, {-self.y0()}")
 
@@ -318,12 +328,13 @@ class StomataGUI:
             self.update_bbox_coords(self.df_coords)
             self.update_image(self.canvas_base, self.image_base, "BASE")
             self.update_image(self.canvas_annot, self.image_annot, "ANNOT")
+            print("Shoot!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             self.update_overlay()
 
     # Go one clump back
     def decrement_bbox(self):
         if hasattr(self, 'df_coords') and self.bbox_number.get() > 1:
-            print("-1")
+            # print("-1")
             s = int(self.bbox_entry.get())
             self.bbox_number.set(s-1)
             self.update_images()
@@ -331,19 +342,21 @@ class StomataGUI:
     # Go one clump forward
     def increment_bbox(self):
         if hasattr(self, 'df_coords') and self.bbox_number.get() < len(self.df_coords):
-            print("+1")
+            # print("+1")
             s = int(self.bbox_entry.get())
             self.bbox_number.set(s+1)
             self.update_images()
 
-    # Move to an arbitrary clump (user input)
+    # Move to an arbitrary clump (user input) (CURRENTLY UNUSED)
     def change_value(self, event):
         placeholder = self.bbox_number.get()
         if hasattr(self, 'df_coords') and self.bbox_number.get() > 0 and self.bbox_number.get() < len(self.df_coords) + 1:
             self.bbox_number.set(self.bbox_entry.get())
+            print("Are you seeing this????????????????????????????????????????????????????")
             self.update_images()
         else:
             self.bbox_number.set(placeholder)
+        root.focus_set()
     
     # Set recent files to current workspace files
     def set_recents(self):
@@ -354,6 +367,7 @@ class StomataGUI:
     # Write annotation notes to CSV file
     def update_csv_notes(self):
         write_path = self.config_properties['recent_CSV']
+        self.df_coords
         self.df_coords.to_csv(write_path)
 
     # Lets you associate three files (BASE, ANNOT, CSV) together so you can load them with a single click. Does nothing right now.
@@ -362,21 +376,21 @@ class StomataGUI:
         pass
 
     def mark_note(self, note_text):
-        print(note_text)
+        # print(note_text)
         index = self.bbox_number.get()-1
         try:
-            print(note_text)
+            # print(note_text)
             if self.notes_list[index] == "NONE": 
-                print(self.notes_list[index])
+                # print(self.notes_list[index])
                 self.notes_list[index] = note_text
-                print(self.notes_list[index])
+                # print(self.notes_list[index])
             elif note_text in self.notes_list[index]:
-                print(self.notes_list[index])
+                # print(self.notes_list[index])
                 pass
             else:
-                print(self.notes_list[index])
+                # print(self.notes_list[index])
                 self.notes_list[index] = self.notes_list[index] + f", {note_text}"
-                print(self.notes_list[index])
+                # print(self.notes_list[index])
             if self.advance_on_label.get():
                 self.increment_bbox()
         except:
@@ -389,10 +403,10 @@ class StomataGUI:
         index = self.bbox_number.get()-1
         try:
             if self.notes_list[index] != "NONE": 
-                print(self.notes_list[index])
+                # print(self.notes_list[index])
                 self.notes_list[index] = "NONE"
                 print("Cleared!")
-                print(self.notes_list[index])
+                # print(self.notes_list[index])
             if self.advance_on_label.get():
                 self.increment_bbox()
         except:
@@ -436,12 +450,25 @@ class StomataGUI:
     
     def confirm_annot(self):
         img_repaste = Image.open("annotation_helper_files/changed_annot_file.jpg")
-        self.image_annot.paste(img_repaste, [crop_coords[0], crop_coords[1]])
         img_repaste.show()
+        img_repaste = img_repaste.convert("L")
+        # print(img_repaste.mode)
+        # img_to_save = self.image_annot.copy()
+        # img_to_save.paste(img_repaste, box=(crop_coords[0], crop_coords[1]))
+        # self.image_annot.mode = "L"
+        self.image_annot = self.image_annot.convert("L")
+        self.image_annot.paste(img_repaste, (crop_coords[0], crop_coords[1]))
+        # Image.Image.paste(img_repaste, (crop_coords[0], crop_coords[1], crop_coords[0]+64, crop_coords[1]+64), self.image_annot)
+        print([crop_coords[0], crop_coords[1]])
+        # self.image_annot.show()
+        # print(self.image_annot.mode)
 
-    def confirm_notes(self, event):
-        self.image_annot.save(self.config_properties["recent_ANNOT"])
-        print("--| Confirmed Notes!")
+    def confirm_notes(self, event=None):
+        # self.image_annot.save(self.config_properties["recent_ANNOT"])
+        self.df_coords["Notes"] = self.notes_list
+        self.update_csv_notes()
+        path = self.config_properties["recent_ANNOT"]
+        print(f"--| Confirmed Notes for {os.path.basename(path)}")
 
     
     def on_closing(self):
@@ -451,6 +478,8 @@ class StomataGUI:
         self.note_summary_stats()
         self.set_recents()
         self.image_annot.save(self.config_properties["recent_ANNOT"])
+        print("Just ran the save image command")
+        self.image_annot.show()
         self.root.destroy()  # Close the window
 
 

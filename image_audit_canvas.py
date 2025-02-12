@@ -33,6 +33,7 @@ class PixelCanvas:
         # print(self.base_section)
         self.annot_section_array = np.asarray(self.annot_section, dtype=np.uint8)
         self.annot_section_array_copy_out = np.copy(self.annot_section_array)
+        print(self.annot_section_array_copy_out.shape)
 
         base_section_shape = self.base_section_array.shape
         annot_section_shape = self.annot_section_array.shape
@@ -51,6 +52,13 @@ class PixelCanvas:
         self.overlay_alpha = 40
 
         self.last_pixel = [0,0]
+
+        self.menubar = tk.Menu(master)
+        self.master.config(menu = self.menubar)
+        self.mod_menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="Modify", menu=self.mod_menu)
+        self.mod_menu.add_command(label="Clear (WIP)", command=self.clear_annot)
+        self.mod_menu.add_command(label="Whiten (WIP)", command=self.set_all_white)
 
         self.matrix_basecanvas = np.zeros((height, width), dtype=int)
         self.matrix_annotcanvas = np.zeros((height, width), dtype=int)
@@ -90,10 +98,28 @@ class PixelCanvas:
     def draw_initial_canvas(self):
         # img_base = Image.open(imgpath_dict['base']).resize((self.corr_width, self.corr_height), Image.Resampling.LANCZOS)
         # img_annot = Image.open(imgpath_dict['annot']).resize((self.corr_width, self.corr_height), Image.Resampling.LANCZOS)
+
         if np.max(self.annot_section_array) == 1:
-            array_annot = Image.fromarray(self.annot_section_array*255, mode="L")
+            # annot_section_threshold = np.where(self.annot_section_array*255 > 27, 255, 0)
+            annot_section_threshold = np.where(self.annot_section_array*255 > 42, self.annot_section_array, 0)
+            # array_annot = Image.fromarray(self.annot_section_array, mode="L")
+            array_annot = Image.fromarray(annot_section_threshold, mode="L")
+            print("A")
         else:
-            array_annot = Image.fromarray(self.annot_section_array, mode="RGB") # Weird hacky way to get image to display properly. Image MUST BE JPG
+            if self.annot_section_array.shape[1] != 3:
+                annot_section_threshold = np.where(self.annot_section_array > 42, self.annot_section_array, 0)
+                annot_section_threshold = annot_section_threshold[:,:,0]
+                print(annot_section_threshold.shape)
+
+        # print(self.annot_section_array.shape)
+        print("groat")
+        print(annot_section_threshold.shape)
+        # annot_section_threshold = np.where(self.annot_section_array > 27, self.annot_section_array, 0)
+        # array_annot = Image.fromarray(self.annot_section_array, mode="RGB") # Weird hacky way to get image to display properly. Image MUST BE JPG
+        array_annot = Image.fromarray(annot_section_threshold, mode="L") # Weird hacky way to get image to display properly. Image MUST BE JPG
+        print("B")
+    
+        
 
         self.img_base_to_disp =  self.base_section.resize((self.corr_width, self.corr_height), Image.Resampling.NEAREST)
         self.img_annot_to_disp =       array_annot.resize((self.corr_width, self.corr_height), Image.Resampling.NEAREST)
@@ -115,6 +141,7 @@ class PixelCanvas:
         self.canvas.image_annot=img_annot_tk
 
         self.update_overlay(base_img = self.img_overlay_bas, annot_img = self.img_overlay_ann)
+        self.set_all_white()
 
 
     # def update_overlay(self, base_img:Image=None, annot_img:Image=None):
@@ -171,6 +198,7 @@ class PixelCanvas:
             # print(x1, y1, self.width, self.width*self.pixel_size, array_x, array_y)
 
             self.annot_section_array_copy_out[array_y][array_x] = [self.pivot_bit*255]*3
+            # print(self.annot_section_array_copy_out.shape)
             
             annot_copy_update = Image.fromarray(self.annot_section_array_copy_out, mode="RGB")
             annot_copy_update = annot_copy_update.resize((self.corr_width, self.corr_height), Image.Resampling.NEAREST)
@@ -182,13 +210,64 @@ class PixelCanvas:
         return self.annot__section_array
     
     def on_closing(self):
-        res=messagebox.askokcancel('Exit Application', 'Commit changes to image?')
-        # print(res)
-        if res:
-            Image.fromarray(self.annot_section_array_copy_out, mode="RGB").save("annotation_helper_files/changed_annot_file.jpg")
-            self.master.destroy()
-        else :
+        res=messagebox.askyesnocancel('Exit Application', 'Commit changes to image?')
+        
+        ## CANCEL
+        if res == None:
             messagebox.askokcancel('Return', 'Returning to main application')
+        ## YES
+        elif res:
+            Image.fromarray(self.annot_section_array_copy_out, mode="RGB").save("annotation_helper_files/changed_annot_file.jpg")
+        
+        ## NO or YES
+        self.master.destroy()
+    
+    def clear_annot(self):
+        self.annot_section_array_copy_out = np.zeros_like(self.annot_section_array_copy_out)
+        annot_clear_update = Image.fromarray(self.annot_section_array_copy_out, mode="RGB")
+        annot_clear_update = annot_clear_update.resize((self.corr_width, self.corr_height), Image.Resampling.NEAREST)
+        annot_clear_update.convert("RGBA")
+        annot_clear_update.putalpha(self.overlay_alpha)
+        self.update_overlay(base_img = self.img_overlay_bas, annot_img = annot_clear_update)
+        
+        # [print(x, y, x+self.pixel_size, y+self.pixel_size) for x, y in [(x,y) for x in range(self.annot_bound_corr['left_bound'], self.annot_bound_corr['right_bound'], self.pixel_size) for y in range(self.corr_margin, self.corr_height+self.corr_margin, self.pixel_size)]]
+        [self.canvas.create_rectangle(x, y, x+self.pixel_size, y+self.pixel_size, fill="black", width=0) for x, y in [(x,y) for x in range(self.annot_bound_corr['left_bound']*self.pixel_size, self.annot_bound_corr['right_bound']*self.pixel_size, self.pixel_size) for y in range(self.corr_margin, self.corr_height+self.corr_margin, self.pixel_size)]]
+
+    def set_all_white(self):
+        self.annot_section_enwhiten = self.annot_section_array_copy_out
+        self.annot_section_enwhiten[self.annot_section_enwhiten < 80] = 0
+        
+        h, w = self.annot_section_array_copy_out.shape[0], self.annot_section_array_copy_out.shape[1]
+
+        # print(h)
+        # print(w)
+        annot_white_update = Image.fromarray(self.annot_section_enwhiten, mode="RGB")
+        annot_white_update = annot_white_update.resize((self.corr_width, self.corr_height), Image.Resampling.NEAREST)
+        annot_white_update.convert("RGBA")
+        annot_white_update.putalpha(self.overlay_alpha)
+        self.update_overlay(base_img = self.img_overlay_bas, annot_img = annot_white_update)
+
+        # [self.canvas.create_rectangle(x, y, x+self.pixel_size, y+self.pixel_size, fill="black", width=0) for x, y in [(x,y) for x in range(self.annot_bound_corr['left_bound']*self.pixel_size, self.annot_bound_corr['right_bound']*self.pixel_size, self.pixel_size) for y in range(self.corr_margin, self.corr_height+self.corr_margin, self.pixel_size)]]
+        for coords in [(x,y) for x in range(w) for y in range(h)]:
+            # print(f'{coords}: x={coords[0]}, y={coords[1]}')
+            # print(coords)
+            
+            x = coords[0]
+            y = coords[1]
+            # print(self.annot_section_enwhiten[y][x][:])
+            # print(self.annot_section_enwhiten[y][x][0])
+            x_canvas = (self.annot_bound_corr['left_bound']+x)*self.pixel_size
+            y_canvas = self.corr_margin+y*self.pixel_size
+            fill = ("black" if (not self.annot_section_enwhiten[y][x][0]) else "white")
+            # fill = ("white" if (not self.annot_section_enwhiten[y][x][0]) else "black")
+            self.canvas.create_rectangle(x_canvas, y_canvas, x_canvas+self.pixel_size, y_canvas+self.pixel_size, fill=fill, width=0) 
+            try:
+                assert (fill == "white" and self.annot_section_enwhiten[y][x][0] > 0) or (fill == "black" and self.annot_section_enwhiten[y][x][0] == 0), "lol lmoaf hahahahahaha"
+                assert x < 64
+                assert y < 64
+            except AssertionError:
+                print("hell")
+        # [self.canvas.create_rectangle(x, y, x+self.pixel_size, y+self.pixel_size, fill="black", width=0) for x, y in [(x,y) for x in range(self.annot_bound_corr['left_bound']*self.pixel_size, self.annot_bound_corr['right_bound']*self.pixel_size, self.pixel_size) for y in range(self.corr_margin, self.corr_height+self.corr_margin, self.pixel_size)]]
         
 
 def get_argparser() -> argparse.ArgumentParser:
