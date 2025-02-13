@@ -65,6 +65,7 @@ class StomataGUI:
         image_compare_tab.bind("<Shift_L>", lambda event: self.confirm_annot)
         self.editmenu.add_command(label="Confirm Notes", command=self.confirm_notes) 
         self.root.bind("<Alt-L>", lambda event: self.confirm_notes(event=event))
+        self.editmenu.add_command(label="Clear Note", command=self.clear_notes)
 
         ### Manager Menu Options
         self.manamenu.add_command(label="Paired Files (WIP)", command=donothing)
@@ -98,6 +99,21 @@ class StomataGUI:
 
         self.button_import_csv = tk.Button(image_compare_tab, text="Import CSV", command=self.import_CSV_dialog)
         self.button_import_csv.grid(row=2, column=2, padx=10, pady=10)
+
+        ### Setup Inference Tab
+
+        # Set up Buttons
+        self.button_set_test = tk.Button(inference_tab, text="Test Split", command=self.set_test_split)
+        self.button_set_test.grid(row=0, column=0, padx=10, pady=10)
+
+        self.button_set_val = tk.Button(inference_tab, text="Val Split", command=self.set_val_split)
+        self.button_set_val.grid(row=0, column=1, padx=10, pady=10)
+
+        self.button_checkfiles = tk.Button(inference_tab, text="Check Files", command=self.verify_split_files)
+        self.button_checkfiles.grid(row=1, column=0, padx=10, pady=10)
+
+        self.button_run_inference = tk.Button(inference_tab, text="Run Inference", command=self.run_inference)
+        self.button_run_inference.grid(row=1, column=1, padx=10, pady=10)
 
         # Setup Variables
         self.image_base = None
@@ -141,32 +157,32 @@ class StomataGUI:
 
         # Current Label
         self.current_labels = tk.Label(image_compare_tab, text=0)
-        self.current_labels.grid(row=5, column=0, padx=5, pady=10)
+        self.current_labels.grid(row=4, column=0, padx=5, pady=10)
 
         # Label Buttons
-        self.button_mark_single = tk.Button(image_compare_tab, text="Edge", command=lambda: self.mark_note("Edge"))
+        self.button_mark_edge = tk.Button(image_compare_tab, text="Edge", command=lambda: self.mark_note("Edge"))
         image_compare_tab.bind("<a>", lambda event: self.mark_note("Edge"))
-        self.button_mark_single.grid(row=5, column=0, padx=5, pady=10)
+        self.button_mark_edge.grid(row=5, column=0, padx=5, pady=10)
 
-        self.button_mark_double = tk.Button(image_compare_tab, text="Cluster", command=lambda: self.mark_note("Cluster"))
+        self.button_mark_cluster = tk.Button(image_compare_tab, text="Cluster", command=lambda: self.mark_note("Cluster"))
         image_compare_tab.bind("<s>", lambda event: self.mark_note("Cluster")) 
-        self.button_mark_double.grid(row=5, column=1, padx=5, pady=10)
+        self.button_mark_cluster.grid(row=5, column=1, padx=5, pady=10)
 
-        self.button_mark_triple = tk.Button(image_compare_tab, text="ERROR", command=lambda: self.mark_note("ERROR"))
+        self.button_mark_error = tk.Button(image_compare_tab, text="ERROR", command=lambda: self.mark_note("ERROR"))
         image_compare_tab.bind("<d>", lambda event: self.mark_note("ERROR"))        
-        self.button_mark_triple.grid(row=5, column=2, padx=5, pady=10)
+        self.button_mark_error.grid(row=5, column=2, padx=5, pady=10)
 
-        self.button_mark_single = tk.Button(image_compare_tab, text="Pore", command=lambda: self.mark_note("Pore"))
+        self.button_mark_pore = tk.Button(image_compare_tab, text="Pore", command=lambda: self.mark_note("Pore"))
         image_compare_tab.bind("<z>", lambda event: self.mark_note("Pore"))
-        self.button_mark_single.grid(row=6, column=0, padx=5, pady=10)
+        self.button_mark_pore.grid(row=6, column=0, padx=5, pady=10)
 
-        self.button_mark_triple = tk.Button(image_compare_tab, text="Unsure", command=lambda: self.mark_note("Unsure"))
+        self.button_mark_unknown = tk.Button(image_compare_tab, text="Unsure", command=lambda: self.mark_note("Unsure"))
         image_compare_tab.bind("<x>", lambda event: self.mark_note("Unsure"))
-        self.button_mark_triple.grid(row=6, column=1, padx=5, pady=10)
+        self.button_mark_unknown.grid(row=6, column=1, padx=5, pady=10)
         
-        self.button_mark_triple = tk.Button(image_compare_tab, text="No Pore", command=lambda: self.mark_note("Nope"))
+        self.button_mark_nopore = tk.Button(image_compare_tab, text="No Pore", command=lambda: self.mark_note("Nope"))
         image_compare_tab.bind("<c>", lambda event: self.mark_note("No Pore"))
-        self.button_mark_triple.grid(row=6, column=2, padx=5, pady=10)
+        self.button_mark_nopore.grid(row=6, column=2, padx=5, pady=10)
 
         image_compare_tab.bind("<Control_L>", self.clear_notes)
 
@@ -248,7 +264,15 @@ class StomataGUI:
 
     ### Get the CSV file (dialog and autofunction)
     def import_CSV_dialog(self):
-        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")], initialdir=self.config_properties['dir_CSV'])
+        decision = messagebox.askyesnocancel('Get Annotation File', 'Use premade clumps file?')
+        if decision:
+            file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")], initialdir=self.config_properties['dir_CSV'])
+        elif not decision:
+            check = messagebox.askyesnocancel('Confirm Annotation', 'Do you have the correct file to make a clumps list of?')
+            print()
+            if check:
+                subprocess.run(f'python.exe clumps_table.py --input_path="{self.config_properties["recent_ANNOT"]}" --output_folder="annotation_helper_files" --prediction_type="clumps" --filter_type="otsu" --save_image_as="recent_generated_clumps.jpg"', shell=True)
+                file_path = f"annotation_helper_files/{os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0]}.csv"
         if file_path:
             try:
                 self.import_CSV(file_path)
@@ -469,21 +493,52 @@ class StomataGUI:
         self.update_csv_notes()
         path = self.config_properties["recent_ANNOT"]
         print(f"--| Confirmed Notes for {os.path.basename(path)}")
-
     
+    def set_test_split(self):
+        file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")], initialdir=self.config_properties['dir_test_split'])
+        if file_path:
+            return file_path
+    def set_val_split(self):
+        file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")], initialdir=self.config_properties['dir_val_split'])
+        if file_path:
+            return file_path
+    def verify_split_files(self):
+        pass
+    def run_inference(self):
+        pth_path = filedialog.askopenfilename(filetypes=[("PTH Files", "*.PTH")], initialdir="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/checkpoints")
+        try:
+            assert pth_path
+        except:
+            print("You must select weights to run an inference!")
+        inf_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.tif")], initialdir=self.config_properties['dir_BASE'])
+        try:
+            assert inf_path
+        except:
+            print("You need to run inference on an image. Please select an image.")
+        subprocess.run(f'python inference.py --model={pth_path} --input="{inf_path}" --overlap=128 --outputname="recent_GUI_output"', shell=True)
+        pass
+
     def on_closing(self):
         print("Window is closing...")
         self.df_coords["Notes"] = self.notes_list
         self.update_csv_notes()
         self.note_summary_stats()
         self.set_recents()
-        self.image_annot.save(self.config_properties["recent_ANNOT"])
+        assert os.path.exists(self.config_properties["recent_ANNOT"])
+        print(self.config_properties["recent_ANNOT"])
+        self.image_annot.save(os.path.abspath(rf'{self.config_properties["recent_ANNOT"]}'))
         print("Just ran the save image command")
-        self.image_annot.show()
+        # self.image_annot.show()
         self.root.destroy()  # Close the window
+
 
 
 if __name__ == "__main__": #
     root = tk.Tk()
     app = StomataGUI(root)
     root.mainloop()
+
+
+# WHERE IS YOUR LABEL :gun:
+
+# AUTOMATIC CLUMPFINDING ON ANNOT LOAD

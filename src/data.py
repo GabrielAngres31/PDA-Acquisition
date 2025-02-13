@@ -22,8 +22,8 @@ def load_splitfile(splitfile:str) -> FilePairs:
         assert len(paths) == 2, f'Unexpected file format: {line}: Line {i}, Previous Line {DEBUG_LINE}'
         
         inputpath, annotationpath = [p.strip() for p in paths]
-        assert os.path.exists(inputpath), f'Could not find {inputpath}'
-        assert os.path.exists(annotationpath), f'Could not find {annotationpath}'
+        assert os.path.exists(inputpath), f'Could not find "{inputpath}"'
+        assert os.path.exists(annotationpath), f'Could not find "{annotationpath}"'
         DEBUG_LINE = line
         pairs.append((inputpath, annotationpath))
         i+=1
