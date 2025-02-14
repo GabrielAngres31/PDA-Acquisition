@@ -14,10 +14,10 @@ venv\Scripts\activate     #windows
 pip install -r requirements.txt
 
 #run training 
-python training.py --trainingsplit=splits/train_0.csv
+python training.py --trainingsplit=splits/pores_only_test_02-2025.csv --validationsplit=splits/pores_only_val_02-2025.csv
 
 #run inference on a file (adjust paths)
-python inference.py --model=checkpoints/2024-06-27_11h-31m-26s/last.e029.pth --input=SCD_training_data/source_images/BASE/cot6.tif --overlap=32
+python inference.py --model=checkpoints/2025-02-12_19h-14m-25s/last.e029.pth --input=SCD_training_data/source_images/BASE/cot6.tif --overlap=32
 
 # Show insufficiently confident positives in blue and false positives in orange.
 # Requires two annotation files to compare, either hand-generated or machine-generated.
