@@ -272,13 +272,13 @@ def copy_files_from_csv(csv_file, destination_folder):
 # for annot_path in glob.glob("pore_nopore_test_folder/clumps/*.*"):
 #     print(os.path.basename(annot_path)[:-len("_ANNOT.csv")])
 
-csvlist = [os.path.basename(p) for p in glob.glob("pore_nopore_test_folder/clumps/*.*")]
+# csvlist = [os.path.basename(p) for p in glob.glob("pore_nopore_test_folder/clumps/*.*")]
 
-trio_list = [[f"pore_nopore_test_folder/BASE/{pth[:-len('_ANNOT.csv')]}.tif", f"pore_nopore_test_folder/ANNOT_former/{pth[:-len('_ANNOT.csv')]}.tif", f"pore_nopore_test_folder/clumps/{pth}",] for pth in csvlist]
+# trio_list = [[f"pore_nopore_test_folder/BASE/{pth[:-len('_ANNOT.csv')]}.tif", f"pore_nopore_test_folder/ANNOT_former/{pth[:-len('_ANNOT.csv')]}.tif", f"pore_nopore_test_folder/clumps/{pth}",] for pth in csvlist]
 
-for t in trio_list:
-    for p in t:
-        assert os.path.isfile(p), f"Could not be found: {p}"
+# for t in trio_list:
+#     for p in t:
+#         assert os.path.isfile(p), f"Could not be found: {p}"
 
 
 # for t in trio_list:
@@ -318,4 +318,4 @@ for t in trio_list:
 # Get a window of size 72 around each stomata by BBOX
 
 for file in glob.glob("AZD_2025/start_tifs/*.tif"):
-  subprocess.run(f'python inference.py --model=checkpoints/2024-12-23_17h-07m-06s/last.e029.pth --input="{file}" --overlap=128 --outputname="_INF"', shell=True)
+  subprocess.run(f'python inference.py --model=checkpoints/2025-02-12_19h-14m-25s/last.e029.pth --input="{file}" --overlap=128 --outputname="_AZD_INF_2025"', shell=True)
