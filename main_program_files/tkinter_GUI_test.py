@@ -269,7 +269,6 @@ class StomataGUI:
             file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")], initialdir=self.config_properties['dir_CSV'])
         elif not decision:
             check = messagebox.askyesnocancel('Confirm Annotation', 'Do you have the correct file to make a clumps list of?')
-            print()
             if check:
                 subprocess.run(f'python.exe clumps_table.py --input_path="{self.config_properties["recent_ANNOT"]}" --output_folder="annotation_helper_files" --prediction_type="clumps" --filter_type="otsu" --save_image_as="recent_generated_clumps.jpg"', shell=True)
                 file_path = f"annotation_helper_files/{os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0]}.csv"
@@ -352,7 +351,6 @@ class StomataGUI:
             self.update_bbox_coords(self.df_coords)
             self.update_image(self.canvas_base, self.image_base, "BASE")
             self.update_image(self.canvas_annot, self.image_annot, "ANNOT")
-            print("Shoot!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             self.update_overlay()
 
     # Go one clump back

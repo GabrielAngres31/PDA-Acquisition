@@ -181,7 +181,7 @@ def clumps_table_auto():
 
     subprocess.run('python clumps_table.py --input_path=only_pored/cot1_ANNOT.png --output_folder="inference" --prediction_type="clumps" --save_image_as="cot1_clustertest_normal"')
 
-
+    
 
 
     # # GET ALL THE FILES AS A LIST
