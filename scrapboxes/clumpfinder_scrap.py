@@ -176,10 +176,20 @@ def clumps_table_auto():
     #     i += 1
     #     command_infer = f"python clumpfinder.py  --input_path= --output_folder=inference/tables --closing_threshold=80 --opening_threshold=120"
     #     command_clump = f""
+
     # clumpfinder_auto("area,axis_major_length")
 
+    # for i, file in enumerate(glob.glob("inference/AZD_2025_inferences/*.png")):
+    #     subprocess.run(f'python clean_image.py --input_path="{file}" --filter_type="confidence" --save_image_as="CLEAN_CON_{os.path.basename(file)}_"', shell=True)
+    #     if i > 5:
+    #         break
+    for i, file in enumerate(glob.glob("cleaned_images_default/*.png")):
+        subprocess.run(f'python clumps_table.py --input_path="{file}" --output_folder="cleaned_images_default/tables"', shell=True)
+    #     if i > 5:
+    #         break
+    # for i, file in 
+    # subprocess.run(f'python clumps_table.py --input_path={file} --save_image_as="CLEAN_{file}_"', shell=True)
 
-    subprocess.run('python clumps_table.py --input_path=only_pored/cot1_ANNOT.png --output_folder="inference" --prediction_type="clumps" --save_image_as="cot1_clustertest_normal"')
 
     
 

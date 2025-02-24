@@ -30,8 +30,9 @@ class StomataGUI:
 
         # Navigable Tabs
         main_tab_control = ttk.Notebook(root)
-        image_compare_tab = ttk.Frame(main_tab_control)
         inference_tab = ttk.Frame(main_tab_control)
+        image_compare_tab = ttk.Frame(main_tab_control)
+
 
         ### Menu Bars
         self.menubar = tk.Menu(root)
@@ -39,7 +40,6 @@ class StomataGUI:
         self.filemenu = tk.Menu(self.menubar, tearoff=0)
         self.editmenu = tk.Menu(self.menubar, tearoff=0)
         self.manamenu = tk.Menu(self.menubar, tearoff=0)
-
 
         main_tab_control.add(image_compare_tab, text='Annotator')
         main_tab_control.add(inference_tab, text='Inference (WIP)')
@@ -414,6 +414,7 @@ class StomataGUI:
                 self.notes_list[index] = self.notes_list[index] + f", {note_text}"
                 # print(self.notes_list[index])
             if self.advance_on_label.get():
+                print("something")
                 self.increment_bbox()
         except:
             print("Something went wrong while trying to __SET the label__! Hopefully nothing got broken...")
@@ -421,7 +422,7 @@ class StomataGUI:
         # TODO: write to self.notes_list
         # On window close, write self.notes_list to the file!
     
-    def clear_notes(self, event):
+    def clear_notes(self, event=None):
         index = self.bbox_number.get()-1
         try:
             if self.notes_list[index] != "NONE": 

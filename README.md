@@ -26,7 +26,10 @@ python errorviz.py --ground_truth=SCD_training_data/source_images/ANNOTATION/cot
 
 # Obtain aggregate data on non-black clump sizes
 
-python clumps_table.py --input_path="C:\Users\Gabriel\Documents\GitHub\PDA-Acquisition\only_pored\ANNOT\basl-2_5_COT_04_rotated_MAX_basl-2_5dpg_110321_2_2_abaxial_merged_ANNOT.png" --output_folder="inference" --prediction_type="clumps" --filter_type="otsu" --save_image_as="basl-2_5_04_128_ANNOT"
+python clean_image.py --input_path="C:\Users\Gabriel\Documents\GitHub\PDA-Acquisition\only_pored\ANNOT\basl-2_5_COT_04_rotated_MAX_basl-2_5dpg_110321_2_2_abaxial_merged_ANNOT.png" --filter_type="otsu" --save_image_as="basl-2_5_04_128_ANNOT"
+
+
+python clumps_table.py --input_path="cleaned_images_default/basl-2_5_04_128_ANNOT.png" --output_folder="inference"
 
 # Create scatterplots of measures
 python visualizers.py --source_data=inference/basl-2_5_COT_02_rotated_MAX_basl-2_5dpg_110321_1_2_abaxial_merged_ANNOT_modded.csv --scatterplots="axis_major_length,axis_minor_length|eccentricity,perimeter|area,axis_minor_length|area,axis_major_length" --save_as="basl2-5-02_ANNOT_glance"

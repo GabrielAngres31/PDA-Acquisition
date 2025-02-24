@@ -30,14 +30,14 @@ def main(args:argparse.Namespace) -> bool:
     # target_tensor = src.data.load_image(args.input_path, "L")
     # table = find_clumps_skimage(target_tensor[0])
     image_in = skimage.io.imread(args.input_path)
-    table = quantify_clumps_skimage(image_in, args.prediction_type, args.filter_type, args.properties, args.save_image_as)
+    table = quantify_clumps_skimage(image_in,  args.properties, args.output_folder)
 
     # Outline-based image workflow:
     
     
     pd.DataFrame(table).to_csv(f"{args.output_folder}/{Path(args.input_path).stem}.csv")
 
-def quantify_clumps_skimage(image: PIL.Image, mode:str, filter_mode:str, properties:tuple, saveas: str): #-> None
+def quantify_clumps_skimage(image: PIL.Image, properties:tuple, saveas: str): #-> None
 
     clumps_map = skimm.label(image, connectivity=2) 
     # shape = clumps_map.shape

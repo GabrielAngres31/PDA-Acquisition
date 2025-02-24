@@ -67,11 +67,13 @@ def clean_image(image: PIL.Image, mode:str, filter_mode:str, saveas: str): #-> N
             image_opening = skimorph.area_opening(image_closing, area_threshold = 100) #120
             final_image=image_opening
     elif filter_mode == "confidence":
-        final_image = image/np.max(image) > 0.7
+        final_image = image/np.max(image) > 0.58
+        final_image = skimorph.area_closing(final_image, area_threshold = 750)
+        final_image = skimorph.area_opening(final_image, area_threshold = 350)
 
 
     if saveas:
-        src.data.save_image(f"reference_figures/{saveas}.png", final_image.astype(numpy.float32))
+        src.data.save_image(f"cleaned_images_default/{saveas}.png", final_image.astype(numpy.float32))
 
 def get_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
@@ -90,14 +92,16 @@ def get_argparser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--prediction_type',
         type = str,
-        required = True,
+        # required = True,
+        default = 'clumps',
         choices = ['clumps', 'outlines'],
         help = 'Whether the mask being read is an outline of the stomata or the stomata themselves.'
     )
     parser.add_argument(
         '--filter_type',
         type = str,
-        required = True,
+        # required = True,
+        default = 'otsu',
         choices = ['confidence', 'otsu'],
         help = 'Whether to filter on absolute pixel brightness or the otsu threshold.'
     )
