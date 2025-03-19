@@ -29,7 +29,12 @@ def main(args:argparse.Namespace) -> bool:
     # CLUMPS-based image workflow
     # target_tensor = src.data.load_image(args.input_path, "L")
     # table = find_clumps_skimage(target_tensor[0])
-    image_in = skimage.io.imread(args.input_path)
+    # try:
+    image_in = skimage.io.imread(args.input_path)#, mode="L")
+    # except "tifffile.tiffiles.TiffFileError":
+    #     print ("darn")
+        
+        
     table = quantify_clumps_skimage(image_in,  args.properties, args.output_folder)
 
     # Outline-based image workflow:

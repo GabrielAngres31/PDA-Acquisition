@@ -5,7 +5,7 @@ from tkinter import filedialog, messagebox, ttk
 import pandas as pd
 from PIL import Image, ImageTk
 import os
-import image_audit_canvas
+import image_audit_canvas_SUF
 import subprocess
 
 
@@ -468,7 +468,7 @@ class StomataGUI:
         save_annot.convert("RGB").save("annotation_helper_files/save_annot_file.jpg")
         # Pass the paths as an arg to the subprocess command
         edit_root = tk.Toplevel(self.root)
-        canvas = image_audit_canvas.PixelCanvas(edit_root, window_size, window_size, base_section_path="annotation_helper_files/save_base_file.png", annot_section_path="annotation_helper_files/save_annot_file.jpg", pixel_size=pixel_size)
+        canvas = image_audit_canvas_SUF.PixelCanvas(edit_root, window_size, window_size, base_section_path="annotation_helper_files/save_base_file.png", annot_section_path="annotation_helper_files/save_annot_file.jpg", pixel_size=pixel_size)
         # subprocess.run("python image_audit_canvas.py --base_path=annotation_helper_files/save_base_file.png --annot_path=annotation_helper_files/save_annot_file.jpg", shell=True)        
     
     def confirm_annot(self):
