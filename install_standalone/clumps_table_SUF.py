@@ -27,6 +27,10 @@ import numpy as np
 def main(args:argparse.Namespace) -> bool:
     
     image_in = skimage.io.imread(args.input_path)
+
+    # Force 2D array from 3D
+    if len(image_in.shape) == 3:
+        image_in = image_in[:, :, 0]
     table = quantify_clumps_skimage(image_in,  args.properties, args.output_folder)
     
     pd.DataFrame(table).to_csv(f"{args.output_folder}/{Path(args.input_path).stem}.csv")
@@ -50,7 +54,7 @@ def get_argparser() -> argparse.ArgumentParser:
         '--properties',
         type = str,
         nargs = "+",
-        default = ['label', 'bbox', 'area', 'area_bbox', 'axis_major_length', 'axis_minor_length', 'centroid', 'eccentricity', 'area_convex', 'perimeter', 'equivalent_diameter_area', 'extent', 'orientation'],
+        default = ['label', 'bbox', 'area', 'area_bbox', 'axis_major_length', 'axis_minor_length', 'centroid', 'eccentricity', 'area_convex', 'perimeter', 'equivalent_diameter_area', 'extent', 'orientation'], # Eccentricity is bugged, so it's been excluded
         help = 'Desired properties to calculate for each clump.'
     )
     parser.add_argument(

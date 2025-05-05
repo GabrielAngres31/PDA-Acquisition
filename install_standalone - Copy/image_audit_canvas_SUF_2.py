@@ -99,10 +99,6 @@ class PixelCanvas:
         self.canvas.bind("<ButtonRelease-3>", self.update_overlay)
         
         self.canvas.bind("<Tab>", lambda event: self.fill_iter(event = event))
-        
-        self.master.bind("w", lambda event: self.close_from_keyboard)
-
-
 
         print(self.canvas.bind())
 
@@ -429,8 +425,7 @@ class PixelCanvas:
 
         pass        
         
-    def close_from_keyboard(self):
-        self.on_closing(self)
+
 
     def on_closing(self):
         compare = Image.open("annotation_helper_files/changed_annot_file.png")

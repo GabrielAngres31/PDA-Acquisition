@@ -11,6 +11,7 @@ import typing
 
 import tkinter as tk
 import argparse
+import time
 
 np.set_printoptions(threshold=np.inf)
 
@@ -77,11 +78,13 @@ class PixelCanvas:
 
         self.canvas.bind("<Button-1>", self.draw_pixel)
         self.canvas.bind("<B1-Motion>", self.draw_pixel)
-        self.canvas.bind("<ButtonRelease-1>", self.draw_pixel)
+        # self.canvas.bind("<ButtonRelease-1>", self.draw_pixel)
+        self.canvas.bind("<ButtonRelease-1>", self.commit_draw)
 
         self.canvas.bind("<Button-3>", self.draw_pixel)
         self.canvas.bind("<B3-Motion>", self.draw_pixel)
-        self.canvas.bind("<ButtonRelease-3>", self.draw_pixel)
+        # self.canvas.bind("<ButtonRelease-3>", self.draw_pixel)
+        self.canvas.bind("<ButtonRelease-3>", self.commit_draw)
 
         self.base_bound =    {"upper_bound":self.corr_margin, "lower_bound":self.corr_height+self.corr_margin, "left_bound":self.corr_margin,                       "right_bound":self.corr_width  +self.corr_margin}
         self.annot_bound =   {"upper_bound":self.corr_margin, "lower_bound":self.corr_height+self.corr_margin, "left_bound":self.corr_margin*2 + self.corr_width,   "right_bound":self.corr_width*2+self.corr_margin*2}
@@ -122,6 +125,8 @@ class PixelCanvas:
         
 
         self.img_base_to_disp =  self.base_section.resize((self.corr_width, self.corr_height), Image.Resampling.NEAREST)
+        # print(self.img_base_to_disp)
+        # print("0000000000000000000")
         self.img_annot_to_disp =       array_annot.resize((self.corr_width, self.corr_height), Image.Resampling.NEAREST)
 
         img_base_tk = ImageTk.PhotoImage(self.img_base_to_disp)
@@ -129,10 +134,16 @@ class PixelCanvas:
 
         self.img_overlay_ann = self.img_annot_to_disp
         self.img_overlay_bas = self.img_base_to_disp
+        # print(self.img_overlay_bas.size)
+        # print("A-A")
         self.img_overlay_ann = self.img_overlay_ann.convert("RGBA")
         self.img_overlay_bas = self.img_overlay_bas.convert("RGBA")
+        # print(self.img_overlay_bas.size)
+        # print("B-B")
         self.img_overlay_ann.putalpha(self.overlay_alpha)
         self.img_overlay_bas.putalpha(255)
+        # print(self.img_overlay_bas.size)
+        # print("C-C")
         
         self.canvas.create_image(self.corr_margin,                   self.corr_margin, anchor = tk.NW, image=img_base_tk)
         self.canvas.create_image(self.corr_width+self.corr_margin*2, self.corr_margin, anchor = tk.NW, image=img_annot_tk)
@@ -141,6 +152,8 @@ class PixelCanvas:
         self.canvas.image_annot=img_annot_tk
 
         self.update_overlay(base_img = self.img_overlay_bas, annot_img = self.img_overlay_ann)
+        print(self.img_overlay_bas.size)
+        print("D-D")
         self.set_all_white()
 
 
@@ -148,10 +161,18 @@ class PixelCanvas:
     def update_overlay(self, base_img:Image, annot_img:Image):
         full_overlay = base_img
         # assert base_img.height==height, 3), f"Base Image has improper dimensions: {annot_section_shape} instead of ({width}, {height})"
-        full_overlay = Image.blend(full_overlay, annot_img, 0.25)
+        # full_overlay = Image.blend(full_overlay, annot_img, 0.25)
+        assert base_img.size == annot_img.size, "Well, no."
+        annot_img = annot_img.convert("RGBA")
+        assert base_img.mode == annot_img.mode, f"The first mode {base_img.mode} isn't the same as the second mode {annot_img.mode}"
+        full_overlay = Image.blend(base_img, annot_img, 0.25)
 
         full_overlay_tk = ImageTk.PhotoImage(full_overlay)
-
+        # print(base_img.size)
+        # base_img.show()
+        # print(annot_img.size)
+        # annot_img.show()
+        print("updating_ovlerying")
         self.canvas.create_image(2*self.corr_width+self.corr_margin*3, self.corr_margin, anchor=tk.NW, image=full_overlay_tk)
         self.canvas.image_overlay=full_overlay_tk
 
@@ -165,8 +186,11 @@ class PixelCanvas:
         if event.num != "??":
             self.pivot_bit = 1-(int(event.num) >> 1)
             self.setdrawcolor(self.color_dict[self.pivot_bit])
+        # if event.num == "??":
+        #     return
+        # self.pivot_bit = 1-(int(event.num) >> 1)
+        # self.setdrawcolor(self.color_dict[self.pivot_bit])
 
-        
         # Creates a lattice grid
         x = event.x // self.pixel_size
         y = event.y // self.pixel_size
@@ -174,26 +198,48 @@ class PixelCanvas:
         if y == self.last_pixel[1]:
             if x == self.last_pixel[0]:
                 return None
+            
+        # Calculate reused values
+        x_demargin = x-self.margin
+        self.region_unit = self.margin+self.width
+        self.offset_unit = self.corr_width + self.corr_margin
 
         if self.corr_margin <= y*self.pixel_size < (self.corr_height+self.corr_margin):
+            # if self.base_bound_corr['left_bound'] <= x < self.base_bound_corr['right_bound']:
+            #     # x1 = (x+self.width) * self.pixel_size + self.corr_margin
+            #     x1 = x_com + self.corr_width + self.corr_margin
 
-            if self.base_bound_corr['left_bound'] <= x < self.base_bound_corr['right_bound']:
-                x1 = (x+self.width) * self.pixel_size + self.corr_margin
+            # elif self.annot_bound_corr['left_bound'] <= x < self.annot_bound_corr['right_bound']:
+            #     # x1 = x * self.pixel_size
+            #     x1 = x_com
 
-            elif self.annot_bound_corr['left_bound'] <= x < self.annot_bound_corr['right_bound']:
-                x1 = x * self.pixel_size
-
-            elif self.overlay_bound_corr['left_bound'] <= x < self.overlay_bound_corr['right_bound']:
-                x1 = (x-self.width) * self.pixel_size - self.corr_margin
+            # elif self.overlay_bound_corr['left_bound'] <= x < self.overlay_bound_corr['right_bound']:
+            #     # x1 = (x-self.width) * self.pixel_size - self.corr_margin
+            #     x1 = x_com - self.corr_width - self.corr_margin
+            if x_demargin % self.region_unit > self.width:
+                return
+            
+            offset = (x_demargin // self.region_unit - 1) * self.offset_unit
+            x_com = x * self.pixel_size
+            x1 = x_com + offset
 
             y1 = y * self.pixel_size
             x2 = x1 + self.pixel_size
             y2 = y1 + self.pixel_size
+            print([x1, y1, x2, y2])
             self.canvas.create_rectangle(x1, y1, x2, y2, fill=self.drawcolor, width=0)
+
             
             self.last_pixel = [x, y]
-            array_x = (x1-(2*self.corr_margin+self.pixel_size*self.width))//self.pixel_size
-            array_y = (y1-   self.corr_margin-self.height*self.pixel_size)//self.pixel_size
+            # array_x = (x1-(2*self.corr_margin+self.pixel_size*self.width))//self.pixel_size
+            # array_y = (y1-   self.corr_margin-self.height*self.pixel_size)//self.pixel_size
+            print("--------")
+            print(self.region_unit)
+            compensate = (x_demargin // self.region_unit) * (self.corr_width+self.corr_margin) + self.corr_margin
+            array_x = (x1-compensate)//self.pixel_size
+            print(array_x)
+            print(x_demargin // self.region_unit - 1)
+            array_y = (y1-self.corr_margin-self.corr_height)//self.pixel_size
             
             # print(x1, y1, self.width, self.width*self.pixel_size, array_x, array_y)
 
@@ -202,9 +248,28 @@ class PixelCanvas:
             
             annot_copy_update = Image.fromarray(self.annot_section_array_copy_out, mode="RGB")
             annot_copy_update = annot_copy_update.resize((self.corr_width, self.corr_height), Image.Resampling.NEAREST)
-            annot_copy_update.convert("RGBA")
+
+            annot_copy_update = annot_copy_update.convert("RGBA")
             annot_copy_update.putalpha(self.overlay_alpha)
+            # print(annot_copy_update)
+            # print(self.img_overlay_bas)
+            # annot_copy_update.show()
+            # self.img_overlay_bas.show()
+            # print("check!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!))))))0000000000000000")
             self.update_overlay(base_img = self.img_overlay_bas, annot_img = annot_copy_update)
+        
+    def fill_blank_EFFICIENTFILL(self, event=None):
+        pass
+
+    def commit_draw(self, event=None):
+        annot_copy_update = Image.fromarray(self.annot_section_array_copy_out, mode="RGB")
+        
+        annot_copy_update = annot_copy_update.resize((self.corr_width, self.corr_height), Image.Resampling.NEAREST)
+        # annot_copy_update.convert("RGBA")
+        # annot_copy_update.putalpha(self.overlay_alpha)
+        # print(self.img_overlay_bas.size)
+        # print(annot_copy_update.size)
+        self.update_overlay(base_img = self.img_overlay_bas, annot_img = annot_copy_update)
 
     def get_annot_result(self):
         return self.annot__section_array
@@ -222,7 +287,7 @@ class PixelCanvas:
             out = Image.fromarray(self.annot_section_array_copy_out, mode="RGB")
             out.save("annotation_helper_files/changed_annot_file.jpg")
             if compare == out:
-                pass                                                                                                                                    # TODO:
+                pass
         
         ## NO or YES
 
@@ -281,14 +346,14 @@ def get_argparser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--base_path',
         type = str,
-        default = "test_stomata_viz_BASE.png",
+        default = "annotation_helper_files/save_base_file.png",
         #required = True,
         help = 'Image section for Base.'
     )
     parser.add_argument(
         '--annot_path',
         type = str,
-        default = "fuzzy_test.jpg",
+        default = "annotation_helper_files/save_annot_file.jpg",
         #required = True,
         help = 'Image section for Annot.'
     )
@@ -305,11 +370,12 @@ def main(args:argparse.Namespace) -> bool:
 
     # Image.save()
 
-    #return True
+    return True
 
 if __name__ == '__main__':
     args = get_argparser().parse_args()
     ok   = main(args)
     if ok:
         print('Done')
+        
 

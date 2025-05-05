@@ -22,7 +22,7 @@ class StomataGUI:
         with open(self.configFilePath, 'r') as file:
             lines = file.readlines()
             self.config_properties = dict([(v for v in line.strip().split("=")) for line in lines])
-        print(self.config_properties)
+        # print(self.config_properties)
 
         file_to_dir = dict(zip(['recent_BASE', 'recent_ANNOT', 'recent_CSV'], ['dir_BASE', 'dir_ANNOT', 'dir_CSV']))
 
@@ -30,7 +30,7 @@ class StomataGUI:
                      'recent_ANNOT',
                      'recent_CSV']:
             try: 
-                print(self.config_properties[prop_file])
+                # print(self.config_properties[prop_file])
                 assert os.path.exists(self.config_properties[prop_file])
                 # print("SCROUND")
             except:
@@ -88,11 +88,14 @@ class StomataGUI:
         
         ### "Edit" Menu Options     
         self.editmenu.add_command(label="Edit Annotation...", command=self.open_window_edit)
+        self.root.bind("E", self.open_window_edit)
         self.editmenu.add_command(label="Confirm Annotation", command=self.confirm_annot) 
-        image_compare_tab.bind("<Shift_L>", lambda event: self.confirm_annot)
+        self.root.bind("<Shift_L>", lambda event: self.confirm_annot)
         self.editmenu.add_command(label="Confirm Notes", command=self.confirm_notes) 
         self.root.bind("<Alt-L>", lambda event: self.confirm_notes(event=event))
         self.editmenu.add_command(label="Clear Note", command=self.clear_notes)
+
+        print(self.root.bind())
 
         ### Manager Menu Options
         self.manamenu.add_command(label="Paired Files (WIP)", command=donothing)
@@ -173,9 +176,11 @@ class StomataGUI:
 
         # +/- (>>/<<) buttons
         self.button_decrement = tk.Button(image_compare_tab, text="<<", command=self.decrement_bbox)
+        self.root.bind("w", self.increment_bbox)
         self.button_decrement.grid(row=3, column=1, padx=5, pady=10)
 
         self.button_increment = tk.Button(image_compare_tab, text=">>", command=self.increment_bbox)
+        self.root.bind("q", self.decrement_bbox) 
         self.button_increment.grid(row=3, column=2, padx=5, pady=10)
 
         # Advance checkbox
@@ -271,6 +276,11 @@ class StomataGUI:
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.tif")], initialdir=self.config_properties['dir_ANNOT'])
         if file_path:
             self.import_ANNOT(file_path)
+            # Putting this here to prevent losing all your work on an accidental file switch
+            # THIS DOESN'T WORK!!!!
+            self.image_annot.save(os.path.abspath(rf'{self.config_properties["recent_ANNOT"]}'))
+            print("Saving work on ANNOT!")
+
     def import_ANNOT(self, file_path):
         self.import_image(self.canvas_annot, file_path, 'ANNOT')
         self.update_overlay()
@@ -286,11 +296,19 @@ class StomataGUI:
         elif not decision:
             check = messagebox.askyesnocancel('Confirm Annotation', 'Do you have the correct file to make a clumps list of?')
             if check:
-                subprocess.run(f'python.exe clumps_table.py --input_path="{self.config_properties["recent_ANNOT"]}" --output_folder="annotation_helper_files" --prediction_type="clumps" --filter_type="otsu" --save_image_as="recent_generated_clumps.jpg"', shell=True, capture_output=True)
-                file_path = f"annotation_helper_files/{os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0]}.csv"
+                print("Generating clumps file")
+                subprocess.run(f'python.exe clumps_table_SUF.py --input_path="{self.config_properties["recent_ANNOT"]}" --output_folder="annotation_helper_files/"', shell=True) #, capture_output=True)
+                # file_path = f"annotation_helper_files/{os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0]}.csv"
+                assert os.path.exists(self.config_properties['recent_ANNOT'])
+                # print(os.path.basename(self.config_properties['recent_ANNOT']))
+                # print(os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT'])))
+                # file_path = f"annotation_helper_files/{os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0]}.csv"
+                # file_path = f"annotation_helper_files/{os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0]}.csv"
         if file_path:
+            print("did you get here already?")
             try:
                 self.import_CSV(file_path)
+                print("Successfully loaded csv!")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to read CSV: {e}")
     def import_CSV(self, file_path):
@@ -358,7 +376,7 @@ class StomataGUI:
                 self.canvas_overlay.create_image(self.xD(), self.yD(), anchor=tk.NW, image=self.image_overlay)
                 self.canvas_overlay.image = self.image_overlay
             except: 
-                print("Image dimension mismatch or other problem detected. Clearing Canvas.")
+                print(f"Image dimension mismatch or other problem detected. Clearing Canvas.\n----Image Dimensions are {self.image_base.size} vs. {self.image_annot.size}")
                 self.canvas_overlay.delete("all")
 
     # Update BASE, ANNOT, and OVERLAY on bbox change
@@ -370,24 +388,29 @@ class StomataGUI:
             self.update_overlay()
 
     # Go one clump back
-    def decrement_bbox(self):
+    def decrement_bbox(self, event=None):
         if hasattr(self, 'df_coords') and self.bbox_number.get() > 1:
             # print("-1")
+            self.confirm_annot()
             s = int(self.bbox_entry.get())
             self.bbox_number.set(s-1)
+            
             self.update_images()
 
     # Go one clump forward
-    def increment_bbox(self):
+    def increment_bbox(self, Event=None):
         if hasattr(self, 'df_coords') and self.bbox_number.get() < len(self.df_coords):
+            self.confirm_annot()
             s = int(self.bbox_entry.get())
             self.bbox_number.set(s+1)
+
             self.update_images()
 
     # Move to an arbitrary clump (user input) (CURRENTLY UNUSED)
     def change_value(self, event):
         placeholder = self.bbox_number.get()
         if hasattr(self, 'df_coords') and self.bbox_number.get() > 0 and self.bbox_number.get() < len(self.df_coords) + 1:
+            self.confirm_annot()
             self.bbox_number.set(self.bbox_entry.get())
             self.update_images()
         else:
@@ -452,9 +475,9 @@ class StomataGUI:
                 unique_items[item] = 1
         # print(unique_items)
 
-    def open_window_edit(self):
+    def open_window_edit(self, event=None):
         window_size = 64
-        pixel_size=6
+        pixel_size = 6
         global crop_coords
         crop_coords = (-(self.xc()+window_size//2), -(self.yc()+window_size//2), -(self.xc()-window_size//2), -(self.yc()-window_size//2))
         # print(crop_coords)
@@ -481,19 +504,22 @@ class StomataGUI:
         # subprocess.run("python image_audit_canvas.py --base_path=annotation_helper_files/save_base_file.png --annot_path=annotation_helper_files/save_annot_file.jpg", shell=True)        
     
     def confirm_annot(self):
-        global crop_coords
-        img_repaste = Image.open("annotation_helper_files/save_annot_file.png")
-        # img_repaste.show()
-        img_repaste = img_repaste.convert("L")
-        # print(img_repaste.mode)
-        # img_to_save = self.image_annot.copy()
-        # img_to_save.paste(img_repaste, box=(crop_coords[0], crop_coords[1]))
-        # self.image_annot.mode = "L"
-        self.image_annot = self.image_annot.convert("L")
-        self.image_annot.paste(img_repaste, (crop_coords[0], crop_coords[1]))
-        # Image.Image.paste(img_repaste, (crop_coords[0], crop_coords[1], crop_coords[0]+64, crop_coords[1]+64), self.image_annot)
-        # print([crop_coords[0], crop_coords[1]])
-        # self.image_annot.show()3
+        try:
+            global crop_coords
+            img_repaste = Image.open("annotation_helper_files/save_annot_file.png")
+            # img_repaste.show()
+            img_repaste = img_repaste.convert("L")
+            # print(img_repaste.mode)
+            # img_to_save = self.image_annot.copy()
+            # img_to_save.paste(img_repaste, box=(crop_coords[0], crop_coords[1]))
+            # self.image_annot.mode = "L"
+            self.image_annot = self.image_annot.convert("L")
+            self.image_annot.paste(img_repaste, (crop_coords[0], crop_coords[1]))
+            # Image.Image.paste(img_repaste, (crop_coords[0], crop_coords[1], crop_coords[0]+64, crop_coords[1]+64), self.image_annot)
+            # print([crop_coords[0], crop_coords[1]])
+            # self.image_annot.show()3
+        except NameError:
+            pass
 
     def confirm_notes(self, event=None):
         # self.image_annot.save(self.config_properties["recent_ANNOT"])
@@ -534,6 +560,7 @@ class StomataGUI:
         self.set_recents()
         print("something's happening")
         assert os.path.exists(self.config_properties["recent_ANNOT"])
+        assert os.path.exists(self.config_properties["recent_CSV"])
         # print(self.config_properties["recent_ANNOT"])f
         self.image_annot.save(os.path.abspath(rf'{self.config_properties["recent_ANNOT"]}'))
         print("Just ran the save image command")
