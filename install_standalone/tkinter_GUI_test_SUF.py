@@ -16,23 +16,23 @@ class StomataGUI:
         # Load Config options
         ### Read config file
         ### Loads: Recent BASE, ANNOT, and CSV files
-        ### TODO: 
         self.configFilePath = "annotation_helper_files/stomata_gui_config.txt"
          
         with open(self.configFilePath, 'r') as file:
             lines = file.readlines()
             self.config_properties = dict([(v for v in line.strip().split("=")) for line in lines])
-        # print(self.config_properties)
 
         file_to_dir = dict(zip(['recent_BASE', 'recent_ANNOT', 'recent_CSV'], ['dir_BASE', 'dir_ANNOT', 'dir_CSV']))
 
         for prop_file in ['recent_BASE', 
                      'recent_ANNOT',
                      'recent_CSV']:
+            # Check that all the filepaths from the last session are still valid
+            # This can change if files have been deleted or moved
             try: 
-                # print(self.config_properties[prop_file])
                 assert os.path.exists(self.config_properties[prop_file])
-                # print("SCROUND")
+            # If a path isn't available, the user is prompted to select a new file to load.
+            # TODO: Make Warning Window contain informative text
             except:
                 messagebox.showwarning("Missing File")
                 file_set = filedialog.askopenfilename(title=f"Select File: {prop_file}")
@@ -43,6 +43,11 @@ class StomataGUI:
         for prop_dir in ['dir_BASE',
                      'dir_ANNOT', 
                      'dir_CSV']:
+            # Check that file directories to select files from are still valid.
+            # File directories may be changed or deleted.
+            # If any of the files above were missing and reselected through user prompt, 
+            #   it automatically updates the directory here, so it shouldn't trigger an error.
+            # Actually, if you have a directory error without having a file error, then something really bizarre must be going on.
             try: 
                 assert os.path.exists(self.config_properties[prop_dir])
                 # print("bround")
@@ -56,9 +61,9 @@ class StomataGUI:
         self.root.title("Image Importer")
 
         # Navigable Tabs
-        main_tab_control = ttk.Notebook(root)
-        inference_tab = ttk.Frame(main_tab_control)
-        image_compare_tab = ttk.Frame(main_tab_control)
+        self.main_tab_control = ttk.Notebook(root)
+        self.inference_tab = ttk.Frame(self.main_tab_control)
+        self.image_compare_tab = ttk.Frame(self.main_tab_control)
 
 
         ### Menu Bars
@@ -68,10 +73,10 @@ class StomataGUI:
         self.editmenu = tk.Menu(self.menubar, tearoff=0)
         self.manamenu = tk.Menu(self.menubar, tearoff=0)
 
-        main_tab_control.add(image_compare_tab, text='Annotator')
-        main_tab_control.add(inference_tab, text='Inference (WIP)')
+        self.main_tab_control.add(self.image_compare_tab, text='Annotator')
+        self.main_tab_control.add(self.inference_tab, text='Inference (WIP)')
 
-        main_tab_control.pack(expand=1, fill="both")
+        self.main_tab_control.pack(expand=1, fill="both")
 
         def donothing(): l=0
 
@@ -95,7 +100,7 @@ class StomataGUI:
         self.root.bind("<Alt-L>", lambda event: self.confirm_notes(event=event))
         self.editmenu.add_command(label="Clear Note", command=self.clear_notes)
 
-        print(self.root.bind())
+        # print(self.root.bind())
 
         ### Manager Menu Options
         self.manamenu.add_command(label="Paired Files (WIP)", command=donothing)
@@ -107,42 +112,42 @@ class StomataGUI:
         self.window_sidelength = 148
 
         # Set up FileTitle
-        self.file_label = tk.Label(image_compare_tab, text=os.path.basename(self.config_properties["recent_BASE"]))
+        self.file_label = tk.Label(self.image_compare_tab, text=os.path.basename(self.config_properties["recent_BASE"]))
         self.file_label.grid(row=0, column=1, padx=10, pady=8)
 
         # Set up canvases
-        self.canvas_base = tk.Canvas(image_compare_tab, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
+        self.canvas_base = tk.Canvas(self.image_compare_tab, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
         self.canvas_base.grid(row=1, column=0, padx=10, pady=8)
 
-        self.canvas_annot = tk.Canvas(image_compare_tab, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
+        self.canvas_annot = tk.Canvas(self.image_compare_tab, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
         self.canvas_annot.grid(row=1, column=1, padx=10, pady=8)
 
-        self.canvas_overlay = tk.Canvas(image_compare_tab, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
+        self.canvas_overlay = tk.Canvas(self.image_compare_tab, width=self.window_sidelength, height=self.window_sidelength, bg="gray")
         self.canvas_overlay.grid(row=1, column=2, padx=10, pady=8)
 
         # Set up Buttons
-        self.button_import_base = tk.Button(image_compare_tab, text="Import Base Image", command=self.import_BASE_dialog)
+        self.button_import_base = tk.Button(self.image_compare_tab, text="Import Base Image", command=self.import_BASE_dialog)
         self.button_import_base.grid(row=2, column=0, padx=10, pady=10)
 
-        self.button_import_annot = tk.Button(image_compare_tab, text="Import Annotation", command=self.import_ANNOT_dialog)
+        self.button_import_annot = tk.Button(self.image_compare_tab, text="Import Annotation", command=self.import_ANNOT_dialog)
         self.button_import_annot.grid(row=2, column=1, padx=10, pady=10)
 
-        self.button_import_csv = tk.Button(image_compare_tab, text="Import CSV", command=self.import_CSV_dialog)
+        self.button_import_csv = tk.Button(self.image_compare_tab, text="Import CSV", command=self.import_CSV_dialog)
         self.button_import_csv.grid(row=2, column=2, padx=10, pady=10)
 
         ### Setup Inference Tab
 
         # Set up Buttons
-        self.button_set_test = tk.Button(inference_tab, text="Test Split", command=self.set_test_split)
+        self.button_set_test = tk.Button(self.inference_tab, text="Test Split", command=self.set_test_split)
         self.button_set_test.grid(row=0, column=0, padx=10, pady=10)
 
-        self.button_set_val = tk.Button(inference_tab, text="Val Split", command=self.set_val_split)
+        self.button_set_val = tk.Button(self.inference_tab, text="Val Split", command=self.set_val_split)
         self.button_set_val.grid(row=0, column=1, padx=10, pady=10)
 
-        self.button_checkfiles = tk.Button(inference_tab, text="Check Files", command=self.verify_split_files)
+        self.button_checkfiles = tk.Button(self.inference_tab, text="Check Files", command=self.verify_split_files)
         self.button_checkfiles.grid(row=1, column=0, padx=10, pady=10)
 
-        self.button_run_inference = tk.Button(inference_tab, text="Run Inference", command=self.run_inference)
+        self.button_run_inference = tk.Button(self.inference_tab, text="Run Inference", command=self.run_inference)
         self.button_run_inference.grid(row=1, column=1, padx=10, pady=10)
 
         # Setup Variables
@@ -169,54 +174,59 @@ class StomataGUI:
         self.advance_on_label=tk.IntVar()
 
         # Clump ID Entry
-        self.bbox_entry = tk.Entry(image_compare_tab, textvariable=self.bbox_number, width=4)
+        self.bbox_entry = tk.Entry(self.image_compare_tab, textvariable=self.bbox_number, width=4)
         self.bbox_entry.grid(row=3, column=0, padx=3, pady=10, ipadx=0, ipady=0)
 
         # self.bbox_entry.bind("<Enter>", self.change_value)
 
         # +/- (>>/<<) buttons
-        self.button_decrement = tk.Button(image_compare_tab, text="<<", command=self.decrement_bbox)
-        self.root.bind("w", self.increment_bbox)
+        self.button_decrement = tk.Button(self.image_compare_tab, text="<<", command=self.decrement_bbox)
+        self.root.bind("q", self.decrement_bbox) 
         self.button_decrement.grid(row=3, column=1, padx=5, pady=10)
 
-        self.button_increment = tk.Button(image_compare_tab, text=">>", command=self.increment_bbox)
-        self.root.bind("q", self.decrement_bbox) 
+        self.button_increment = tk.Button(self.image_compare_tab, text=">>", command=self.increment_bbox)
+        self.root.bind("w", self.increment_bbox)
         self.button_increment.grid(row=3, column=2, padx=5, pady=10)
 
         # Advance checkbox
-        self.checkbox_advance = tk.Checkbutton(image_compare_tab, text="Advance on Label", variable=self.advance_on_label, command=lambda:print(self.advance_on_label.get()))
+        self.checkbox_advance = tk.Checkbutton(self.image_compare_tab, text="Advance on Label", variable=self.advance_on_label, command=lambda:print(self.advance_on_label.get()))
         self.checkbox_advance.grid(row=4, column=1, padx=5, pady=10)
 
         # Current Label
-        self.current_labels = tk.Label(image_compare_tab, text=0)
+        self.current_labels = tk.Label(self.image_compare_tab, text=0)
         self.current_labels.grid(row=4, column=0, padx=5, pady=10)
 
         # Label Buttons
-        self.button_mark_edge = tk.Button(image_compare_tab, text="Edge", command=lambda: self.mark_note("Edge"))
-        image_compare_tab.bind("<a>", lambda event: self.mark_note("Edge"))
+        self.button_mark_edge = tk.Button(self.image_compare_tab, text="Edge", command=lambda: self.mark_note("Edge"))
+        self.image_compare_tab.bind("a", lambda event: self.mark_note("Edge"))
         self.button_mark_edge.grid(row=5, column=0, padx=5, pady=10)
+        # self.button_mark_edge = tk.Button(image_compare_tab, text="Edge", command=lambda: self.mark_note("Edge"))
+        # image_compare_tab.bind("a", lambda event: self.mark_note("Edge"))
+        # self.button_mark_edge.grid(row=5, column=0, padx=5, pady=10)
 
-        self.button_mark_cluster = tk.Button(image_compare_tab, text="Cluster", command=lambda: self.mark_note("Cluster"))
-        image_compare_tab.bind("<s>", lambda event: self.mark_note("Cluster")) 
+        self.button_mark_cluster = tk.Button(self.image_compare_tab, text="Cluster", command=lambda: self.mark_note("Cluster"))
+        self.root.bind("s", lambda event: self.mark_note("Cluster")) 
         self.button_mark_cluster.grid(row=5, column=1, padx=5, pady=10)
 
-        self.button_mark_error = tk.Button(image_compare_tab, text="ERROR", command=lambda: self.mark_note("ERROR"))
-        image_compare_tab.bind("<d>", lambda event: self.mark_note("ERROR"))        
+        self.button_mark_error = tk.Button(self.image_compare_tab, text="ERROR", command=lambda: self.mark_note("ERROR"))
+        self.root.bind("d", lambda event: self.mark_note("ERROR"))        
         self.button_mark_error.grid(row=5, column=2, padx=5, pady=10)
 
-        self.button_mark_pore = tk.Button(image_compare_tab, text="Pore", command=lambda: self.mark_note("Pore"))
-        image_compare_tab.bind("<z>", lambda event: self.mark_note("Pore"))
+        self.button_mark_pore = tk.Button(self.image_compare_tab, text="Pore", command=lambda: self.mark_note("Pore"))
+        self.root.bind("z", lambda event: self.mark_note("Pore"))
         self.button_mark_pore.grid(row=6, column=0, padx=5, pady=10)
 
-        self.button_mark_unknown = tk.Button(image_compare_tab, text="Unsure", command=lambda: self.mark_note("Unsure"))
-        image_compare_tab.bind("<x>", lambda event: self.mark_note("Unsure"))
+        self.button_mark_unknown = tk.Button(self.image_compare_tab, text="Unsure", command=lambda: self.mark_note("Unsure"))
+        self.root.bind("x", lambda event: self.mark_note("Unsure"))
         self.button_mark_unknown.grid(row=6, column=1, padx=5, pady=10)
         
-        self.button_mark_nopore = tk.Button(image_compare_tab, text="No Pore", command=lambda: self.mark_note("Nope"))
-        image_compare_tab.bind("<c>", lambda event: self.mark_note("No Pore"))
+        self.button_mark_nopore = tk.Button(self.image_compare_tab, text="No Pore", command=lambda: self.mark_note("NoPore"))
+        self.root.bind("c", lambda event: self.mark_note("NoPore"))
         self.button_mark_nopore.grid(row=6, column=2, padx=5, pady=10)
 
-        image_compare_tab.bind("<Control_L>", self.clear_notes)
+        self.root.bind("<Control_L>", self.clear_notes)
+
+        self.main_tab_control.bind('<<NotebookTabChanged>>', self.set_focus_to_tab)
 
         if "recent_BASE" in self.config_properties and self.config_properties["recent_BASE"]:
             self.import_BASE(self.config_properties["recent_BASE"])
@@ -226,6 +236,27 @@ class StomataGUI:
             self.import_CSV(self.config_properties["recent_CSV"])
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        # self.set_focus_to_tab(None, 0)
+        self.main_tab_control.select(0)
+        # self.set_focus_to_tab(None)
+
+    def set_focus_to_tab(self, event=None):
+        ind = self.main_tab_control.index(self.main_tab_control.select())
+        # ind = self.main_tab_control.index(self.main_tab_control.select())
+        print("None")
+
+        # self.main_tab_control.focus_set(ind)
+
+    
+        print("Hm?")
+        # self.main_tab_control.select(tab_index)
+        print(self.main_tab_control.index(self.main_tab_control.select()))
+        
+        self.main_tab_control.select(ind)
+        print(ind)
+        print(self.root.focus_get())
+
 
     # Set config properties during function calls
     def set_property(self, property, value):
@@ -312,7 +343,7 @@ class StomataGUI:
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to read CSV: {e}")
     def import_CSV(self, file_path):
-        print(f"{file_path}")
+        # print(f"{file_path}")
         self.df_coords = pd.read_csv(file_path, encoding='utf8')
         self.max_number = len(self.df_coords)
         self.bbox_number.set(1) 
@@ -398,7 +429,7 @@ class StomataGUI:
             self.update_images()
 
     # Go one clump forward
-    def increment_bbox(self, Event=None):
+    def increment_bbox(self, event=None):
         if hasattr(self, 'df_coords') and self.bbox_number.get() < len(self.df_coords):
             self.confirm_annot()
             s = int(self.bbox_entry.get())

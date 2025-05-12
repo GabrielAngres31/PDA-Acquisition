@@ -237,9 +237,19 @@ def run_training_mbn(
 
     for e in range(epochs):
         loss_info = train_one_epoch_mbn(module, loader, optimizer, pos_weight)
-
-        loss, losses = loss_info["mean"], loss_info["losses"]
-
+        print(loss_info)
+        print("Okay, here's this.")
+        try:
+            print("Attempting to allocate losses...")
+            loss, losses = loss_info["mean"], loss_info["losses"]
+        except IndexError:
+            print(f"You've run into a strange error. Here's what we have:\n")
+            try:    print(f"LOSS_INFO: {loss_info}")
+            except: print("Couldn't get LOSS_INFO!")
+            try:    print(f"[_mean]: {loss_info['mean']}")
+            except: print("Couldn't get [_mean]!")
+            try:    print(f"[_losses]: {loss_info['losses']}")
+            except: print("Couldn't get [_losses]!")
         scheduler.step()
         if vloader is not None:
             vloss = validate_one_epoch_mbn(module, vloader)
@@ -312,7 +322,8 @@ def train_one_epoch_mbn(
 
         losses.append(loss.item())
         print(f'{i:3d}/{len(loader)} loss={loss.item():.4f}', end='\r')
-    return np.mean(losses)
+    # return np.mean(losses)
+    return losses
 
 def validate_one_epoch_mbn(module:torch.nn.Module, loader:tp.Iterable) -> float:
     losses = []
@@ -321,7 +332,8 @@ def validate_one_epoch_mbn(module:torch.nn.Module, loader:tp.Iterable) -> float:
             y    = module(x)
         loss = torch.nn.functional.cross_entropy(y)
         losses.append(loss.item())
-    return np.mean(losses)
+    # return np.mean(losses)
+    return losses
 
 # Fill In Guesser
 

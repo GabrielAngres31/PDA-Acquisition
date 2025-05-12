@@ -23,6 +23,7 @@ def load_splitfile(splitfile:str) -> FilePairs:
         
         inputpath, annotationpath = [p.strip() for p in paths]
         assert os.path.exists(inputpath), f'Could not find "{inputpath}"'
+        # print(inputpath)
         assert os.path.exists(annotationpath), f'Could not find "{annotationpath}"'
         DEBUG_LINE = line
         pairs.append((inputpath, annotationpath))

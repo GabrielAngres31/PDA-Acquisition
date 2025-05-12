@@ -12,7 +12,7 @@ import typing
 import tkinter as tk
 import argparse
 import time
-from bresenham import bresenham
+# from bresenham import bresenham
 # from system_hotkey import SystemHotkey
 
 # TODO: TEMPORARY UNTIL I CAN GET TYPING TO WORK IN PYTHON 3.12
@@ -380,8 +380,8 @@ class PixelCanvas:
                 if not self.annot_section_array[index[0], index[1]] == fill:
                     self.annot_section_array[index[0], index[1]] = fill
                     self.draw_pixel(x*self.pixel_size+self.corr_margin*2+self.corr_width, y*self.pixel_size+self.corr_margin, fill)
-                    print(arr_x)
-                    print(arr_y)
+                    # print(arr_x)
+                    # print(arr_y)
                     # self.draw_pixel(arr_x, arr_y, fill)
                     # print("a")
                     points.append( (x+1,y) )
@@ -392,7 +392,7 @@ class PixelCanvas:
                     # print("aaa a")
                     points.append( (x,y-1) )
                     # print("aaaa       a")
-                    print(f"plotting px at {x}, {y}")
+                    # print(f"plotting px at {x}, {y}")
         self.update_overlay()
         # iterate through queue pop using array coordinates
         # convert popped coord back to canvas for draw_pixel

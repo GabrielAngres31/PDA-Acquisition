@@ -238,22 +238,24 @@ def run_training_mbn(
     for e in range(epochs):
         loss_info = train_one_epoch_mbn(module, loader, optimizer, pos_weight)
 
-        loss, losses = loss_info["mean"], loss_info["losses"]
+        # loss, losses = loss_info["mean"], loss_info["losses"]
 
         scheduler.step()
         if vloader is not None:
             vloss = validate_one_epoch_mbn(module, vloader)
         print(
-            f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" }'
+            # f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" }'
+            f'Epoch: {e:3d} | loss: {loss_info:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" }'
         )
         torch.save(module, os.path.join(checkpointdir, f'last.e{e:03d}.pth'))
         if table_out:
-            loss_list.append(f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" },')
+            # loss_list.append(f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" },')
+            loss_list.append(f'Epoch: {e:3d} | loss: {loss_info:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" },')
             
             with open(f'{checkpointdir}{table_out}_cloud.csv', 'w', newline='') as csv_points_out:
                 csv_points_writer = csv.writer(csv_points_out, delimiter=',',
                                     quotechar='\"', quoting=csv.QUOTE_MINIMAL)
-                [csv_points_writer.writerow([f"Epoch: {e:3d}", l]) for l in losses]
+                [csv_points_writer.writerow([f"Epoch: {e:3d}", l]) for l in loss_list]
     
     if table_out:
         with open(f'{checkpointdir}{table_out}.csv', 'w', newline='') as csv_out:

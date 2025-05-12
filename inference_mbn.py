@@ -22,13 +22,17 @@ def main(args:argparse.Namespace) -> bool:
         y = torch.softmax(y, dim=1, dtype=float)
         y = torch.argmax(y, dim=1)
         print(p, ": ", classer(y[0]))
+        return(classer(y[0]))
     elif args.input_folder:
         dir_list = os.listdir(args.input_folder)
         x     = torch.stack([src.data.load_inputimage(os.path.join(args.input_folder, f)) for f in dir_list])
         y = run_inference(model, x)
         y = torch.softmax(y, dim=1, dtype=float)
         y = torch.argmax(y, dim=1)
-        [print(f"{dir_list[i]}: \t{classer(y[i])}") for i, t in enumerate(y)]
+        # [print(f"{dir_list[i]}: \t{classer(y[i])}") for i, t in enumerate(y)]
+        with open("SCD_training_data/mbn_training/guess_outfile.txt", "w") as t:
+            for l in [(f"{dir_list[i]}: \t{classer(y[i])}") for i, t in enumerate(y)]:
+                t.write(f"{l}\n")
     return True
 
 

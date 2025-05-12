@@ -12,10 +12,12 @@ from timeit import default_timer as timer
 
 
 def main(args:argparse.Namespace) -> bool:
-    model = torch.load(args.model).eval()
+    # print(args.weights_only)
+    model = torch.load(args.model, weights_only=False).eval()
     x     = src.data.load_inputimage(args.input)
     y     = run_patchwise_inference(model, x, args.overlap)
     outf  = os.path.join(args.outputdir, os.path.basename(args.input)+f'{args.outputname}.output.png')
+    # print(outf)
     # print("DIR_OUTPUT IS:")
     # print(os.path.dirname(outf))
     
@@ -60,7 +62,11 @@ def get_argparser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--progress",
         type=str,
-        help = "Whether to show a progress bar. May disable for batch jobs."
+        help    = "Whether to show a progress bar. May disable for batch jobs."
+    )
+    parser.add_argument(
+        "--weights_only",
+        default = True
     )
     return parser
 
