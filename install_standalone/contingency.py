@@ -153,8 +153,8 @@ def main(args:argparse.Namespace) -> bool:
 
     # print(str(default_list))
 
-    #IoU_csr[:, 0] = 0
-    #IoU_csr[0, :] = 0
+    IoU_csr[:, 0] = 0
+    IoU_csr[0, :] = 0
 
     #print(IoU_csr)
 

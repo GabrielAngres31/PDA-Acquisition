@@ -15,7 +15,7 @@ def main(args:argparse.Namespace) -> bool:
     # print(args.weights_only)
     model = torch.load(args.model, weights_only=False).eval()
     x     = src.data.load_inputimage(args.input)
-    y     = run_patchwise_inference(model, x, args.overlap)
+    y     = run_patchwise_inference(model, x, args.patchsize, args.overlap)
     outf  = os.path.join(args.outputdir, os.path.basename(args.input)+f'{args.outputname}.output.png')
     # print(outf)
     # print("DIR_OUTPUT IS:")
@@ -26,8 +26,8 @@ def main(args:argparse.Namespace) -> bool:
     return True
 
 
-def run_patchwise_inference(model:torch.nn.Module, x:torch.Tensor, overlap:int) -> torch.Tensor:
-    input_patches  = src.data.slice_into_patches_with_overlap(x, 256, overlap)
+def run_patchwise_inference(model:torch.nn.Module, x:torch.Tensor, patchsize:int, overlap:int) -> torch.Tensor:
+    input_patches  = src.data.slice_into_patches_with_overlap(x, patchsize=patchsize, overlap=overlap)
     output_patches = []
     if args.progress: iterator = tqdm.tqdm(input_patches)
     else: iterator = input_patches
@@ -46,6 +46,7 @@ def get_argparser() -> argparse.ArgumentParser:
     parser.add_argument('--input', type=str, required=True, help='Path to input image')
     parser.add_argument('--close_on', type=int, help='Maximum hole size to remove')
     parser.add_argument('--open_on', type=int, help='Minimum clump size to keep')
+    parser.add_argument('--patchsize', type=int, default=256, help='Patch size, default 256')
     parser.add_argument('--overlap', type=int, help='Vertical overlap between patches')
     parser.add_argument(
         '--outputdir', 

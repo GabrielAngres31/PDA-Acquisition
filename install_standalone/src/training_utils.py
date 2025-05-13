@@ -103,7 +103,7 @@ def augment(x_batch:torch.Tensor, t_batch:torch.Tensor) -> torch.Tensor:
         new_x_batch[i] = x_image
         new_t_batch[i] = t_mask
         
-        transform_code = np.random.randint(1,4)
+        transform_code = np.random.randint(0,2)
         noise = transform_code >> 1
         blur = transform_code & 1
 
