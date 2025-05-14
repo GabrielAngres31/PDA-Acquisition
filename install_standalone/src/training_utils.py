@@ -57,15 +57,16 @@ def run_training(
         if table_out:
             mean_loss_list.append(f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" },')
             [all_loss_list.append(f'{e}\t{l:.5f}') for l in loss_all]
-            [all_vloss_list.append(f'{e}\t{v:.5f}') for v in vloss_all]
+            if vloader:
+                [all_vloss_list.append(f'{e}\t{v:.5f}') for v in vloss_all]
 
 
     
     if table_out:
         print(mean_loss_list)
         print(all_loss_list)
-        print(mean_vloss_list)
-        print(all_vloss_list)
+        print(mean_vloss_list if vloader else "NO VALIDATION")
+        print(all_vloss_list if vloader else "NO VALIDATION")
         with open(f'{checkpointdir}{table_out}.csv', 'w', newline='') as csv_out:
             csv_out_writer = csv.writer(csv_out, delimiter=',',
                                 quotechar='\"', quoting=csv.QUOTE_MINIMAL)
@@ -74,14 +75,15 @@ def run_training(
             csv_out_all_writer = csv.writer(csv_all_out, delimiter=',',
                                 quotechar='\"', quoting=csv.QUOTE_MINIMAL)
             [csv_out_all_writer.writerow([i]) for i in all_loss_list]
-        with open(f'{checkpointdir}{table_out}_V.csv', 'w', newline='') as csv_out_v:
-            csv_out_writer_v = csv.writer(csv_out_v, delimiter=',',
-                                quotechar='\"', quoting=csv.QUOTE_MINIMAL)
-            [csv_out_writer_v.writerow([i]) for i in mean_vloss_list]
-        with open(f'{checkpointdir}{table_out}_all_V.csv', 'w', newline='') as csv_all_out_v:
-            csv_out_all_writer_v = csv.writer(csv_all_out_v, delimiter=',',
-                                quotechar='\"', quoting=csv.QUOTE_MINIMAL)
-            [csv_out_all_writer_v.writerow([i]) for i in all_vloss_list]
+        if vloader:
+            with open(f'{checkpointdir}{table_out}_V.csv', 'w', newline='') as csv_out_v:
+                csv_out_writer_v = csv.writer(csv_out_v, delimiter=',',
+                                    quotechar='\"', quoting=csv.QUOTE_MINIMAL)
+                [csv_out_writer_v.writerow([i]) for i in mean_vloss_list]
+            with open(f'{checkpointdir}{table_out}_all_V.csv', 'w', newline='') as csv_all_out_v:
+                csv_out_all_writer_v = csv.writer(csv_all_out_v, delimiter=',',
+                                    quotechar='\"', quoting=csv.QUOTE_MINIMAL)
+                [csv_out_all_writer_v.writerow([i]) for i in all_vloss_list]
         
     return module.eval()
 
@@ -100,30 +102,32 @@ def augment(x_batch:torch.Tensor, t_batch:torch.Tensor) -> torch.Tensor:
         if np.random.random() < 0.5:
             x_image = torch.flip(x_image, dims=[-1])
             t_mask  = torch.flip(t_mask, dims=[-1])
-        new_x_batch[i] = x_image
-        new_t_batch[i] = t_mask
+
+        # new_x_batch[i] = x_image
+        # new_t_batch[i] = t_mask
+
         
         transform_code = np.random.randint(0,2)
         noise = transform_code >> 1
         blur = transform_code & 1
 
-        def add_black_squares(img_tensor, num_squares=3):
+        # def add_black_squares(img_tensor, num_squares=3):
 
-            height, width, channels = img_tensor.shape
-            def add_single_square():
+        #     height, width, channels = img_tensor.shape
+        #     def add_single_square():
                 
-                x = torch.randint(0, width - 2, (1,)).item() 
-                y = torch.randint(0, height - 2, (1,)).item()
+        #         x = torch.randint(0, width - 2, (1,)).item() 
+        #         y = torch.randint(0, height - 2, (1,)).item()
 
-                square = torch.zeros((3, 3, channels))
-                img_tensor[y:y+3, x:x+3, :] = square
+        #         square = torch.zeros((3, 3, channels))
+        #         img_tensor[y:y+3, x:x+3, :] = square
 
-            for _ in range(num_squares):                
-                add_single_square()
-            return img_tensor
+        #     for _ in range(num_squares):                
+        #         add_single_square()
+        #     return img_tensor
         
-        if np.random.random() < 0.05:
-            x_image = add_black_squares(x_image, num_squares=3)
+        # if np.random.random() < 0.05:
+        #     x_image = add_black_squares(x_image, num_squares=3)
 
         # if np.random.random() < 0.5:
         if noise:
@@ -138,6 +142,9 @@ def augment(x_batch:torch.Tensor, t_batch:torch.Tensor) -> torch.Tensor:
                 kernel_size = int(np.random.choice([3, 5, 7])),
                 sigma       = np.random.uniform(0.0, 3),
             )
+        
+        new_x_batch[i] = x_image
+        new_t_batch[i] = t_mask            
     
     return new_x_batch, new_t_batch
 
