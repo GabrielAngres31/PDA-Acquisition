@@ -107,6 +107,9 @@ def augment(x_batch:torch.Tensor, t_batch:torch.Tensor) -> torch.Tensor:
         # new_t_batch[i] = t_mask
 
         
+        # transform_code = np.random.randint(0,2)
+        # noise = transform_code >> 1
+        # blur = transform_code & 1
         transform_code = np.random.randint(0,2)
         noise = transform_code >> 1
         blur = transform_code & 1
@@ -130,9 +133,7 @@ def augment(x_batch:torch.Tensor, t_batch:torch.Tensor) -> torch.Tensor:
         #     x_image = add_black_squares(x_image, num_squares=3)
 
         # if np.random.random() < 0.5:
-        if noise:
-            gauss_noise = tfv2.GaussianNoise()
-            x_image=gauss_noise(x_image)
+
             # pass #NOISING
 
         # if np.random.random() < 0.5:

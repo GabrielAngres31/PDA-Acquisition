@@ -38,9 +38,10 @@ def main(args:argparse.Namespace) -> bool:
 def quantify_clumps_skimage(image: PIL.Image, properties:tuple, saveas: str): #-> None
 
     clumps_map = skimm.label(image, connectivity=2) 
-    return skimm.regionprops_table(skimm.label(clumps_map),#, 
-                                   properties = tuple(properties)
-                                   )
+    clumps_table = skimm.regionprops_table(skimm.label(clumps_map), properties = tuple(properties))
+    if saveas:
+        clumps_table.to_csv(saveas)
+    return clumps_table
 
 def get_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()

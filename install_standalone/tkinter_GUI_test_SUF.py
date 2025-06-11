@@ -7,6 +7,9 @@ from PIL import Image, ImageTk
 import os
 import image_audit_canvas_SUF_2
 import subprocess
+import clean_image_SUF as cl
+import clumps_table_SUF as cf
+import numpy as np
 
 
 
@@ -107,6 +110,8 @@ class StomataGUI:
         self.manamenu.add_separator()
         self.manamenu.add_command(label="Set Recents", command=self.set_recents)
         self.manamenu.add_command(label="Set Paired Files (WIP)", command=self.set_paired_files)
+        self.manamenu.add_separator()
+        self.manamenu.add_command(label="Clean In-place", command=self.clean_inplace)
 
         # Hardcoded window sidelength
         self.window_sidelength = 148
@@ -240,6 +245,9 @@ class StomataGUI:
         # self.set_focus_to_tab(None, 0)
         self.main_tab_control.select(0)
         # self.set_focus_to_tab(None)
+    
+    def toplevelDialogue(self, event=None):
+        pass
 
     def set_focus_to_tab(self, event=None):
         ind = self.main_tab_control.index(self.main_tab_control.select())
@@ -326,7 +334,10 @@ class StomataGUI:
             file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")], initialdir=self.config_properties['dir_CSV'])
         elif not decision:
             check = messagebox.askyesnocancel('Confirm Annotation', 'Do you have the correct file to make a clumps list of?')
+            # mode = 
             if check:
+            # if mode:
+
                 print("Generating clumps file")
                 subprocess.run(f'python.exe clumps_table_SUF.py --input_path="{self.config_properties["recent_ANNOT"]}" --output_folder="annotation_helper_files/"', shell=True) #, capture_output=True)
                 # file_path = f"annotation_helper_files/{os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0]}.csv"
@@ -335,7 +346,9 @@ class StomataGUI:
                 # print(os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT'])))
                 # file_path = f"annotation_helper_files/{os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0]}.csv"
                 # file_path = f"annotation_helper_files/{os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0]}.csv"
+                file_path = "annotation_helper_files/" + os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0] + ".csv"
         if file_path:
+            print(file_path)
             print("did you get here already?")
             try:
                 self.import_CSV(file_path)
@@ -379,6 +392,8 @@ class StomataGUI:
             print(f"Imported Image {image_type} to {-self.x0()}, {-self.y0()}")
         except:
             print(f"Could not import image. Check your filepath: {file_path}")
+        # print(len(set(img.getdata()))) 
+        # return(len(set(img.getdata())))
         
     # Change image on a given canvas
     def update_image(self, canvas, img, image_type):
@@ -464,6 +479,23 @@ class StomataGUI:
     def set_paired_files(self):
         #TODO
         pass
+
+    def clean_inplace(self): # CURRENTLY DOES NOT WORK!
+        annotpath = self.config_properties['recent_ANNOT']
+        img = np.asarray(Image.open(annotpath))
+        print(type(img))
+        if np.unique(img).size != 2:
+            cln_img = cl.clean_image(img, 'clumps', 'otsu', return_im = True)
+            cln_tbl = cf.quantify_clumps_skimage(cln_img, saveas=f"annotation_helper_files/{os.path.splitext(os.path.basename())[0]}.csv") # Run the Clumpfinder!!!
+            # self.config_properties['recent_CSV'] = f"annotation_helper_files/{os.path.splitext(os.path.basename())[0]}.csv"
+            self.import_csv(f"annotation_helper_files/{os.path.splitext(os.path.basename())[0]}.csv")
+            # return cln_tbl
+        # Check for currently loaded annot file
+        # Check value range is two values 0 and 255 or 0 and 1 - confirm!!!
+        ### If not, apply cleaning per clean_image_SUF.py
+        print(f"Number of unique values is != 2: [ {len(set(img.getdata()))} ]")
+
+
 
     def mark_note(self, note_text):
         index = self.bbox_number.get()-1

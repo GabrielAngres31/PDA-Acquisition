@@ -16,7 +16,7 @@ import os
 import subprocess
 
 
-
+import sys
 
 
 if False:
@@ -35,16 +35,16 @@ def get_argparser() -> argparse.ArgumentParser:
         type    = str,
         help    = 'Filepath for the Ground Truth Image - MUST BE ANNOTATION'
     )
-    parser.add_argument(
-        '--base_image',
-        type    = str,
-        help    = 'Base Image to run inference on - generates inference annotation with a provided model. MUST PROVIDE A MODEL'
-    )
-    parser.add_argument(
-        '--model_path',
-        type    = str,
-        help    = "Model Path for interpreting Base Image"
-    )
+    # parser.add_argument(
+    #     '--base_image',
+    #     type    = str,
+    #     help    = 'Base Image to run inference on - generates inference annotation with a provided model. MUST PROVIDE A MODEL'
+    # )
+    # parser.add_argument(
+    #     '--model_path',
+    #     type    = str,
+    #     help    = "Model Path for interpreting Base Image"
+    # )
     parser.add_argument(
         '--guess_image',
         type    = str,
@@ -55,35 +55,42 @@ def get_argparser() -> argparse.ArgumentParser:
         default = False,
         help    = "Set this to True to see the histogram of residual errors. Not recommended for batch operations."
     )
+    parser.add_argument(
+        '--texttag',
+        type = str,
+        default = "",
+        help    = "Label for output histogram. Default none."
+    )
     return parser
 
 
 def main(args:argparse.Namespace) -> bool:
-    print("Running!")
+    # print("Running!")
     assert args.ground_truth, "Need to specify --ground_truth argument."
     assert os.path.exists(args.ground_truth), f"Invalid path to ground truth image. Please check --ground_truth argument.\nArgument value: {args.ground_truth}"
     assert args.guess_image or args.base_image, "Please provide either a base image with --base_image or a pregenerated inference image with --guess_image."
-    if args.model_path and not(args.base_image):
-        print("You've specified a model, but not an image to apply the model to. The model will not be applied.")
-    if args.base_image and args.guess_image:
-        print("Command cannot be run with two conflicting inputs. Please choose between providing a --base_image and --model_path argument set, and providing a --guess_image argument by itself.")
-        print("Terminating operation")
-        return
+    # if args.model_path and not(args.base_image):
+    #     print("You've specified a model, but not an image to apply the model to. The model will not be applied.")
+    # if args.base_image and args.guess_image:
+    #     print("Command cannot be run with two conflicting inputs. Please choose between providing a --base_image and --model_path argument set, and providing a --guess_image argument by itself.")
+    #     print("Terminating operation")
+    #     return
     
     gt = skimage.io.imread(args.ground_truth)
-    if args.base_image:
-        assert args.model_path, "You need to provide a model to use on the base image!"
-        # print(os.path.basename(args.base_image), "CONTINGENCY.output.png")
-        path_compare_image = os.path.join("inference", str(os.path.basename(args.base_image)+'CONTINGENCY.output.png'))
-        halt_var = subprocess.run(f"python inference_SUF.py --model={args.model_path} --input={args.base_image} --overlap=32 --outputdir=inference --outputname=CONTINGENCY  --progress='T' --weights_only=False", shell=True, capture_output=True)
-        print(path_compare_image)
-        assert os.path.exists(path_compare_image), print(path_compare_image)
-        compare_image = skimage.io.imread(path_compare_image)
+    # if args.base_image:
+    #     assert args.model_path, "You need to provide a model to use on the base image!"
+    #     # print(os.path.basename(args.base_image), "CONTINGENCY.output.png")
+    #     path_compare_image = os.path.join("inference", str(os.path.basename(args.base_image)))
+    #     halt_var = subprocess.run(f"python inference_SUF.py --model={args.model_path} --input={args.base_image} --overlap=32 --outputdir=inference --outputname=CONTINGENCY  --progress='T' --weights_only=False", shell=True, capture_output=True)
+    #     print(path_compare_image)
+    #     print("gorf")
+    #     assert os.path.exists(path_compare_image), path_compare_image
+    #     compare_image = skimage.io.imread(path_compare_image)
         # cm = skimage.io.imread()
-    elif args.guess_image:
+    if args.guess_image:
         compare_image = skimage.io.imread(args.guess_image)
     
-
+    # print(compare_image)
     
 
     # apply threshold
@@ -95,11 +102,12 @@ def main(args:argparse.Namespace) -> bool:
     thresh_inf = compare_image
     # compare_image = compare_image
     try: 
-        compare_image.ndim == 2
+        # print(compare_image.ndim)
+        assert compare_image.ndim == 2
     except:
         compare_image = compare_image[:,:,0]
-        print(compare_image.shape)
-
+    #     print(compare_image.shape)
+    # print(compare_image > 204)
     bw_inf = closing(compare_image > 204, square(3))
     
     
@@ -107,13 +115,13 @@ def main(args:argparse.Namespace) -> bool:
         bw_tru = closing(gt > 204, square(3))
     except:
         gt = gt[:,:,0]
-        print(gt.shape)
+        # print(gt.shape)
         bw_tru = closing(gt > 204, square(3))
-    thresh_tru = threshold_otsu(gt)
+    # thresh_tru = threshold_otsu(gt)
     # gt = gt
 
 
-    inf_out =  np.multiply(bw_inf, 255)
+    # inf_out =  np.multiply(bw_inf, 255)
 
     # skimage.io.imsave("inference/test_skimage_out_close.png", inf_out.astype('uint8'))
     # skimage.io.imsave("inference/test_skimage_out_close.png", bw_inf.astype('uint8'))
@@ -129,7 +137,8 @@ def main(args:argparse.Namespace) -> bool:
             "label_image_inf":{label_image_inf[1]},
             "label_image_tru":{label_image_tru[1]},
             }
-
+    # print(label_image_tru)
+    # print(label_image_inf)
     # skimage.io.imsave("inference/test_skimage_out_cont.png", label_image_inf.astype('uint8'))
     # skimage.io.imsave("inference/test_skimage_out_cont_tru.png", label_image_tru.astype('uint8'))
 
@@ -137,8 +146,15 @@ def main(args:argparse.Namespace) -> bool:
     nd_tru = label_image_tru[0]
 
 
-
-    intersections = skimage.metrics.contingency_table(nd_tru, nd_inf)             #[N,M]
+    try:
+        intersections = skimage.metrics.contingency_table(nd_tru, nd_inf)             #[N,M]
+    except:
+        if nd_inf.shape != nd_tru.shape:
+            print(f"INF: {nd_inf.shape}")
+            print(args.guess_image)
+            print(f"TRU: {nd_tru.shape}")
+            print(args.ground_truth)
+            sys.exit()
     pixelsums_annotation = intersections.sum(axis=1)    #[N,1]
     pixelsums_outputs    = intersections.sum(axis=0)    #[1,M]
     unions = pixelsums_annotation + pixelsums_outputs - intersections  #[N,M]
@@ -161,18 +177,21 @@ def main(args:argparse.Namespace) -> bool:
     bins = np.arange(0, 1, 0.05) # fixed bin size
 
     data = [x for x in default_list.tolist()[0]]
-    print(f"Mean: {np.mean(data)}")
-    print(nums)
+    # print(f"Mean: {np.mean(data)}")
+    # print(nums)
     #plt.xlim([min(data)-0.2, max(data)+0.2])
 
     plt.hist(data, bins=bins, alpha=0.5)
     plt.title('IoU data - mutant')
     plt.xlabel('IoU (bin size = 0.05)')
     plt.ylabel('Count')
-    # plt.ylim()
-    plt.savefig(f"inference/{os.path.basename(args.base_image)}_CONTINGENCY_testfigure.png")
+    # plt.ylim(0, 120)
     if args.show_image:
         plt.show()
+    # plt.savefig(f"inference/{os.path.basename(args.base_image)}_CONTINGENCY_testfigure.png")
+    plt.savefig(f"inference/contingencycompare/{os.path.basename(args.guess_image)}_{args.texttag}.png")
+    # print(f"inference/{os.path.basename(args.guess_image)}_{args.texttag}.png")
+
 
     return True
 
@@ -182,6 +201,7 @@ if __name__ == '__main__':
     ok   = main(args)
     
     if ok:
+        pass
         print('Done')
 
 

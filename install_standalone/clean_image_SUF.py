@@ -28,7 +28,7 @@ def main(args:argparse.Namespace) -> bool:
     image_in = skimage.io.imread(args.input_path)
     clean_image(image_in, args.prediction_type, args.filter_type, args.save_image_as)
 
-def clean_image(image: PIL.Image, mode:str, filter_mode:str, saveas: str): 
+def clean_image(image: np.array, mode:str, filter_mode:str, saveas: str = "", return_im: bool = False): 
     if len(image.shape) == 3:
         image = skimage.color.rgb2gray(image)
     print(image.shape)
@@ -62,6 +62,8 @@ def clean_image(image: PIL.Image, mode:str, filter_mode:str, saveas: str):
 
     if saveas:
         src.data.save_image(f"cleaned_images_default/{saveas}.png", final_image.astype(numpy.float32))
+    if return_im:
+        return final_image
 
 def get_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
