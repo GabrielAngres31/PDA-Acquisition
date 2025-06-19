@@ -10,6 +10,9 @@ import glob
 import typing
 import os
 
+import csv
+import shutil
+
 model_of_choice = "checkpoints/comp_nosmalls_2025-05-21_12h-13m-25s/last.e029.pth"
 command =  'python inference_SUF.py --model=checkpoints/comp_nosmalls_2025-05-21_12h-13m-25s/last.e029.pth --input="remove_ALL_smalls/BASE_smalls/cotE10.tif" --overlap=232 --outputname="o232_E10" --progress=True'
 
@@ -69,6 +72,7 @@ def quickerator(dir:str, o:int, out:str, model:str = "checkpoints/comp_nosmalls_
 
 
 
+
 def RGBgen_from_monodiff_vector(num, threshold=100):
     
     # Calculates the R value corresponding to the monochrome cell, to make the first image ORANGE (in combination with the G value)
@@ -98,20 +102,34 @@ def generate_compare(img1, img2):
     
     return delta_RGB
 
-Image.fromarray(
-    generate_compare(
-        np.asarray(Image.open("inference/basl-2_5_COT_02_rotated_MAX_basl-2_5dpg_110321_1_2_abaxial_merged.tifCONTINGENCY.output.png")),
-        np.asarray(Image.open("remove_ALL_smalls/ANNOT_smalls/basl-2_5_COT_02_rotated_MAX_basl-2_5dpg_110321_1_2_abaxial_merged_ANNOT.png"))
-        # np.asarray(Image.open("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/inference/R3-1uM_1_1.tifo232_AZDtest_avgskiptest_withskip.output.png")),
-        # np.asarray(Image.open("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/inference/R3-1uM_1_1.tifo200_AZDtest_avgskiptest_withskip.output.png"))
-        )
-).show()
+# Image.fromarray(
+#     generate_compare(
+#         np.asarray(Image.open("inference/basl-2_5_COT_02_rotated_MAX_basl-2_5dpg_110321_1_2_abaxial_merged.tifCONTINGENCY.output.png")),
+#         np.asarray(Image.open("remove_ALL_smalls/ANNOT_smalls/basl-2_5_COT_02_rotated_MAX_basl-2_5dpg_110321_1_2_abaxial_merged_ANNOT.png"))
+#         # np.asarray(Image.open("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/inference/R3-1uM_1_1.tifo232_AZDtest_avgskiptest_withskip.output.png")),
+#         # np.asarray(Image.open("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/inference/R3-1uM_1_1.tifo200_AZDtest_avgskiptest_withskip.output.png"))
+#         )
+# ).show()
 
 
 # for i, filepair in enumerate(zip(glob.glob("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/publication_compare/pre-annotated/AZD/*.png"), glob.glob("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/publication_compare/inference/inf_AZD/raw_inf_216/*.png"))):
 #     base, inf = filepair[0], filepair[1]
 #     # print(base, inf)
 #     subprocess.run(f"python contingency.py --ground_truth={base} --guess_image={inf} --texttag=_{i}", shell=True)
+# for file in glob.glob("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/publication_compare/pre-annotated/AZD/*.png"):
+#     pass
+#     base = os.path.basename(file)
+#     inf = os.path.splitext(base)[0]+".png"
+#     subprocess.run(f"python contingency.py --ground_truth={file} --guess_image={f'../publication_compare/inference/inf_AZD/raw_inf_216/{inf}'} --texttag=FFcheck --mode=full_filter", shell=True)
+
+if False:
+    with open("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/nosmallsplitval_05-2025.csv", mode='r', newline='') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            shutil.copy(row[0], "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/publication_compare/inference/validation_set/BASE")
+            shutil.copy(row[1], "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/publication_compare/inference/validation_set/ANNOT")
+        # subprocess.run(f"python contingency.py --ground_truth={file} --guess_image={f'../publication_compare/inference/inf_AZD/raw_inf_216/{inf}'} --texttag=FFcheck --mode=full_filter", shell=True)
+
 
 
 # Quantify Training and Validation loss from Models into Table/Graphs

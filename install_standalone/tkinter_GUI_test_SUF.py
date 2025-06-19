@@ -248,8 +248,11 @@ class StomataGUI:
     
     def toplevelDialogue(self, event=None):
         pass
-
+    
     def set_focus_to_tab(self, event=None):
+        """
+        Sets focus to a tab in response to an event.
+        """
         ind = self.main_tab_control.index(self.main_tab_control.select())
         # ind = self.main_tab_control.index(self.main_tab_control.select())
         print("None")
@@ -265,45 +268,74 @@ class StomataGUI:
         print(ind)
         print(self.root.focus_get())
 
-
     # Set config properties during function calls
     def set_property(self, property, value):
+        """
+        Writes a property to the config file in the annotation_helper_files txt.
+        """
         self.config_properties[property] = value
 
-    # Upper left corner of clump bounding box
     def x0(self): 
+        """
+        Returns the LEFT boundary of a given clump's bounding box.
+        """
         return -self.bbox_coords[0]
 
     def y0(self):
+        """
+        Returns the UPPER boundary of a given clump's bounding box.
+        """
         return -self.bbox_coords[1]
     
-    # Low right corner of clump bounding box
     def x1(self): 
+        """
+        Returns the RIGHT boundary of a given clump's bounding box.
+        """
         return -self.bbox_coords[2]
 
     def y1(self):
+        """
+        Returns the BOTTOM boundary of a given clump's bounding box.
+        """
         return -self.bbox_coords[3]
 
-    # Center pixel
     def xc(self):
+        """
+        Returns the X-Midpoint (horizontal) of a given clump's bounding box.
+        """
         return (self.x0()+self.x1())//2
     
     def yc(self):
+        """
+        Returns the Y-Midpoint (vertical) of a given clump's bounding box.
+        """
         return (self.y0()+self.y1())//2
     
     # Fixed-size window centered on chunk, upper left corner
     def xD(self):
+        """
+        X-coordinate of upper-left corner of NxN frame centered on chunk.
+        """
         return self.xc()+self.window_sidelength//2
     
     def yD(self):
+        """
+        Y-coordinate of upper-left corner of NxN frame centered on chunk.
+        """
         return self.yc()+self.window_sidelength//2
     
     # File Dialogs
     ### Get the BASE file (dialog and autofunction)
     def import_BASE_dialog(self):
+        """
+        Prompts the user about the BASE image to load for visual analysis, through a dialog box.
+        """
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.tif")], initialdir=self.config_properties['dir_BASE'])
         if file_path: self.import_BASE(file_path)
     def import_BASE(self, file_path):
+        """
+        Imports an image with a given filepath as a BASE image for visual analysis.
+        """
         self.import_image(self.canvas_base, file_path, 'BASE')
         self.update_overlay()
         self.set_property("recent_BASE", file_path)
@@ -312,6 +344,9 @@ class StomataGUI:
 
     ### Get the ANNOT file (dialog and autofunction)
     def import_ANNOT_dialog(self):
+        """
+        Prompts the user about the ANNOT image to load for visual analysis, through a dialog box.
+        """
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.tif")], initialdir=self.config_properties['dir_ANNOT'])
         if file_path:
             self.import_ANNOT(file_path)
@@ -321,6 +356,9 @@ class StomataGUI:
             print("Saving work on ANNOT!")
 
     def import_ANNOT(self, file_path):
+        """
+        Imports an image with a given filepath as a ANNOT image for visual analysis.
+        """
         self.import_image(self.canvas_annot, file_path, 'ANNOT')
         self.update_overlay()
         self.current_annot_path = file_path
@@ -329,45 +367,72 @@ class StomataGUI:
 
     ### Get the CSV file (dialog and autofunction)
     def import_CSV_dialog(self):
+        """
+        Prompts the user about the clumps CSVs to load for visual analysis, through a dialog box.
+        """
         decision = messagebox.askyesnocancel('Get Annotation File', 'Use premade clumps file?')
-        if decision:
-            file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")], initialdir=self.config_properties['dir_CSV'])
-        elif not decision:
-            check = messagebox.askyesnocancel('Confirm Annotation', 'Do you have the correct file to make a clumps list of?')
-            # mode = 
-            if check:
-            # if mode:
+        # Asks whether the user wants to select a premade clumps file that corresponds with the image, 
+        # or whether to generate a new file based on the provided annotation image.
 
+        # Yes Path
+        if decision:
+            # Establish the filepath of the CLUMPS file - LOCATE.
+            file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")], initialdir=self.config_properties['dir_CSV'])
+        
+        # No Path
+        elif not decision:
+            # Confirm that the Annotation file is correct (i.e. corresponds with the correct loaded BASE file)
+            # If not, it exits without doing anything.
+            check = messagebox.askyesnocancel('Confirm Annotation', 'Do you have the correct file to make a clumps list of?')
+            # Yes Path
+            if check:
                 print("Generating clumps file")
-                subprocess.run(f'python.exe clumps_table_SUF.py --input_path="{self.config_properties["recent_ANNOT"]}" --output_folder="annotation_helper_files/"', shell=True) #, capture_output=True)
-                # file_path = f"annotation_helper_files/{os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0]}.csv"
+                # Cheak that the path is valid
                 assert os.path.exists(self.config_properties['recent_ANNOT'])
-                # print(os.path.basename(self.config_properties['recent_ANNOT']))
-                # print(os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT'])))
-                # file_path = f"annotation_helper_files/{os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0]}.csv"
-                # file_path = f"annotation_helper_files/{os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0]}.csv"
+                # Runs the clumpfinder and features on the ANNOT image.
+                subprocess.run(f'python.exe clumps_table_SUF.py --input_path="{self.config_properties["recent_ANNOT"]}" --output_folder="annotation_helper_files/"', shell=True) #, capture_output=True)
+                # Establish the filepath of the CLUMPS file - REGENERATE.
                 file_path = "annotation_helper_files/" + os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0] + ".csv"
+        
+        # If either of the two options returned a filepath, attempt to import the CLUMPS file to the viewer.
+        # Otherwise, fail out and leave everything else in the viewer as it was.
         if file_path:
-            print(file_path)
-            print("did you get here already?")
             try:
+                # Attempts to load the CLUMPS file
                 self.import_CSV(file_path)
                 print("Successfully loaded csv!")
             except Exception as e:
+                # Else, prints the Exception to Console for the user to diagnose.
                 messagebox.showerror("Error", f"Failed to read CSV: {e}")
+
     def import_CSV(self, file_path):
-        # print(f"{file_path}")
+        """
+        Imports a CSV with a given filepath as a table to orient the viewer utility.
+        """
+        
+        # Loads the coordinates of the clumps
         self.df_coords = pd.read_csv(file_path, encoding='utf8')
+        # Places upper bound on the clumps that can be scrolled to.
+        # Any number higher than this, or lower than zero, will not prompt a viewer update.
+        # TODO: Make it so that number updates do not occur for higher AND lower values.
         self.max_number = len(self.df_coords)
+        # Initialize current viewed stomata to the 1st clump on the list.
         self.bbox_number.set(1) 
         try: 
+            # Check if the file already has a "Notes" column for labeling.
             self.notes_list = self.df_coords["Notes"]
         except:
+            # If not, writes a new one.
+            # NOTE: Writing a new clumps file with the same name will overwrite the column and *remove all labels*!
             print("Writing Notes Column: ")
             self.notes_list = ["NONE"] * self.max_number
+        
+        # Load the BASE and ANNOT views to the first clump on the list.
         self.update_bbox_coords(self.df_coords)
         self.update_images()
+        # Update the overlay
         self.update_overlay()
+        # Update the most recent CSV.
         self.set_property("recent_CSV", file_path)
         self.set_property("dir_CSV", os.path.dirname(file_path))
 

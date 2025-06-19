@@ -11,26 +11,29 @@ import src.data
 import src.training_utils
 import src.unet
 
-import time
 
 def main(args:argparse.Namespace) -> bool:
-    print("Beginning Training")
     '''Training entry point'''
-    # print(args.trainingsplit)
-    trainfiles = src.data.load_splitfile(args.trainingsplit)
-    trainfiles = src.data.cache_file_pairs(
-        trainfiles, args.cachedir, args.patchsize, args.overlap
-    )
-    print("Caching Filepairs...")
+    trainfiles = args.trainingfolder
+    # trainfiles = src.data.load_splitfile(args.trainingfolder)
+    # trainfiles = src.data.cache_file_pairs(
+    #     trainfiles, args.cachedir, args.patchsize, args.overlap
+    # )
     validationfiles = None
-    if args.validationsplit is not None:
-        validationfiles = src.data.load_splitfile(args.validationsplit)
-        validationfiles = src.data.cache_file_pairs(
-            validationfiles, args.cachedir, args.patchsize, args.overlap, clear=False
-        )
-    print("Acquiring Model...")
-    model = src.unet.UNet()
-    model = src.training_utils.run_training(
+
+    if args.validationfolder is not None:
+        validationfiles = args.validationfolder,
+    # if args.validationfiles is not None:
+    #     validationfiles = src.data.load_splitfile(args.validationfolder)
+    #     validationfiles = src.data.cache_file_pairs(
+    #         validationfiles, args.cachedir, args.patchsize, args.overlap, clear=False
+    #     )
+    
+
+
+    model = torchvision.models.mobilenet_v3_large(weights='DEFAULT')
+    assert isinstance(trainfiles, tp.Iterable), "WOOPS"
+    model = src.training_utils.run_training_mbn(
         model, 
         trainfiles, 
         args.epochs, 
@@ -49,43 +52,29 @@ def main(args:argparse.Namespace) -> bool:
 def get_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--trainingsplit', 
+        '--trainingfolder', 
         type     = str, 
         required = True,
-        help     = '''Path to .csv file containing pairs of input images and 
-        annotations to be used for training'''
+        help     = '''Path to folder containing class-labeled images to be used for training'''
     )
     parser.add_argument(
-        '--validationsplit', 
+        '--validationfolder', 
         type     = str, 
         required = False,
-        help     = '''Path to .csv file containing pairs of input images and 
-        annotations to be used for validation'''
-    )
-    parser.add_argument(
-        '--patchsize',
-        type    = int,
-        default = 256,
-        help    = 'Size of input patches in pixels'
-    )
-    parser.add_argument(
-        '--cachedir', 
-        type    = str, 
-        default = './cache/', 
-        help    = 'Where to store image patches',
+        help     = '''Path to folder containing class-labeled images to be used for validation'''
     )
     parser.add_argument(
         '--checkpointdir',
         type    = str,
-        default = './checkpoints/',
+        default = './checkpoints/mbn/',
         help    = 'Where to store trained models',
     )
-    parser.add_argument(
-        '--overlap',
-        type    = int,
-        default = 32,
-        help    = 'How much overlap between patches',
-    )
+    # parser.add_argument(
+    #     'model_ID',
+    #     type = str,
+    #     default = "",
+    #     help = 'Identifier to put before the date in the model name',
+    # )
     parser.add_argument(
         '--outputcsv',
         type    = str,
@@ -107,13 +96,13 @@ def get_argparser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--batchsize',
         type    = int,
-        default = 8,
+        default = 16,
         help    = 'Number of samples in a batch per training step'
     )
     parser.add_argument(
         '--pos_weight',
         type    = float,
-        default = 5.0,
+        default = 1.0,
         help    = 'Extra training weight on the positive class'
     )
     return parser
@@ -121,13 +110,6 @@ def get_argparser() -> argparse.ArgumentParser:
 
 if __name__ == '__main__':
     args = get_argparser().parse_args()
-
-    start_time = time.time()
     ok   = main(args)
-    end_time = time.time()
-
-    execution_time = end_time - start_time
-    print("Execution time:", execution_time)
-    
     if ok:
         print('Done')

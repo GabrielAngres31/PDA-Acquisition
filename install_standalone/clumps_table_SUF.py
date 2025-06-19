@@ -1,28 +1,12 @@
 # clumps_table.py
 
-import pandas as pd
 import argparse
-import src.data
-import tqdm
-import numpy
-import PIL
 from pathlib import Path
 
-import skimage.measure as skimm
-import skimage.morphology as skimorph
-
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-
+import pandas as pd
+import PIL 
 import skimage
-from skimage import data
-from skimage.filters import threshold_otsu
-from skimage.segmentation import clear_border
-from skimage.measure import label, regionprops
-from skimage.morphology import closing, square, area_closing, area_opening
-from skimage.color import label2rgb
-import PIL
-import numpy as np
+import numpy as np 
 
 def main(args:argparse.Namespace) -> bool:
     
@@ -37,8 +21,8 @@ def main(args:argparse.Namespace) -> bool:
 
 def quantify_clumps_skimage(image: PIL.Image, properties:tuple, saveas: str): #-> None
 
-    clumps_map = skimm.label(image, connectivity=2) 
-    clumps_table = skimm.regionprops_table(skimm.label(clumps_map), properties = tuple(properties))
+    clumps_map = skimage.measure.label(image, connectivity=2) 
+    clumps_table = skimage.measure.regionprops_table(skimage.measure.label(clumps_map), properties = tuple(properties))
     if saveas:
         clumps_table.to_csv(saveas)
     return clumps_table
@@ -55,7 +39,7 @@ def get_argparser() -> argparse.ArgumentParser:
         '--properties',
         type = str,
         nargs = "+",
-        default = ['label', 'bbox', 'area', 'area_bbox', 'axis_major_length', 'axis_minor_length', 'centroid', 'eccentricity', 'area_convex', 'perimeter', 'equivalent_diameter_area', 'extent', 'orientation'], # Eccentricity is bugged, so it's been excluded
+        default = ['label', 'bbox', 'area', 'area_bbox', 'axis_major_length', 'axis_minor_length', 'centroid', 'eccentricity', 'area_convex', 'perimeter', 'equivalent_diameter_area', 'extent', 'orientation'],
         help = 'Desired properties to calculate for each clump.'
     )
     parser.add_argument(

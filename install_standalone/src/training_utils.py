@@ -244,11 +244,12 @@ def run_training_mbn(
         vloader  = src.data.create_dataloader_mbn(vdataset, batchsize, shuffle=False)
 
     for e in range(epochs):
-        loss_info = train_one_epoch_mbn(module, loader, optimizer, pos_weight)
+        loss_fromfunc = train_one_epoch_mbn(module, loader, optimizer, pos_weight)
+        loss_info = {"mean":np.mean(loss_fromfunc), "losses":loss_fromfunc}
         print(loss_info)
-        print("Okay, here's this.")
         try:
             print("Attempting to allocate losses...")
+            # print(loss_info)
             loss, losses = loss_info["mean"], loss_info["losses"]
         except IndexError:
             print(f"You've run into a strange error. Here's what we have:\n")
@@ -287,21 +288,12 @@ def augment_mbn(x_batch:torch.Tensor) -> torch.Tensor:
     new_x_batch = x_batch.clone()
     
     for i, (x_image) in enumerate(zip(x_batch)):
-        # print(i)
-        # print(x_image[0])
         k = np.random.randint(0,4)
-        # x_image = tuple(torch.rot90(x_image[0], k, dims=(-1,-2)))
         x_image = torch.rot90(x_image[0], k, dims=(-1,-2))
 
         if np.random.random() < 0.5:
             x_image = torch.flip(x_image, dims=[-1])
         new_x_batch[i] = x_image
-        
-        # x_image = torchvision.transforms.functional.gaussian_blur(
-        #     x_image, 
-        #     kernel_size = 3,
-        #     sigma       = np.random.uniform(0.0, 2.4),
-        # )
     return new_x_batch
 
 
@@ -313,15 +305,10 @@ def train_one_epoch_mbn(
 ) -> float:
     losses = []
     assert str(loader)[1:39] == "torch.utils.data.dataloader.DataLoader", f"{str(loader)[1:39]} is not 'torch.utils.data.dataloader.DataLoader'"
-    # print("Well, is it subscriptable?")
     for i,[x,l] in enumerate(loader):
-        # print("a")
         x  = augment_mbn(x)
-        # print("a")
         optimizer.zero_grad()
-        # print("a")
         y    = module(x)
-        # print("a")
         loss = torch.nn.functional.cross_entropy(
             y, l
         )
@@ -330,7 +317,6 @@ def train_one_epoch_mbn(
 
         losses.append(loss.item())
         print(f'{i:3d}/{len(loader)} loss={loss.item():.4f}', end='\r')
-    # return np.mean(losses)
     return losses
 
 def validate_one_epoch_mbn(module:torch.nn.Module, loader:tp.Iterable) -> float:
@@ -340,11 +326,9 @@ def validate_one_epoch_mbn(module:torch.nn.Module, loader:tp.Iterable) -> float:
             y    = module(x)
         loss = torch.nn.functional.cross_entropy(y)
         losses.append(loss.item())
-    # return np.mean(losses)
     return losses
 
 # Fill In Guesser
-
 def run_training_fill_in(
     module:               torch.nn.Module, 
     training_folders:     torchvision.datasets.ImageFolder, 

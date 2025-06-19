@@ -1,16 +1,13 @@
 import argparse
 import os
 import typing as tp
+from timeit import default_timer as timer
 
-import PIL.Image
+import numpy as np
 import torch
+import tqdm
 
 import src.data
-
-import tqdm
-from timeit import default_timer as timer
-import numpy as np
-
 
 def main(args:argparse.Namespace) -> bool:
     # print(args.weights_only)
@@ -50,7 +47,7 @@ def run_patchwise_inference(model:torch.nn.Module, x:torch.Tensor, patchsize:int
             if check:
                 # Write -10 to patch, which upon applying thr sigmoid function (1/[1+exp(-x)]) will evaluate to 0.0003 (<< 1/256 = ~0.004)
                 # Which will be converted to a #000000 or BLACK pixel on subsequent normalization to [0, 255] monochrome.
-                y_patch = torch.full((1, 1, 256, 256), 0)
+                y_patch = torch.full((1, 1, 256, 256), -10)
                 output_patches.append(y_patch)
                 # Move to the next patch.
                 continue
@@ -64,7 +61,7 @@ def run_patchwise_inference(model:torch.nn.Module, x:torch.Tensor, patchsize:int
     result = result.sigmoid()
     return result
 
-def check_indices(wsize, step):
+def check_indices(wsize:int, step:int):
     i = 0
     while step*i < wsize:
         yield [(i*step,0), (wsize, i*step), (wsize-i*step,wsize), (0,wsize-i*step)]
