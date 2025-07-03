@@ -8,20 +8,22 @@ import argparse
 
 
 
-def RGBgen_from_monodiff_vector(num, threshold):
+def RGBgen_from_monodiff_vector(arr, threshold):
     
     # Calculates the R value corresponding to the monochrome cell, to make the first image ORANGE (in combination with the G value)
-    R = np.maximum( num, 0)
+    R = np.maximum( arr, 0)
     # Calculates the B value corresponding to the monochrome cell, to make the first image BLUE (in combination with the G value)
-    B = np.maximum(-num, 0)
+    B = np.maximum(-arr, 0)
 
-    # THreshold is used to artificially inflate minor differences so that they can be seen in the first place.
-    R[np.logical_and(num > 0, num <  threshold)] = threshold
-    B[np.logical_and(num < 0, num > -threshold)] = threshold
+    # Threshold is used to artificially inflate minor differences so that they can be seen in the first place.
+    R[np.logical_and(arr > 0, arr <  threshold)] = threshold
+    B[np.logical_and(arr < 0, arr > -threshold)] = threshold
 
     # GREEN value that scales with half the magnitude of the difference in the monochrome values.
-    G = np.abs(num)//2
+    G = np.abs(arr)//2
 
+    # if num == 0:
+    #     R, G, B = 0
     # RGB array returned for saving and display with PIL.Image
     return np.stack([R,G,B], axis=-1).astype(np.uint8)
 

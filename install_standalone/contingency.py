@@ -40,17 +40,10 @@ def get_argparser() -> argparse.ArgumentParser:
         help    = "Label for output histogram. Default none."
     )
     parser.add_argument(
-        '--mode',
-        type=str,
-        required = True,
-        choices = ("flat", "otsu", "full_filter"),
-        help = "Which mode to use. Either uses a flat threshold of any pixel more than 204 on [0, 255] or an otsu threshold."
-    )
-    parser.add_argument(
         '--output_folder_table',
         type = str,
         required = True,
-        help = "Output file folder to save the finished table."
+        help = "Output file folder to save the finished histogram."
     )
     return parser
 
@@ -70,81 +63,10 @@ def main(args:argparse.Namespace) -> bool:
     if ground_truth_img.ndim == 3:
         ground_truth_img = ground_truth_img[:,:,0] # --    --    --    --    --    --    --    --    --    --    --    --    --    --    --    --    --
 
-    def process_image_largeobjects(img, threshold=10, cutoff=2500):
-        """
-        Loads an image, thresholds it to binary, and removes objects larger than a cutoff.
-
-        Args:
-            image_filepath (str): The path to the input image.
-            threshold_constant (int): The threshold value (0-255). Pixels above this
-                                    become 255, others become 0. Default set to hand-tuned value of 10.
-            min_object_size_cutoff (int): The maximum size (in pixels) for an object
-                                        to be KEPT. Objects *larger* than this
-                                        will be removed (set to black).
-                                        Default set to hand-tuned value of 2500.
-        Returns:
-            numpy.ndarray: The processed image.
-        """
-
-        try:
-            binary_image = (img > threshold).astype(np.uint8) # Generate binary mask of pixels above the threshold
-            labels = label(binary_image, connectivity = 2) # Find clumps
-
-            large_objects_mask = np.zeros_like(binary_image,dtype=bool) # Generate an array of zeros the same size as binary_image
-
-            for region in regionprops(labels):
-                # If the object's area is greater than the min_object_size_cutoff,
-                # it's considered a "large object" that should be removed.
-                if region.area > cutoff: # Set the pixels corresponding to this large object in the mask to True
-                    for r, c in region.coords:
-                        large_objects_mask[r,c] = True
-            img_out = img.copy() # Generate copy of img to eliminate large clumps from
-            img_out[large_objects_mask] = 0 # Eliminate large clumps
-            return img_out
-
-        except FileNotFoundError:
-            print(f"Error: Image file not found at {img}") # If the file is not found, notify the user
-            return None
-        except Exception as e: # If a different exception occurs, notify the user
-            print(f"An error occurred: {e}")
-            return None
-    
-    condition_gi = None
-    condition_gt = None
-
-    if args.mode == None:
-        bw_inf = guess_in_image   # Make copies of the input images to modify.
-        bw_tru = ground_truth_img # --    --    --    --    --    --    --  --
-    elif args.mode == "flat":
-        # Threshold both images on a hand-tuned value on [0,255]
-        condition_gt = ground_truth_img > 204
-        condition_gi = guess_in_image   > 204
-    elif args.mode == "full_filter":
-        # Apply large clumps filter, then threshold on Otsu.
-        guess_in_image = process_image_largeobjects(guess_in_image)
-        thresh_inf = threshold_otsu(guess_in_image)
-        thresh_tru = threshold_otsu(ground_truth_img)
-        condition_gt = ground_truth_img > thresh_tru
-        condition_gi = guess_in_image > thresh_inf
-    elif args.mode == "otsu":
-        # Threshold both images on an Otsu threshold.
-        thresh_inf = threshold_otsu(guess_in_image)
-        thresh_tru = threshold_otsu(ground_truth_img)
-        condition_gt = ground_truth_img > thresh_tru
-        condition_gi = guess_in_image > thresh_inf
-    else:
-        raise ValueError(f"Unknown mode: {args.mode}")
-    
-    if condition_gi is not None and condition_gt is not None:
-        bw_inf = closing(condition_gi, square(3))        
-        bw_tru = closing(condition_gt, square(3))
-
-    cleared_inf = clear_border(bw_inf)
-    cleared_tru = clear_border(bw_tru)
-
+   
     # Label image regions
-    label_image_inf = label(cleared_inf, return_num=True)
-    label_image_tru = label(cleared_tru, return_num=True)
+    label_image_inf = label(guess_in_image, return_num=True)
+    label_image_tru = label(ground_truth_img, return_num=True)
     # nums =  {
     #         "label_image_inf":{label_image_inf[1]},
     #         "label_image_tru":{label_image_tru[1]},

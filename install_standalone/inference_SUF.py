@@ -39,7 +39,7 @@ def run_patchwise_inference(model:torch.nn.Module, x:torch.Tensor, patchsize:int
     # Inference loop start:
     for x_patch in iterator:
         # If skipping is turned on, do the following:
-        if args.skip_empty:
+        if args.skip_empty == True:
             # Check if any of the pixels in the pregenerated indices list are "bright" enough to be relevant.
             # This value is hand-tuned - minimum and maximum ranges for tensor values are not normalized to [0,255] so I picked what appeared to work in the general case.
             # RESULTS MAY VARY!

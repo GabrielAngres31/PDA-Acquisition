@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 
 import pandas as pd
-import PIL 
+from PIL import Image
 import skimage
 import numpy as np 
 
@@ -19,12 +19,12 @@ def main(args:argparse.Namespace) -> bool:
     
     pd.DataFrame(table).to_csv(f"{args.output_folder}/{Path(args.input_path).stem}.csv")
 
-def quantify_clumps_skimage(image: PIL.Image, properties:tuple, saveas: str): #-> None
+def quantify_clumps_skimage(image: Image, properties:tuple, saveas: str): #-> None
 
     clumps_map = skimage.measure.label(image, connectivity=2) 
     clumps_table = skimage.measure.regionprops_table(skimage.measure.label(clumps_map), properties = tuple(properties))
     if saveas:
-        clumps_table.to_csv(saveas)
+        pd.DataFrame(clumps_table).to_csv(saveas + "/table_out.csv")
     return clumps_table
 
 def get_argparser() -> argparse.ArgumentParser:

@@ -48,7 +48,7 @@ def run_training(
         scheduler.step()
         if vloader is not None:
             vloss_info = validate_one_epoch(module, vloader)
-            vloss, vloss_all = vloss_info["mean"], loss_info["losses"]
+            vloss, vloss_all = vloss_info["mean"], vloss_info["losses"]
         
         print(
             f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" }'

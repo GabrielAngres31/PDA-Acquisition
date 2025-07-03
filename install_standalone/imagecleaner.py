@@ -54,7 +54,7 @@ def main(args:argparse.Namespace) -> bool:
     if guess_in_image.ndim == 3:
         guess_in_image = guess_in_image[:,:,0] # --    --    --    --    --    --    --    --    --    --    --    --    --    --    --    --    --
 
-    def process_image_largeobjects(img, threshold=10, cutoff=2500):
+    def process_image_largeobjects(img, threshold=188, cutoff=2500):
         """
         Loads an image, thresholds it to binary, and removes objects larger than a cutoff.
 
