@@ -94,13 +94,20 @@ class PixelCanvas:
         self.canvas.bind("<B1-Motion>", self.pixel_multitrack)
         self.canvas.bind("<ButtonRelease-1>", self.update_overlay)
 
+        self.canvas.bind("<Button-2>", self.custom_smoothing)
+        # self.canvas.bind("<B1-Motion>", self.pixel_multitrack)
+        # self.canvas.bind("<ButtonRelease-1>", self.update_overlay)
+
         self.canvas.bind("<Button-3>", self.pixel_multitrack)
         self.canvas.bind("<B3-Motion>", self.pixel_multitrack)
         self.canvas.bind("<ButtonRelease-3>", self.update_overlay)
+
+        # self.canvas.bind("k", lambda event: print("k"))
         
         self.canvas.bind("<Tab>", lambda event: self.fill_iter(event = event))
         
         self.master.bind("w", lambda event: self.close_from_keyboard)
+    
 
 
 
@@ -284,6 +291,8 @@ class PixelCanvas:
     def update_overlay(self, event=None):
         base_image = self.base_section.resize((self.corr_width, self.corr_height), Image.Resampling.NEAREST)   
         over_image = Image.fromarray(self.annot_section_array).resize((self.corr_width, self.corr_height), Image.Resampling.NEAREST)
+        # print(over_image)
+        # over_image.show()
         over_assembly_image = Image.blend(base_image, over_image, self.overlay_alpha/255)
         assemb_img_tk = ImageTk.PhotoImage(over_assembly_image)
 
@@ -428,7 +437,74 @@ class PixelCanvas:
         # self.update_overlay()
 
         pass        
-        
+    
+    def custom_smoothing(self, event):
+        # Create [n-2]x[n-2] without the border
+        for i in range(3):
+            if np.any((self.annot_section_array < 255) & (self.annot_section_array > 0)):
+                print("You need to make the image black and white first!")
+                return None
+            
+            borderless = self.annot_section_array.astype(bool)
+            # print(np.max(borderless))
+            # print(borderless)
+            borderless[ :, 0] = False
+            borderless[ :,-1] = False
+            borderless[ 0, :] = False
+            borderless[-1, :] = False
+
+            shift_LEFT_brd = np.roll(borderless, -1, axis=1)
+            shift_RGHT_brd = np.roll(borderless,  1, axis=1)
+            shift_UP_brd   = np.roll(borderless, -1, axis=0)
+            shift_DN_brd   = np.roll(borderless,  1, axis=0)
+            
+            # print(shift_LEFT_brd)
+            # print(shift_UP_brd)
+            # print(shift_RGHT_brd)
+            # print(shift_DN_brd)
+
+            # alpha_decision = np.logical_and(shift_UP_brd, shift_DN_brd)
+            # omega_decision = np.logical_and(shift_LEFT_brd, shift_RGHT_brd)
+
+            eraser = np.where(np.sum([shift_LEFT_brd, shift_RGHT_brd, shift_UP_brd, shift_DN_brd], axis=0) <  2)
+            stable = np.where(np.sum([shift_LEFT_brd, shift_RGHT_brd, shift_UP_brd, shift_DN_brd], axis=0) == 2)
+            fillin = np.where(np.sum([shift_LEFT_brd, shift_RGHT_brd, shift_UP_brd, shift_DN_brd], axis=0) >  2)
+
+            smoothed = borderless
+            smoothed[eraser] = 0
+            smoothed[fillin] = 1
+
+            smoothed[ :, 0] = self.annot_section_array[ :, 0]
+            smoothed[ :,-1] = self.annot_section_array[ :,-1]
+            smoothed[ 0, :] = self.annot_section_array[ 0, :]
+            smoothed[-1, :] = self.annot_section_array[-1, :]
+            
+            draw_delta_key = np.where(np.logical_xor(smoothed, self.annot_section_array))
+            draw_delta_coo = list(zip(draw_delta_key[0].tolist(), draw_delta_key[1].tolist()))
+            # print(draw_delta_coo)
+
+
+            # smoothed[np.where(np.sum([shift_LEFT_brd, shift_RGHT_brd, shift_UP_brd, shift_DN_brd], axis=0) > 2)] = 1
+
+            # print("-----")
+            # print(alpha_decision)
+            # print(omega_decision)
+
+            # smoothed = np.logical_or(alpha_decision, omega_decision)
+            # assert np.any(smoothed)
+            
+            # self.annot_section_array[1:-1, 1:-1] = smoothed[1:-1, 1:-1].view(np.uint8) 
+            smoothed = smoothed.astype(np.uint8)*255
+            # print(self.annot_section_array.dtype)
+            self.annot_section_array = smoothed
+            # print(self.annot_section_array.dtype)
+            self.update_overlay()
+
+            for p in draw_delta_coo:
+                # print(p[0])
+                self.draw_pixel(p[1]*self.pixel_size+self.corr_margin*2+self.corr_width, p[0]*self.pixel_size+self.corr_margin, draw_fill = self.annot_section_array[p])
+
+    
     def close_from_keyboard(self):
         self.on_closing(self)
 
