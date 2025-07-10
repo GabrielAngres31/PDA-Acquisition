@@ -55,6 +55,9 @@ class EventCoord :
 
 class PixelCanvas:
     def __init__(self, master, width, height, margin=3, base_section_path=None, annot_section_path=None, pixel_size=4):
+        """
+        Initializes the PixelCanvas class, which controls the drawing window.
+        """
         
         # Establish main frame
         self.master = master
@@ -105,13 +108,9 @@ class PixelCanvas:
         # self.canvas.bind("k", lambda event: print("k"))
         
         self.canvas.bind("<Tab>", lambda event: self.fill_iter(event = event))
+        self.canvas.bind("<Shift-Key-Up>", lambda event: print("gorph"))
         
         self.master.bind("w", lambda event: self.close_from_keyboard)
-    
-
-
-
-        print(self.canvas.bind())
 
         # Construct base annot canvas       
         for r, row in enumerate(self.annot_section_array):
@@ -126,9 +125,6 @@ class PixelCanvas:
         self.menubar.add_cascade(label="Modify", menu=self.mod_menu)
         self.mod_menu.add_command(label="Clear (WIP)", command=self.clear_annot)
         self.mod_menu.add_command(label="Whiten (WIP)", command=self.set_all_white)
-
-        # hk = SystemHotkey()
-
 
         # Last_Pixel
         self.last_pixel_x = 0
@@ -231,23 +227,19 @@ class PixelCanvas:
             fill_hex = f'{self.drawcolor:02X}'*3
         else:
             fill_hex = f'{fill:02X}'*3
-        # print(fill_hex) if fill_hex != "000000" else None
-        # print(fill_hex)
-        # print(x)
-        # print(y)
+        
         self.canvas.create_rectangle(x, y, x+self.pixel_size, y+self.pixel_size, fill="#"+fill_hex, width=0)
 
     def draw_pixel(self, x, y, draw_fill=None):
         main_coords = self.calc_main_coords(x, y)
-        if main_coords["main_x"] == self.last_pixel_x and main_coords["main_y"] == self.last_pixel_y: return
-        # print(event.x)
-        # print(event.y)
-        # print(event.num)
+        # if main_coords["main_x"] == self.last_pixel_x and main_coords["main_y"] == self.last_pixel_y: return
         # print(main_coords)
-        if self.check_canvas_coords(x, y):
+        if self.check_canvas_coords(x+1, y+1):  # NOTE: I don't know why adding 1 to these fixes the off-by-one error.
+                                                # Check here first if you get a weird lack of plotted pixels.
             self.place_pixel(None, main_coords["main_x"]*self.pixel_size, main_coords["main_y"]*self.pixel_size, draw_fill)
-        # print(self.calculate_canvas_coords(self.last_pixel))
-
+        else:
+            print(f"Couldn't draw here! You tried to draw at {main_coords['main_x']}, {main_coords['main_y']}")
+            
     # TODO: CURRENTLY UNUSED AND NONFUNCTIONAL
     # def extrapolate_pixels(self, event):
     #     main_coords = self.calc_main_coords([event.x, event.y])
@@ -325,14 +317,14 @@ class PixelCanvas:
                 self.place_pixel(None, c*self.pixel_size + self.corr_margin*2+self.corr_width, r*self.pixel_size+self.corr_margin, self.annot_section_array[r, c]) 
 
     def eff_fill(self, event=None, x=None, y=None, fill=None):
-        # Using Flood Fill here because the regions being filled are small
-        # print(event)
-        # print("yep!")
-
+        """
+        An implementation of floodfill that fills a region with its opposite color.
+        """
         pix = self.pixel_size
         if x == None or y == None:
             x, y = event.x, event.y
         arr_coords = self.get_arraycoord_from_canvaspx(x, y)
+        print(arr_coords)
         # print(arr_coords)
     
         arr_x, arr_y = arr_coords["arr_x"], arr_coords["arr_y"]
@@ -347,12 +339,16 @@ class PixelCanvas:
         if self.annot_section_array[arr_y, arr_x] != fill:
             self.annot_section_array[arr_y, arr_x] = fill
             self.place_pixel(None, x*self.pixel_size+self.corr_margin*2, y*self.pixel_size+self.corr_margin, fill=fill)
-            if y > 0: self.eff_fill(None, x, y-1)
-            if x > 0: self.eff_fill(None, x-1, y)
+            if y >= 0: self.eff_fill(None, x, y-1)
+            if x >= 0: self.eff_fill(None, x-1, y)
             if x < self.annot_section_array.shape[1]-1: self.eff_fill(None, x+1, y)
             if y < self.annot_section_array.shape[0]-1: self.eff_fill(None, x, y+1)
     
     def fill_master(self, event, x, y, fill = 0):
+        """
+        Master command that floodfills a region of an array and updates the array and overlay.
+        Called when pressing tab over a region in the middle window.
+        """
         print(f"{x}, {y}")
         if x == None or y == None:
             x, y = event.x, event.y
@@ -384,6 +380,7 @@ class PixelCanvas:
         # WHILE LOOP BEGINS
         while points:
             x, y = points.pop()
+            # assert x or y, "You do in fact have 0 values?!"
             if (x >= 0 and x < self.width) and (y >= 0 and y < self.height):
                 index = [y, x]
                 if not self.annot_section_array[index[0], index[1]] == fill:
@@ -391,52 +388,23 @@ class PixelCanvas:
                     self.draw_pixel(x*self.pixel_size+self.corr_margin*2+self.corr_width, y*self.pixel_size+self.corr_margin, fill)
                     # print(arr_x)
                     # print(arr_y)
+                    # self.draw_pixel(x, y, fill)
                     # self.draw_pixel(arr_x, arr_y, fill)
-                    # print("a")
+                    
+                    # if x+1 <  self.width: points.append( (x+1,y) )
                     points.append( (x+1,y) )
-                    # print("aa")
+                    
+                    # if x-1 >= 0: points.append( (x-1,y) )
                     points.append( (x-1,y) )
-                    # print("aaa")
+                    
+                    # if y+1 <  self.height: points.append( (x,y+1) )
                     points.append( (x,y+1) )
-                    # print("aaa a")
+                    
+                    # if y-1 >= 0: points.append( (x,y-1) )
                     points.append( (x,y-1) )
-                    # print("aaaa       a")
-                    # print(f"plotting px at {x}, {y}")
-        self.update_overlay()
-        # iterate through queue pop using array coordinates
-        # convert popped coord back to canvas for draw_pixel
-
-        # if not self.check_canvas_coords(event.x, event.y): return
-        
-        # array_coords = self.get_arraycoord_from_canvaspx(event.x, event.y)
-        # x, y = array_coords["arr_x"], array_coords["arr_y"]
-        
-        # fill = 255-self.annot_section_array[y, x]
-
-        # to_update = []
-
-        # to_update.append((x, y))
-
-        # while to_update:
-        #     x,y = to_update.pop()   
-        #     if (x >= 0 and x < self.width) and (y >= 0 and y < self.height):
-        #         index = [y, x]
-        #         if not self.annot_section_array[index[0], index[1]] == fill:
-        #             self.annot_section_array[index[0], index[1]] = fill
-        #             self.pixel_multitrack(None,x*self.pixel_size+self.corr_margin, y*self.pixel_size+self.corr_margin)
-        #             print("a")
-        #             to_update.append( (x+1,y) )
-        #             print("aa")
-        #             to_update.append( (x-1,y) )
-        #             print("aaa")
-        #             to_update.append( (x,y+1) )
-        #             print("aaa a")
-        #             to_update.append( (x,y-1) )
-        #             print("aaaa       a")
-        #             print(f"plotting px at {x}, {y}")
-        # self.update_overlay()
-
-        pass        
+                    
+        self.update_overlay()       
+        print(self.annot_section_array[0:2,0:2])
     
     def custom_smoothing(self, event):
         # Create [n-2]x[n-2] without the border
