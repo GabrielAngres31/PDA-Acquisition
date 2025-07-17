@@ -126,6 +126,7 @@ def main(args:argparse.Namespace) -> bool:
     if args.show_image:
         final_image.show()
     if args.savepath:
+        assert os.path.exists(args.savepath), f"This filepath appears invalid: '{args.savepath}'"
         final_image.save(args.savepath)
 
     return True

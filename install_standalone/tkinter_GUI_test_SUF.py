@@ -202,33 +202,44 @@ class StomataGUI:
         self.current_labels = tk.Label(self.image_compare_tab, text=0)
         self.current_labels.grid(row=4, column=0, padx=5, pady=10)
 
-        # Label Buttons
-        self.button_mark_edge = tk.Button(self.image_compare_tab, text="Edge", command=lambda: self.mark_note("Edge"))
-        self.image_compare_tab.bind("a", lambda event: self.mark_note("Edge"))
-        self.button_mark_edge.grid(row=5, column=0, padx=5, pady=10)
-        # self.button_mark_edge = tk.Button(image_compare_tab, text="Edge", command=lambda: self.mark_note("Edge"))
-        # image_compare_tab.bind("a", lambda event: self.mark_note("Edge"))
-        # self.button_mark_edge.grid(row=5, column=0, padx=5, pady=10)
+        # Label Buttons in Dedicated Frame
 
-        self.button_mark_cluster = tk.Button(self.image_compare_tab, text="Cluster", command=lambda: self.mark_note("Cluster"))
-        self.root.bind("s", lambda event: self.mark_note("Cluster")) 
-        self.button_mark_cluster.grid(row=5, column=1, padx=5, pady=10)
+        self.labelbuttonframe = tk.LabelFrame(self.image_compare_tab)
+        self.labelbuttonframe.grid(row=5, column=1)
 
-        self.button_mark_error = tk.Button(self.image_compare_tab, text="ERROR", command=lambda: self.mark_note("ERROR"))
-        self.root.bind("d", lambda event: self.mark_note("ERROR"))        
-        self.button_mark_error.grid(row=5, column=2, padx=5, pady=10)
+        self.root.bind("<h>", lambda x: print)
 
-        self.button_mark_pore = tk.Button(self.image_compare_tab, text="Pore", command=lambda: self.mark_note("Pore"))
-        self.root.bind("z", lambda event: self.mark_note("Pore"))
-        self.button_mark_pore.grid(row=6, column=0, padx=5, pady=10)
+        self.button_mark_00 = tk.Button(self.labelbuttonframe, text="Hit", command=lambda: self.mark_note("Hit"))
+        self.root.bind("a", lambda event: self.mark_note("Hit"))
+        self.button_mark_00.grid(row=0, column=0, padx=5, pady=10)
 
-        self.button_mark_unknown = tk.Button(self.image_compare_tab, text="Unsure", command=lambda: self.mark_note("Unsure"))
-        self.root.bind("x", lambda event: self.mark_note("Unsure"))
-        self.button_mark_unknown.grid(row=6, column=1, padx=5, pady=10)
+        self.button_mark_01 = tk.Button(self.labelbuttonframe, text="Miss", command=lambda: self.mark_note("Miss"))
+        self.root.bind("s", lambda event: self.mark_note("Miss")) 
+        self.button_mark_01.grid(row=0, column=1, padx=5, pady=10)
+
+        self.button_mark_02 = tk.Button(self.labelbuttonframe, text="Partial", command=lambda: self.mark_note("Partial"))
+        self.root.bind("d", lambda event: self.mark_note("Partial"))        
+        self.button_mark_02.grid(row=0, column=2, padx=5, pady=10)
         
-        self.button_mark_nopore = tk.Button(self.image_compare_tab, text="No Pore", command=lambda: self.mark_note("NoPore"))
-        self.root.bind("c", lambda event: self.mark_note("NoPore"))
-        self.button_mark_nopore.grid(row=6, column=2, padx=5, pady=10)
+        self.button_mark_03 = tk.Button(self.labelbuttonframe, text="False", command=lambda: self.mark_note("False"))
+        self.root.bind("f", lambda event: self.mark_note("False"))        
+        self.button_mark_03.grid(row=0, column=3, padx=5, pady=10)
+
+        self.button_mark_10 = tk.Button(self.labelbuttonframe, text="Cl. Hit", command=lambda: self.mark_note("Cl. Hit"))
+        self.root.bind("z", lambda event: self.mark_note("Cl. Hit"))
+        self.button_mark_10.grid(row=1, column=0, padx=5, pady=10)
+
+        self.button_mark_11 = tk.Button(self.labelbuttonframe, text="Cl. Miss", command=lambda: self.mark_note("Cl. Miss"))
+        self.root.bind("x", lambda event: self.mark_note("Cl. Miss"))
+        self.button_mark_11.grid(row=1, column=1, padx=5, pady=10)
+
+        self.button_mark_12 = tk.Button(self.labelbuttonframe, text="Cl. Part.", command=lambda: self.mark_note("Cl. Part."))
+        self.root.bind("c", lambda event: self.mark_note("Cl. Part."))
+        self.button_mark_12.grid(row=1, column=2, padx=5, pady=10)
+        
+        self.button_mark_13 = tk.Button(self.labelbuttonframe, text="Cl. False", command=lambda: self.mark_note("Cl. False"))
+        self.root.bind("v", lambda event: self.mark_note("Cl. False"))
+        self.button_mark_13.grid(row=1, column=3, padx=5, pady=10)
 
         self.root.bind("<Control_L>", self.clear_notes)
 
@@ -265,7 +276,7 @@ class StomataGUI:
         # self.main_tab_control.select(tab_index)
         print(self.main_tab_control.index(self.main_tab_control.select()))
         
-        self.main_tab_control.select(ind)
+        # self.main_tab_control.select(ind)
         print(ind)
         print(self.root.focus_get())
 
