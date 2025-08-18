@@ -270,7 +270,6 @@ class StomataGUI:
         print("None")
 
         # self.main_tab_control.focus_set(ind)
-
     
         print("Hm?")
         # self.main_tab_control.select(tab_index)
@@ -376,6 +375,7 @@ class StomataGUI:
         self.current_annot_path = file_path
         self.set_property("recent_ANNOT", file_path)
         self.set_property("dir_ANNOT", os.path.dirname(file_path))
+        self.image_annot.save(os.path.abspath(rf'{self.config_properties["recent_ANNOT"]}'))
 
     ### Get the CSV file (dialog and autofunction)
     def import_CSV_dialog(self):
@@ -397,14 +397,17 @@ class StomataGUI:
             # If not, it exits without doing anything.
             check = messagebox.askyesnocancel('Confirm Annotation', 'Do you have the correct file to make a clumps list of?')
             # Yes Path
+            outdir_newclumps = filedialog.askdirectory(title="Save location for new clumps file", initialdir=self.config_properties["dir_CSV"])
+            # if not outpath: outpath = self.config_properties['dir_csv']+'/outfile_base.csv'
             if check:
                 print("Generating clumps file")
                 # Cheak that the path is valid
                 assert os.path.exists(self.config_properties['recent_ANNOT'])
                 # Runs the clumpfinder and features on the ANNOT image.
-                subprocess.run(f'python.exe clumps_table_SUF.py --input_path="{self.config_properties["recent_ANNOT"]}" --output_folder="annotation_helper_files/"', shell=True) #, capture_output=True)
+                subprocess.run(f'python.exe clumps_table_SUF.py --input_path="{self.config_properties["recent_ANNOT"]}" --output_folder="{outdir_newclumps}/"', shell=True) #, capture_output=True)
                 # Establish the filepath of the CLUMPS file - REGENERATE.
-                file_path = "annotation_helper_files/" + os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0] + ".csv"
+                file_path = f"{outdir_newclumps}/" + os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0] + ".csv"
+                print(file_path)
         
         # If either of the two options returned a filepath, attempt to import the CLUMPS file to the viewer.
         # Otherwise, fail out and leave everything else in the viewer as it was.
@@ -597,8 +600,8 @@ class StomataGUI:
             if self.notes_list[index] != "NONE": 
                 # print(self.notes_list[index])
                 self.notes_list[index] = "NONE"
-            if self.advance_on_label.get():
-                self.increment_bbox()
+            # if self.advance_on_label.get():
+            #     self.increment_bbox()
         except:
             print("Something went wrong while trying to __CLEAR the label__! Hopefully nothing got broken...")
 
@@ -718,3 +721,5 @@ if __name__ == "__main__": #
 # WHERE IS YOUR LABEL :gun:
 
 # AUTOMATIC CLUMPFINDING ON ANNOT LOAD
+
+

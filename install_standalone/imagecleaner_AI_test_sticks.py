@@ -5,18 +5,15 @@ import os
 import sys
 import warnings
 
-import numpy             as np
-from skimage.filters      import threshold_otsu
-from skimage.io           import imread
-from skimage.measure      import label, regionprops
-from skimage.morphology   import closing, square, area_opening, area_closing
+import numpy         as np
+from skimage.filters import threshold_otsu
+from skimage.io      import imread
+from skimage.measure import label, regionprops
+from skimage.morphology import closing, square, area_opening, area_closing, binary_erosion, binary_dilation
 from skimage.segmentation import clear_border
 from PIL import Image
 
 import tqdm
-
-# TODO: Add region-based nearest ellipse fitter to clumps to try and clean up irregularities on the ouside of the clump
-# TODO: Alternatively,  fill in concave outline, followed by erosion + dilation - or should it be the other way around?
 
 
 def get_argparser() -> argparse.ArgumentParser:
@@ -30,6 +27,7 @@ def get_argparser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--show_image',
         default = False,
+        action='store_true',
         help    = "Set this to True to see the cleaned image. Not recommended for batch operations."
     )
     parser.add_argument(
@@ -46,6 +44,12 @@ def get_argparser() -> argparse.ArgumentParser:
         help = "Threshold below which all smaller clumps are removed."
     )
     parser.add_argument(
+        "--remove_sticks",
+        default = False,
+        action='store_true',
+        help = "Set this to True to remove stick-like projections from rounded features."
+    )
+    parser.add_argument(
         "--savepath",
         type = str,
         help = "Filepath to save generated image to."
@@ -55,10 +59,10 @@ def get_argparser() -> argparse.ArgumentParser:
 
 def main(args:argparse.Namespace) -> bool:
 
-    guess_in_image = imread(args.image_in)  # Read in the guess image. Assumed to be either black and white, or greyscale on [0,255]
+    guess_in_image = imread(args.image_in)
 
     if guess_in_image.ndim == 3:
-        guess_in_image = guess_in_image[:,:,0] # --    --    --    --    --    --    --    --    --    --    --    --    --    --    --    --    --
+        guess_in_image = guess_in_image[:,:,0]
 
     def process_image_largeobjects(img, threshold=188, cutoff=3750):
         """
@@ -69,63 +73,65 @@ def main(args:argparse.Namespace) -> bool:
             threshold_constant (int): The threshold value (0-255). Pixels above this
                                     become 255, others become 0. Default set to hand-tuned value of 10.
             min_object_size_cutoff (int): The maximum size (in pixels) for an object
-                                        to be KEPT. Objects *larger* than this
-                                        will be removed (set to black).
-                                        Default set to hand-tuned value of 3750.
+                                          to be KEPT. Objects *larger* than this
+                                          will be removed (set to black).
+                                          Default set to hand-tuned value of 3750.
         Returns:
             numpy.ndarray: The processed image.
         """
 
         try:
-            binary_image = (img > threshold).astype(np.uint8) # Generate binary mask of pixels above the threshold
-            labels = label(binary_image, connectivity = 2) # Find clumps
+            binary_image = (img > threshold).astype(np.uint8)
+            labels = label(binary_image, connectivity = 2)
 
-            large_objects_mask = np.zeros_like(binary_image,dtype=bool) # Generate an array of zeros the same size as binary_image
+            large_objects_mask = np.zeros_like(binary_image,dtype=bool)
 
             for region in tqdm.tqdm(regionprops(labels)):
-                # If the object's area is greater than the min_object_size_cutoff,
-                # it's considered a "large object" that should be removed.
-                # print(region)
-                # if region.area > cutoff: # Set the pixels corresponding to this large object in the mask to True
                 if region["area_bbox"]/region["area"] > 3:
                     for r, c in region.coords:
                         large_objects_mask[r,c] = True
-            img_out = img.copy() # Generate copy of img to eliminate large clumps from
-            img_out[large_objects_mask] = 0 # Eliminate large clumps
+            img_out = img.copy()
+            img_out[large_objects_mask] = 0
             return img_out
 
         except FileNotFoundError:
-            print(f"Error: Image file not found at {img}") # If the file is not found, notify the user
+            print(f"Error: Image file not found at {img}")
             return None
-        except Exception as e: # If a different exception occurs, notify the user
+        except Exception as e:
             print(f"An error occurred: {e}")
             return None
     
     condition_gi = None
 
     if args.mode == None:
-        bw_inf = guess_in_image   # Make copies of the input images to modify.
+        bw_inf = guess_in_image
     elif args.mode == "flat":
-        # Threshold both images on a hand-tuned value on [0,255]
-        condition_gi = guess_in_image   > 204
+        condition_gi = guess_in_image > 204
     elif args.mode == "full_filter":
-        # Apply large clumps filter, then threshold on Otsu.
         guess_in_image = process_image_largeobjects(guess_in_image)
         thresh_inf = threshold_otsu(guess_in_image)
         condition_gi = guess_in_image > thresh_inf
     elif args.mode == "otsu":
-        # Threshold both images on an Otsu threshold.
         thresh_inf = threshold_otsu(guess_in_image)
         condition_gi = guess_in_image > thresh_inf
     else:
         raise ValueError(f"Unknown mode: {args.mode}")
     
     if condition_gi is not None:
-        bw_inf = closing(condition_gi, square(3))  
+        bw_inf = closing(condition_gi, square(3))   
+
+    # ---
+    # New section for removing stick-like projections (moved to here)
+    if args.remove_sticks:
+        selem = square(4)
+        bw_inf = binary_erosion(bw_inf, selem)
+        bw_inf = binary_dilation(bw_inf, selem)
+        bw_inf = area_opening(bw_inf, area_threshold=50)
+    # ---
 
     rmv_sml = args.remove_small_thresh
     if rmv_sml > 0:
-        bw_inf = area_opening(bw_inf, area_threshold=rmv_sml)     
+        bw_inf = area_opening(bw_inf, area_threshold=rmv_sml)    
 
     bw_inf = area_closing(bw_inf, area_threshold=3000) 
 
@@ -136,8 +142,14 @@ def main(args:argparse.Namespace) -> bool:
     if args.show_image:
         final_image.show()
     if args.savepath:
-        assert os.path.exists(args.savepath), f"This filepath appears invalid: '{args.savepath}'"
-        final_image.save(args.savepath)
+        save_dir = os.path.dirname(args.savepath)
+        if save_dir and not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+        
+        try:
+            final_image.save(args.savepath)
+        except Exception as e:
+            print(f"Error saving image to {args.savepath}: {e}")
 
     return True
 
@@ -149,4 +161,3 @@ if __name__ == '__main__':
     if ok:
         pass
         print('Done')
-

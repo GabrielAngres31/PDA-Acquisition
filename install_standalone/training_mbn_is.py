@@ -77,9 +77,9 @@ def get_argparser() -> argparse.ArgumentParser:
     # )
     parser.add_argument(
         '--outputcsv',
-        type    = str,
-        default = '',
-        help    = 'Name to store csv of losses and epochs for easy viewing',
+        type     = str,
+        required = True,
+        help     = 'Name to store csv of losses and epochs for easy viewing',
     )
     parser.add_argument(
         '--epochs',

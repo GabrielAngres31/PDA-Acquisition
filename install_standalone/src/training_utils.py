@@ -246,7 +246,7 @@ def run_training_mbn(
     for e in range(epochs):
         loss_fromfunc = train_one_epoch_mbn(module, loader, optimizer, pos_weight)
         loss_info = {"mean":np.mean(loss_fromfunc), "losses":loss_fromfunc}
-        print(loss_info)
+        # print(loss_info)
         try:
             print("Attempting to allocate losses...")
             # print(loss_info)
@@ -267,7 +267,7 @@ def run_training_mbn(
         )
         torch.save(module, os.path.join(checkpointdir, f'last.e{e:03d}.pth'))
         if table_out:
-            loss_list.append(f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" },')
+            loss_list.append([f'Epoch: {e:3d} | loss: {loss:.5f}  { f"val.loss: {vloss:.5f}" if vloader else "" }'])
             
             with open(f'{checkpointdir}{table_out}_cloud.csv', 'w', newline='') as csv_points_out:
                 csv_points_writer = csv.writer(csv_points_out, delimiter=',',

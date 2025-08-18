@@ -128,6 +128,11 @@ if False:
         for row in reader:
             shutil.copy(row[0], "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/publication_compare/inference/validation_set/BASE")
             shutil.copy(row[1], "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/publication_compare/inference/validation_set/ANNOT")
+if True:
+    with open("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/nosmallsplitval_05-2025.csv", mode='r', newline='') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            shutil.copy(row[0], "C:/Users/Gabriel/Downloads/samples_process_07302025/FORMER_COMPARE")
         # subprocess.run(f"python contingency.py --ground_truth={file} --guess_image={f'../publication_compare/inference/inf_AZD/raw_inf_216/{inf}'} --texttag=FFcheck --mode=full_filter", shell=True)
 
 

@@ -15,13 +15,13 @@ def main(args:argparse.Namespace) -> bool:
     classer = lambda f: "Single" if f else "Clustered"
     assert args.input_image or args.input_folder, "You haven't provided any input images or folders!"
     p = args.input_image if args.input_image else args.input_folder
-    model = torch.load(args.model).eval()
+    model = torch.load(args.model, weights_only=False).eval()
     if args.input_image:
         x     = src.data.load_inputimage(args.input_image)
         y = run_inference(model, x)
         y = torch.softmax(y, dim=1, dtype=float)
         y = torch.argmax(y, dim=1)
-        print(p, ": ", classer(y[0]))
+        # print(p, ": ", classer(y[0]))
         return(classer(y[0]))
     elif args.input_folder:
         dir_list = os.listdir(args.input_folder)
@@ -30,7 +30,7 @@ def main(args:argparse.Namespace) -> bool:
         y = torch.softmax(y, dim=1, dtype=float)
         y = torch.argmax(y, dim=1)
         # [print(f"{dir_list[i]}: \t{classer(y[i])}") for i, t in enumerate(y)]
-        with open("SCD_training_data/mbn_training/guess_outfile.txt", "w") as t:
+        with open("C:/Users/Gabriel/Documents/Github/PDA-Acquisition/SCD_training_data/mbn_training/guess_outfile.txt", "w") as t:
             for l in [(f"{dir_list[i]}: \t{classer(y[i])}") for i, t in enumerate(y)]:
                 t.write(f"{l}\n")
     return True
@@ -71,6 +71,7 @@ if __name__ == '__main__':
     args = get_argparser().parse_args()
     ok   = main(args)
     if ok:
-        t1 = timer()
-        elapsed = t1-t0
-        print(f'Done in {elapsed} seconds')
+        print(ok)
+        # t1 = timer()
+        # elapsed = t1-t0
+        # print(f'Done in {elapsed} seconds')

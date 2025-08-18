@@ -18,13 +18,15 @@ def main(args:argparse.Namespace) -> bool:
     table = quantify_clumps_skimage(image_in,  args.properties, args.output_folder)
     
     pd.DataFrame(table).to_csv(f"{args.output_folder}/{Path(args.input_path).stem}.csv")
+    print(f"Attempted to save to Output Folder: {args.output_folder}")
 
 def quantify_clumps_skimage(image: Image, properties:tuple, saveas: str): #-> None
 
     clumps_map = skimage.measure.label(image, connectivity=2) 
     clumps_table = skimage.measure.regionprops_table(skimage.measure.label(clumps_map), properties = tuple(properties))
-    if saveas:
-        pd.DataFrame(clumps_table).to_csv(saveas + "/table_out.csv")
+    # if saveas:
+    #     pd.DataFrame(clumps_table).to_csv(saveas + "/table_out.csv")
+    #     print(f"Attempted save to {saveas}")
     return clumps_table
 
 def get_argparser() -> argparse.ArgumentParser:
