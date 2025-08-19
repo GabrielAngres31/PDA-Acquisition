@@ -11,8 +11,6 @@ import clean_image_SUF as cl
 import clumps_table_SUF as cf
 import numpy as np
 
-from GUI_calcs import xc
-
 
 class StomataGUI:
     def __init__(self, root):
