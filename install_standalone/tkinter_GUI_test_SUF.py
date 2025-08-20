@@ -95,7 +95,7 @@ class StomataGUI:
         
         ### "Edit" Menu Options     
         self.editmenu.add_command(label="Edit Annotation...", command=self.open_window_edit)
-        self.root.bind("E", self.open_window_edit)
+        self.root.bind("R", self.open_window_edit)
         self.editmenu.add_command(label="Confirm Annotation", command=self.confirm_annot) 
         self.root.bind("<Shift_L>", lambda event: self.confirm_annot)
         self.editmenu.add_command(label="Confirm Notes", command=self.confirm_notes) 
@@ -177,6 +177,9 @@ class StomataGUI:
         
         self.advance_on_label=tk.IntVar()
 
+        self.isPanning = False
+        self.panDelta = [0,0]
+
         # Clump ID Entry
         self.bbox_entry = tk.Entry(self.image_compare_tab, textvariable=self.bbox_number, width=4)
         self.bbox_entry.grid(row=3, column=0, padx=3, pady=10, ipadx=0, ipady=0)
@@ -189,8 +192,21 @@ class StomataGUI:
         self.button_decrement.grid(row=3, column=1, padx=5, pady=10)
 
         self.button_increment = tk.Button(self.image_compare_tab, text=">>", command=self.increment_bbox)
-        self.root.bind("w", self.increment_bbox)
+        self.root.bind("e", self.increment_bbox)
         self.button_increment.grid(row=3, column=2, padx=5, pady=10)
+
+        # Free Pan Binds (<>^v)
+        self.root.bind("w", lambda event: self.directedPan(dd=[ 0, 8]))
+        self.root.bind("s", lambda event: self.directedPan(dd=[ 0,-8]))
+        self.root.bind("a", lambda event: self.directedPan(dd=[ 8, 0]))
+        self.root.bind("d", lambda event: self.directedPan(dd=[-8, 0]))
+
+        self.root.bind("W", lambda event: self.directedPan(dd=[  0, 64]))
+        self.root.bind("S", lambda event: self.directedPan(dd=[  0,-64]))
+        self.root.bind("A", lambda event: self.directedPan(dd=[ 64, 0]))
+        self.root.bind("D", lambda event: self.directedPan(dd=[-64, 0]))
+
+
 
         # Advance checkbox
         self.checkbox_advance = tk.Checkbutton(self.image_compare_tab, text="Advance on Label", variable=self.advance_on_label, command=lambda:print(self.advance_on_label.get()))
@@ -205,38 +221,38 @@ class StomataGUI:
         self.labelbuttonframe = tk.LabelFrame(self.image_compare_tab)
         self.labelbuttonframe.grid(row=5, column=1)
 
-        self.root.bind("<h>", lambda x: print)
+        self.root.bind("<h>", lambda x: print("squuqs"))
 
         self.button_mark_00 = tk.Button(self.labelbuttonframe, text="Hit", command=lambda: self.mark_note("Hit"))
-        self.root.bind("a", lambda event: self.mark_note("Hit"))
+        self.root.bind("z", lambda event: self.mark_note("Hit"))
         self.button_mark_00.grid(row=0, column=0, padx=5, pady=10)
 
         self.button_mark_01 = tk.Button(self.labelbuttonframe, text="Miss", command=lambda: self.mark_note("Miss"))
-        self.root.bind("s", lambda event: self.mark_note("Miss")) 
+        self.root.bind("x", lambda event: self.mark_note("Miss")) 
         self.button_mark_01.grid(row=0, column=1, padx=5, pady=10)
 
         self.button_mark_02 = tk.Button(self.labelbuttonframe, text="Partial", command=lambda: self.mark_note("Partial"))
-        self.root.bind("d", lambda event: self.mark_note("Partial"))        
+        self.root.bind("c", lambda event: self.mark_note("Partial"))        
         self.button_mark_02.grid(row=0, column=2, padx=5, pady=10)
         
         self.button_mark_03 = tk.Button(self.labelbuttonframe, text="False", command=lambda: self.mark_note("False"))
-        self.root.bind("f", lambda event: self.mark_note("False"))        
+        self.root.bind("v", lambda event: self.mark_note("False"))        
         self.button_mark_03.grid(row=0, column=3, padx=5, pady=10)
 
         self.button_mark_10 = tk.Button(self.labelbuttonframe, text="Cl. Hit", command=lambda: self.mark_note("Cl. Hit"))
-        self.root.bind("z", lambda event: self.mark_note("Cl. Hit"))
+        self.root.bind("Z", lambda event: self.mark_note("Cl. Hit"))
         self.button_mark_10.grid(row=1, column=0, padx=5, pady=10)
 
         self.button_mark_11 = tk.Button(self.labelbuttonframe, text="Cl. Miss", command=lambda: self.mark_note("Cl. Miss"))
-        self.root.bind("x", lambda event: self.mark_note("Cl. Miss"))
+        self.root.bind("X", lambda event: self.mark_note("Cl. Miss"))
         self.button_mark_11.grid(row=1, column=1, padx=5, pady=10)
 
         self.button_mark_12 = tk.Button(self.labelbuttonframe, text="Cl. Part.", command=lambda: self.mark_note("Cl. Part."))
-        self.root.bind("c", lambda event: self.mark_note("Cl. Part."))
+        self.root.bind("C", lambda event: self.mark_note("Cl. Part."))
         self.button_mark_12.grid(row=1, column=2, padx=5, pady=10)
         
         self.button_mark_13 = tk.Button(self.labelbuttonframe, text="Cl. False", command=lambda: self.mark_note("Cl. False"))
-        self.root.bind("v", lambda event: self.mark_note("Cl. False"))
+        self.root.bind("V", lambda event: self.mark_note("Cl. False"))
         self.button_mark_13.grid(row=1, column=3, padx=5, pady=10)
 
         self.root.bind("<Control_L>", self.clear_notes)
@@ -255,6 +271,9 @@ class StomataGUI:
         # self.set_focus_to_tab(None, 0)
         self.main_tab_control.select(0)
         # self.set_focus_to_tab(None)
+
+    def directedPan(self, event=None, dd = [0, 0]):
+        self.update_from_pan(vector = dd)
     
     def toplevelDialogue(self, event=None):
         pass
@@ -442,7 +461,7 @@ class StomataGUI:
         
         # Load the BASE and ANNOT views to the first clump on the list.
         self.update_bbox_coords(self.df_coords)
-        self.update_images()
+        self.update_images_by_bbox()
         # Update the overlay
         self.update_overlay()
         # Update the most recent CSV.
@@ -472,7 +491,19 @@ class StomataGUI:
             print(f"Could not import image. Check your filepath: {file_path}")
         # print(len(set(img.getdata()))) 
         # return(len(set(img.getdata())))
-        
+
+    def update_from_pan(self, event=None, vector = [0,0]):
+        self.panDelta[0] += vector[0]
+        self.panDelta[1] += vector[1]
+        if vector != [0,0]:
+            print(vector)
+            print(self.panDelta)
+            self.isPanning = True
+            self.update_image(self.canvas_base, self.image_base, "BASE")
+            self.update_image(self.canvas_annot, self.image_annot, "ANNOT")
+            self.update_overlay()
+
+
     # Change image on a given canvas
     def update_image(self, canvas, img, image_type):
         if image_type == 'BASE':
@@ -484,7 +515,11 @@ class StomataGUI:
         self.photo = ImageTk.PhotoImage(img)
         # img.show()
         canvas.delete("all")
-        canvas.create_image(self.xD(), self.yD(), anchor=tk.NW, image=self.photo)
+        if self.panDelta == [0,0]:
+            canvas.create_image(self.xD(), self.yD(), anchor=tk.NW, image=self.photo)
+        else:
+            # print("SHIFTING")
+            canvas.create_image(self.xD()+self.panDelta[0], self.yD()+self.panDelta[1], anchor=tk.NW, image=self.photo)
         # print(self.xc(), self.yc())
         canvas.image = self.photo
         # print(f"Updated Images to {-self.x0()}, {-self.y0()}")
@@ -497,14 +532,14 @@ class StomataGUI:
                 result = Image.blend(self.image_base.convert("L"), self.image_annot.convert("L"), alpha=0.37)
                 self.image_overlay = ImageTk.PhotoImage(result)
                 self.canvas_overlay.delete("all")
-                self.canvas_overlay.create_image(self.xD(), self.yD(), anchor=tk.NW, image=self.image_overlay)
+                self.canvas_overlay.create_image(self.xD()+self.panDelta[0], self.yD()+self.panDelta[1], anchor=tk.NW, image=self.image_overlay)
                 self.canvas_overlay.image = self.image_overlay
             except: 
                 print(f"Image dimension mismatch or other problem detected. Clearing Canvas.\n----Image Dimensions are {self.image_base.size} vs. {self.image_annot.size}")
                 self.canvas_overlay.delete("all")
 
     # Update BASE, ANNOT, and OVERLAY on bbox change
-    def update_images(self):
+    def update_images_by_bbox(self):
         if hasattr(self, 'df_coords') and hasattr(self, 'bbox_number') and self.bbox_number.get() < len(self.df_coords)+1 and self.bbox_number.get() >= 0:
             self.update_bbox_coords(self.df_coords)
             self.update_image(self.canvas_base, self.image_base, "BASE")
@@ -515,32 +550,38 @@ class StomataGUI:
     def decrement_bbox(self, event=None):
         if hasattr(self, 'df_coords') and self.bbox_number.get() > 1:
             # print("-1")
+            self.panDelta  = [0,0]
+            self.isPanning = False
             self.confirm_annot()
             s = int(self.bbox_entry.get())
             self.bbox_number.set(s-1)
             
-            self.update_images()
+            self.update_images_by_bbox()
 
     # Go one clump forward
     def increment_bbox(self, event=None):
         if hasattr(self, 'df_coords') and self.bbox_number.get() < len(self.df_coords):
+            self.panDelta  = [0,0]
+            self.isPanning = False
             self.confirm_annot()
             s = int(self.bbox_entry.get())
             self.bbox_number.set(s+1)
 
-            self.update_images()
+            self.update_images_by_bbox()
 
     # Move to an arbitrary clump (user input) (CURRENTLY UNUSED)
     def change_value(self, event):
         placeholder = self.bbox_number.get()
         if hasattr(self, 'df_coords') and self.bbox_number.get() > 0 and self.bbox_number.get() < len(self.df_coords) + 1:
+            self.panDelta  = [0,0]
+            self.isPanning = False
             self.confirm_annot()
             self.bbox_number.set(self.bbox_entry.get())
-            self.update_images()
+            self.update_images_by_bbox()
         else:
             self.bbox_number.set(placeholder)
         root.focus_set()
-    
+
     # Set recent files to current workspace files
     def set_recents(self):
         with open(self.configFilePath, 'w') as file:
@@ -620,7 +661,8 @@ class StomataGUI:
         window_size = 64
         pixel_size = 6
         global crop_coords
-        crop_coords = (-(self.xc()+window_size//2), -(self.yc()+window_size//2), -(self.xc()-window_size//2), -(self.yc()-window_size//2))
+        xpart, ypart = self.xc()+self.panDelta[0], self.yc()+self.panDelta[1]
+        crop_coords = (-(xpart+window_size//2), -(ypart+window_size//2), -(xpart-window_size//2), -(ypart-window_size//2))
         # print(crop_coords)
         save_base = self.image_base.crop(crop_coords)
         save_annot = self.image_annot.crop(crop_coords)
