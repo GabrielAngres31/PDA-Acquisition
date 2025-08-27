@@ -148,11 +148,16 @@ class StomataGUI:
         self.button_set_val = tk.Button(self.inference_tab, text="Val Split", command=self.set_val_split)
         self.button_set_val.grid(row=0, column=1, padx=10, pady=10)
 
-        self.button_checkfiles = tk.Button(self.inference_tab, text="Check Files", command=self.verify_split_files)
-        self.button_checkfiles.grid(row=1, column=0, padx=10, pady=10)
-
         self.button_run_inference = tk.Button(self.inference_tab, text="Run Inference", command=self.run_inference)
-        self.button_run_inference.grid(row=1, column=1, padx=10, pady=10)
+        self.button_run_inference.grid(row=0, column=2, padx=10, pady=10)
+
+        self.button_clean_annotation = tk.Button(self.inference_tab, text="Clean Annotation", command=self.clean_annotation)
+        self.button_clean_annotation.grid(row=2, column=0, padx=10, pady=10)
+        
+        self.button_recalculate_clumps = tk.Button(self.inference_tab, text="Recalculate Clumps", command=self.recalculate_clumps)
+        self.button_recalculate_clumps.grid(row=2, column=1, padx=10, pady=10)
+
+
 
         # Setup Variables
         self.image_base = None
@@ -719,8 +724,10 @@ class StomataGUI:
         file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")], initialdir=self.config_properties['dir_val_split'])
         if file_path:
             return file_path
+        
     def verify_split_files(self):
         pass
+
     def run_inference(self):
         pth_path = filedialog.askopenfilename(filetypes=[("PTH Files", "*.PTH")], initialdir="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/checkpoints")
         try:
@@ -734,6 +741,17 @@ class StomataGUI:
             print("You need to run inference on an image. Please select an image.")
         subprocess.run(f'python inference.py --model={pth_path} --input="{inf_path}" --overlap=128 --outputname="recent_GUI_output"', shell=True)
         pass
+
+    def clean_annotation(self):
+        clean_annot_outpath = f"{self.config_properties['dir_ANNOT']}/CLEANED_{os.path.basename(self.config_properties['recent_ANNOT'])}.png"
+
+        subprocess.run(f"python imagecleaner_AI_test_sticks.py --image_in={self.config_properties['recent_ANNOT']} --mode=full_filter --remove_sticks --savepath={clean_annot_outpath}")
+
+        # self.config_properties['recent_ANNOT'] = clean_annot_outpath
+
+
+    def recalculate_clumps(self):
+        subprocess.run(f"python clumps_table_SUF.py --input_path={self.config_properties['recent_ANNOT']} --output_folder={self.config_properties['dir_CSV']}")
 
     def on_closing(self):
         print("Window is closing...")

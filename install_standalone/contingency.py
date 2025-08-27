@@ -92,10 +92,14 @@ def main(args:argparse.Namespace) -> bool:
 
     IoU_csr = IoU.tocsr()
 
-    default_list = IoU_csr[IoU_csr > 0.001]
 
     IoU_csr[:, 0] = 0
     IoU_csr[0, :] = 0
+
+    default_list = IoU_csr[IoU_csr > 0.001]
+
+    # IoU_csr[:, 0] = 0
+    # IoU_csr[0, :] = 0
 
     bins = np.arange(0, 1, 0.05) # Fixed bin size
 
@@ -106,12 +110,15 @@ def main(args:argparse.Namespace) -> bool:
     #plt.xlim([min(data)-0.2, max(data)+0.2])
 
     plt.hist(data, bins=bins, alpha=0.5)
-    plt.title('IoU data - mutant')
+    plt.title('IoU data - contingency of ground truth vs. machine guess')
     plt.xlabel('IoU (bin size = 0.05)')
     plt.ylabel('Count')
     if args.show_image:
         plt.show()
     plt.savefig(f"inference/contingencycompare/{os.path.basename(args.guess_image)}_{args.texttag}.png") #TODO: save folder as argument
+
+    if args.output_folder_table:
+        print([round(i, 2) for i in data])
 
 
     return True
@@ -124,5 +131,7 @@ if __name__ == '__main__':
     if ok:
         pass
         print('Done')
+
+
 
 
