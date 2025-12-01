@@ -76,7 +76,7 @@ class StomataGUI:
         self.manamenu = tk.Menu(self.menubar, tearoff=0)
 
         self.main_tab_control.add(self.image_compare_tab, text='Annotator')
-        self.main_tab_control.add(self.inference_tab, text='Inference (WIP)')
+        self.main_tab_control.add(self.inference_tab, text='Inference')
 
         self.main_tab_control.pack(expand=1, fill="both")
 
@@ -95,7 +95,7 @@ class StomataGUI:
         
         ### "Edit" Menu Options     
         self.editmenu.add_command(label="Edit Annotation...", command=self.open_window_edit)
-        self.root.bind("R", self.open_window_edit)
+        self.root.bind("E", self.open_window_edit)
         self.editmenu.add_command(label="Confirm Annotation", command=self.confirm_annot) 
         self.root.bind("<Shift_L>", lambda event: self.confirm_annot)
         self.editmenu.add_command(label="Confirm Notes", command=self.confirm_notes) 
@@ -169,7 +169,9 @@ class StomataGUI:
         self.bbox_coords = [0, 0, self.window_sidelength, self.window_sidelength]
         self.photo = None # Placeholder for image updating
         self.bbox_number = tk.IntVar()
+        self.bbox_maxnum = tk.IntVar()
         self.bbox_number.set(1)
+        self.bbox_maxnum.set(1)
         self.max_number = 0 # How many clumps there are
         self.df_coords = None
         self.notes_list = []
@@ -197,19 +199,19 @@ class StomataGUI:
         self.button_decrement.grid(row=3, column=1, padx=5, pady=10)
 
         self.button_increment = tk.Button(self.image_compare_tab, text=">>", command=self.increment_bbox)
-        self.root.bind("e", self.increment_bbox)
+        self.root.bind("w", self.increment_bbox)
         self.button_increment.grid(row=3, column=2, padx=5, pady=10)
 
         # Free Pan Binds (<>^v)
-        self.root.bind("w", lambda event: self.directedPan(dd=[ 0, 8]))
-        self.root.bind("s", lambda event: self.directedPan(dd=[ 0,-8]))
+        self.root.bind("s", lambda event: self.directedPan(dd=[ 0, 8]))
+        self.root.bind("z", lambda event: self.directedPan(dd=[ 0,-8]))
         self.root.bind("a", lambda event: self.directedPan(dd=[ 8, 0]))
-        self.root.bind("d", lambda event: self.directedPan(dd=[-8, 0]))
+        self.root.bind("x", lambda event: self.directedPan(dd=[-8, 0]))
 
-        self.root.bind("W", lambda event: self.directedPan(dd=[  0, 64]))
-        self.root.bind("S", lambda event: self.directedPan(dd=[  0,-64]))
+        self.root.bind("S", lambda event: self.directedPan(dd=[  0, 64]))
+        self.root.bind("Z", lambda event: self.directedPan(dd=[  0,-64]))
         self.root.bind("A", lambda event: self.directedPan(dd=[ 64, 0]))
-        self.root.bind("D", lambda event: self.directedPan(dd=[-64, 0]))
+        self.root.bind("X", lambda event: self.directedPan(dd=[-64, 0]))
 
 
 
@@ -229,11 +231,11 @@ class StomataGUI:
         self.root.bind("<h>", lambda x: print("squuqs"))
 
         self.button_mark_00 = tk.Button(self.labelbuttonframe, text="Hit", command=lambda: self.mark_note("Hit"))
-        self.root.bind("z", lambda event: self.mark_note("Hit"))
+        self.root.bind("d", lambda event: self.mark_note("Hit"))
         self.button_mark_00.grid(row=0, column=0, padx=5, pady=10)
 
         self.button_mark_01 = tk.Button(self.labelbuttonframe, text="Miss", command=lambda: self.mark_note("Miss"))
-        self.root.bind("x", lambda event: self.mark_note("Miss")) 
+        self.root.bind("f", lambda event: self.mark_note("Miss")) 
         self.button_mark_01.grid(row=0, column=1, padx=5, pady=10)
 
         self.button_mark_02 = tk.Button(self.labelbuttonframe, text="Partial", command=lambda: self.mark_note("Partial"))
@@ -245,11 +247,11 @@ class StomataGUI:
         self.button_mark_03.grid(row=0, column=3, padx=5, pady=10)
 
         self.button_mark_10 = tk.Button(self.labelbuttonframe, text="Cl. Hit", command=lambda: self.mark_note("Cl. Hit"))
-        self.root.bind("Z", lambda event: self.mark_note("Cl. Hit"))
+        self.root.bind("D", lambda event: self.mark_note("Cl. Hit"))
         self.button_mark_10.grid(row=1, column=0, padx=5, pady=10)
 
         self.button_mark_11 = tk.Button(self.labelbuttonframe, text="Cl. Miss", command=lambda: self.mark_note("Cl. Miss"))
-        self.root.bind("X", lambda event: self.mark_note("Cl. Miss"))
+        self.root.bind("F", lambda event: self.mark_note("Cl. Miss"))
         self.button_mark_11.grid(row=1, column=1, padx=5, pady=10)
 
         self.button_mark_12 = tk.Button(self.labelbuttonframe, text="Cl. Part.", command=lambda: self.mark_note("Cl. Part."))
@@ -289,17 +291,17 @@ class StomataGUI:
         """
         ind = self.main_tab_control.index(self.main_tab_control.select())
         # ind = self.main_tab_control.index(self.main_tab_control.select())
-        print("None")
+        # print("None")
 
         # self.main_tab_control.focus_set(ind)
     
-        print("Hm?")
+        # print("Hm?")
         # self.main_tab_control.select(tab_index)
-        print(self.main_tab_control.index(self.main_tab_control.select()))
+        # print(self.main_tab_control.index(self.main_tab_control.select()))
         
         # self.main_tab_control.select(ind)
-        print(ind)
-        print(self.root.focus_get())
+        # print(ind)
+        # print(self.root.focus_get())
 
     # Set config properties during function calls
     def set_property(self, property, value):
@@ -426,6 +428,7 @@ class StomataGUI:
                 # Cheak that the path is valid
                 assert os.path.exists(self.config_properties['recent_ANNOT'])
                 # Runs the clumpfinder and features on the ANNOT image.
+                print(f'python.exe clumps_table_SUF.py --input_path="{self.config_properties["recent_ANNOT"]}" --output_folder="{outdir_newclumps}/"')
                 subprocess.run(f'python.exe clumps_table_SUF.py --input_path="{self.config_properties["recent_ANNOT"]}" --output_folder="{outdir_newclumps}/"', shell=True) #, capture_output=True)
                 # Establish the filepath of the CLUMPS file - REGENERATE.
                 file_path = f"{outdir_newclumps}/" + os.path.splitext(os.path.basename(self.config_properties['recent_ANNOT']))[0] + ".csv"
@@ -474,6 +477,7 @@ class StomataGUI:
         self.set_property("dir_CSV", os.path.dirname(file_path))
 
     # Change current bbox coords for focused clump
+
     def update_bbox_coords(self, df_coords):
         if self.bbox_number.get() < len(df_coords)+1 and self.bbox_number.get() >= 1:
             self.bbox_coords = [
@@ -501,8 +505,8 @@ class StomataGUI:
         self.panDelta[0] += vector[0]
         self.panDelta[1] += vector[1]
         if vector != [0,0]:
-            print(vector)
-            print(self.panDelta)
+            # print(vector)
+            # print(self.panDelta)
             self.isPanning = True
             self.update_image(self.canvas_base, self.image_base, "BASE")
             self.update_image(self.canvas_annot, self.image_annot, "ANNOT")
@@ -607,7 +611,7 @@ class StomataGUI:
     def clean_inplace(self): # CURRENTLY DOES NOT WORK!
         annotpath = self.config_properties['recent_ANNOT']
         img = np.asarray(Image.open(annotpath))
-        print(type(img))
+        # print(type(img))
         if np.unique(img).size != 2:
             cln_img = cl.clean_image(img, 'clumps', 'otsu', return_im = True)
             cln_tbl = cf.quantify_clumps_skimage(cln_img, saveas=f"annotation_helper_files/{os.path.splitext(os.path.basename())[0]}.csv") # Run the Clumpfinder!!!
@@ -759,12 +763,12 @@ class StomataGUI:
         self.update_csv_notes()
         self.note_summary_stats()
         self.set_recents()
-        print("something's happening")
+        self.confirm_annot()
         assert os.path.exists(self.config_properties["recent_ANNOT"])
         assert os.path.exists(self.config_properties["recent_CSV"])
         # print(self.config_properties["recent_ANNOT"])f
         self.image_annot.save(os.path.abspath(rf'{self.config_properties["recent_ANNOT"]}'))
-        print("Just ran the save image command")
+        # print("Just ran the save image command")
         # self.image_annot.show()
         self.root.destroy()  # Close the window
 

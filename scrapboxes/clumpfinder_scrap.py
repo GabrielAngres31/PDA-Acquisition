@@ -3,6 +3,7 @@ import tqdm
 
 import os
 import glob
+import pandas as pd
 
 model_path = "checkpoints/2024-06-27_11h-31m-26s/last.e029.pth"
 old_model_path = "checkpoints/2024-04-22_11h-16m-11s/last.e029.pth"
@@ -183,8 +184,64 @@ def clumps_table_auto():
     #     subprocess.run(f'python clean_image.py --input_path="{file}" --filter_type="confidence" --save_image_as="CLEAN_CON_{os.path.basename(file)}_"', shell=True)
     #     if i > 5:
     #         break
-    for i, file in enumerate(glob.glob("cleaned_images_default/*.png")):
-        subprocess.run(f'python clumps_table.py --input_path="{file}" --output_folder="cleaned_images_default/tables"', shell=True)
+    # for i, file in enumerate(glob.glob("cleaned_images_default/*.png")):
+    #     subprocess.run(f'python clumps_table.py --input_path="{file}" --output_folder="cleaned_images_default/tables"', shell=True)
+    
+    
+    # for i, file in enumerate(glob.glob("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/inference/PUBADD_111325/*.png")):
+    #     subprocess.run(f'python install_standalone/clumps_table_SUF.py --input_path="{file}" --output_folder="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/inference/PUBADD_111325/clump/"', shell=True)
+
+    scrappaths = {
+        "MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_5dpg_102021_2_2_abaxial_merged-0002.tif.output_BLEANED_former.csv":"cotX5_01",
+        "MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_5dpg_102021_3_1_abaxial_merged-0002.tif.output_BLEANED_former.csv":"cotX5_02",
+        "MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_5dpg_102021_3_2_abaxial_merged-0002.tif.output_BLEANED_former.csv":"cotX5_03",
+        "MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_5dpg_120821_1_1_abaxial_merged-0002.tif.output_BLEANED_former.csv":"cotX5_04",
+        "MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_5dpg_120821_2_1_abaxial_merged-0002.tif.output_BLEANED_former.csv":"cotX5_05",
+        "MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_5dpg_120821_3_1_abaxial_merged-0002.tif.output_BLEANED_former.csv":"cotX5_06",
+        "MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_5dpg_120821_4_1_abaxial_merged-0002.tif.output_BLEANED_former.csv":"cotX5_07",
+        "MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_5dpg_120821_5_1_abaxial_merged-0002.tif.output_BLEANED_former.csv":"cotX5_08",
+        "MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_5dpg_120821_6_1_abaxial_merged-0002.tif.output_BLEANED_former.csv":"cotX5_09",
+        "rotated_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_5dpg_102021_1_1_abaxial_merged.tif.output_BLEANED_former.csv":"cotX5_10",
+        "113021_4dpg_cot1_max_rotated-1.tif.output_BLEANED_former.csv":"cotX4_01",
+        "113021_4dpg_cot2_max_rotated-1.tif.output_BLEANED_former.csv":"cotX4_02",
+        "113021_4dpg_cot4_max_rotated.tif.output_BLEANED_former.csv":"cotX4_03",
+        "110321_4dpg_cot5_max_rotated-1.tif.output_BLEANED_former.csv":"cotX4_04",
+        "113021_4dpg_cot6_max_rotated-1.tif.output_BLEANED_former.csv":"cotX4_05",
+        "113021_4dpg_cot7_max_rotated-1.tif.output_BLEANED_former.csv":"cotX4_06",
+        "rotated_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_4dpg_101921_1_2_abaxial_merged.tif.output_BLEANED_former.csv":"cotX4_07",
+        "rotated_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_4dpg_101921_4_1_abaxial_merged.tif.output_BLEANED_former.csv":"cotX4_08",
+        "WT_3_COT_01_rotated_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_3dpg_101821_7_1_abaxial_merged.tif.output_BLEANED_former.csv":"cotX3_01",
+        "WT_3_COT_02_rotated_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_3dpg_101821_7_2_abaxial_merged.tif.output_BLEANED_former.csv":"cotX3_02",
+        "WT_3_COT_03_rotated_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_3dpg_101821_8_1_abaxial_merged.tif.output_BLEANED_former.csv":"cotX3_03",
+        "WT_3_COT_04_rotated_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_3dpg_101821_8_2_abaxial_merged.tif.output_BLEANED_former.csv":"cotX3_04",
+        "WT_3_COT_10_rotated_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_3dpg_101821_1_2_abaxial_merged.tif.output_BLEANED_former.csv":"cotX3_05",
+        "WT_3_COT_11_rotated_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_3dpg_101821_2_1_abaxial_merged.tif.output_BLEANED_former.csv":"cotX3_06",
+        "WT_3_COT_18_112921_cot3_max_rotated_c2.tif.output_BLEANED_former.csv":"cotX3_07",
+        "WT_3_COT_20_112921_cot5_max_rotated_c2.tif.output_BLEANED_former.csv":"cotX3_08",
+        "WT_3_COT_21_112921_cot6_max_rotated_c2.tif.output_BLEANED_former.csv":"cotX3_09",
+        "WT_3_COT_22_112921_cot7_max_rotated_c2.tif.output_BLEANED_former.csv":"cotX3_10",
+        "WT_3_COT_23_rotated_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_3dpg_101121_1_1_abaxial_merged.tif.output_BLEANED_former.csv":"cotX3_11",
+        "WT_3_COT_24_rotated_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_3dpg_101121_1_2_abaxial_merged.tif.output_BLEANED_former.csv":"cotX3_12",
+        "WT_3_COT_25_rotated_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_3dpg_101121_2_1_abaxial_merged.tif.output_BLEANED_former.csv":"cotX3_13",
+        "WT_3_COT_26_rotated_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_3dpg_101121_3_1_abaxial_merged.tif.output_BLEANED_former.csv":"cotX3_14",
+        "WT_3_COT_27_rotated_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_3dpg_101121_3_2_abaxial_merged.tif.output_BLEANED_former.csv":"cotX3_15",
+        "WT_3_COT_29_112921_cot1_max_rotated_c2.tif.output_BLEANED_former.csv":"cotX3_16"
+    }
+
+    filelist = [None]*len(scrappaths)
+
+    for i, file in enumerate(glob.glob("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/inference/PUBADD_111325/clump/*.csv")):
+        # print(scrappaths[os.path.basename(file)])
+        swap = pd.read_csv(file)
+        print(f"{scrappaths[os.path.basename(file)]}\t|\t{len(swap)}")
+    #     val = scrappaths[os.path.basename(file)]
+    #     swap.insert(1, "dpg", int(val[4]))
+    #     swap.insert(1, "ID", val)
+    #     swap.insert(1, "record_ID", val)
+    #     filelist[i]=swap
+    
+    # pd.concat(filelist).to_csv("C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/inference/PUBADD_111325/ALL_TOGETHER.csv")
+
     #     if i > 5:
     #         break
     # for i, file in 

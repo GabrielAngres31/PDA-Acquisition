@@ -98,8 +98,8 @@ def main(args:argparse.Namespace) -> bool:
 
     default_list = IoU_csr[IoU_csr > 0.001]
 
-    # IoU_csr[:, 0] = 0
-    # IoU_csr[0, :] = 0
+    IoU_csr[:, 0] = 0
+    IoU_csr[0, :] = 0
 
     bins = np.arange(0, 1, 0.05) # Fixed bin size
 

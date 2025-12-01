@@ -59,18 +59,24 @@ def compare_image_folders(folder1, folder2, hash_algorithm='md5'):
     for f1, f2 in identical_images:
         print(f"  - {f1} (in {folder1}) and {f2} (in {folder2})")
 
-    # print(f"\nUnique Images in {folder1}: {len(unique_in_folder1)}")
+    for f1, f2 in identical_images:
+        print(f"{f2}")
+
+    # print(f"/nUnique Images in {folder1}: {len(unique_in_folder1)}")
     # for filename in unique_in_folder1:
     #     print(f"  - {filename}")
 
-    # print(f"\nUnique Images in {folder2}: {len(unique_in_folder2)}")
+    # print(f"/nUnique Images in {folder2}: {len(unique_in_folder2)}")
     # for filename in unique_in_folder2:
     #     print(f"  - {filename}")
 
 # Example Usage:
 if __name__ == "__main__":
-    folder_a = "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/SCD_training_data/mbn_training/classes/clustered"  # Replace with your actual folder paths
-    folder_b = "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/SCD_training_data/mbn_training/guesses_nojitter_06-17-2025"  # Replace with your actual folder paths
+    # folder_a = "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/SCD_training_data/mbn_training/classes/clustered"  # Replace with your actual folder paths
+    # folder_b = "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/SCD_training_data/mbn_training/guesses_nojitter_06-17-2025"  # Replace with your actual folder paths
+    folder_a = "C:/Users/Gabriel/Documents/3dpg_publication_addition"  # Replace with your actual folder paths
+    # folder_b = "C:/Users/Gabriel/Downloads/samples_process_07302025/sort_ALLS"  # Replace with your actual folder paths
+    folder_b = "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/SCD_training_data/source_images/BASE"  # Replace with your actual folder paths
     
     # Ensure Pillow is installed: pip install Pillow
     # Ensure folders exist before running

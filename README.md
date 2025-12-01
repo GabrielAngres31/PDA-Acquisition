@@ -1,6 +1,6 @@
 
 
-## Usage
+## Setup
 
 ```bash
 #new python virtual environment
@@ -12,7 +12,11 @@ venv\Scripts\activate     #windows
 
 #install packages
 pip install -r requirements.txt
+```
 
+## Usage
+### Cotyledon-wide stomatal location
+```bash
 #run training 
 python training.py --trainingsplit=splits/pores_only_test_02-2025.csv --validationsplit=splits/pores_only_val_02-2025.csv
 
@@ -42,7 +46,12 @@ python visualizers.py --source_data=inference/clump_data/aggregate_folders/aggre
 python visualizers.py --source_data=inference/clump_data/cot6_STOMATA_MASKS.csv --histograms="area,axis_major_length,axis_minor_length,eccentricity"
 ```
 
+### Centered Single/Cluster Decisions
+```bash
 
+
+
+```
 ## Code Overviews
 
 ### Data.py
