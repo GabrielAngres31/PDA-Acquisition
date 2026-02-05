@@ -1,0 +1,20 @@
+SCD\ training\ data/**/*.jpg
+**/generated/**/*.tif
+*.png
+*.png
+*.png
+*.tif
+__pycache__
+checkpoints
+cache
+venv
+*.txt
+*.pth
+*.csv
+*.roi
+*.pdn
+*.lif
+*.zip
+*.ald
+*.ijm
+*scrapbox.py
