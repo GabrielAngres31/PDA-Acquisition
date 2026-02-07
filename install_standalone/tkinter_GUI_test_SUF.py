@@ -18,28 +18,43 @@ class StomataGUI:
         # Load Config options
         ### Read config file
         ### Loads: Recent BASE, ANNOT, and CSV files
+        assert os.path.exists("annotation_helper_files/stomata_gui_config.txt"), "ERROR: configFilePath does not exist as set!"
         self.configFilePath = "annotation_helper_files/stomata_gui_config.txt"
          
         with open(self.configFilePath, 'r') as file:
             lines = file.readlines()
             self.config_properties = dict([(v for v in line.strip().split("=")) for line in lines])
 
-        file_to_dir = dict(zip(['recent_BASE', 'recent_ANNOT', 'recent_CSV'], ['dir_BASE', 'dir_ANNOT', 'dir_CSV']))
+        file_to_dir = dict(zip(['train_folder', 'val_folder', 'model_file',   'recent_BASE', 'recent_ANNOT', 'recent_CSV'], 
+                               ['train_DIR',    'val_DIR',    'model_DIR',    'dir_BASE',    'dir_ANNOT',    'dir_CSV']))
+        
+        print(file_to_dir)
 
         for prop_file in ['recent_BASE', 
                      'recent_ANNOT',
                      'recent_CSV']:
-            # Check that all the filepaths from the last session are still valid
+            # Check that all the image filepaths from the last session are still valid
             # This can change if files have been deleted or moved
             try: 
                 assert os.path.exists(self.config_properties[prop_file])
             # If a path isn't available, the user is prompted to select a new file to load.
-            # TODO: Make Warning Window contain informative text
             except:
                 messagebox.showwarning("Missing File")
                 file_set = filedialog.askopenfilename(title=f"Select File: {prop_file}")
                 self.config_properties[prop_file] = file_set
                 self.config_properties[file_to_dir[prop_file]] = os.path.dirname(file_set)
+
+        for use_file in ['model_file']:
+            # Check that model filepath exists
+            try: 
+                assert os.path.exists(self.config_properties[use_file])
+            # If a path isn't available, the user is prompted to select a new file to load.
+            except:
+                messagebox.Message("No model exists at that path.")
+                file_set = filedialog.askopenfilename(title=f"Select File: {use_file}")
+                self.config_properties[use_file] = file_set
+                self.config_properties[file_to_dir[use_file]] = os.path.dirname(file_set)
+            
             
         
         for prop_dir in ['dir_BASE',
@@ -52,10 +67,15 @@ class StomataGUI:
             # Actually, if you have a directory error without having a file error, then something really bizarre must be going on.
             try: 
                 assert os.path.exists(self.config_properties[prop_dir])
-                # print("bround")
             except:
-                messagebox.showwarning("Missing Directory")
+                messagebox.showwarning(f"Missing Directory: {prop_dir}")
                 filedialog.askopenfilename(title=f"Select Directory: {prop_dir}")
+        for use_dir in ['model_dir']:
+            try: 
+                assert os.path.exists(self.config_properties[use_dir])
+            except:
+                messagebox.showwarning(f"Missing Directory: {use_dir}")
+                filedialog.askopenfilename(title=f"Select Directory: {use_dir}")
 
 
         # Window Setup
@@ -161,11 +181,13 @@ class StomataGUI:
 
         ### Setup Training Tab
 
-        self.button_train_opentest = tk.Button(self.training_tab, text="Set Test Folder", command=None)
+        self.button_train_opentest = tk.Button(self.training_tab, text="Set Test Folder", command=self.func_train_opentest)
         self.button_train_opentest.grid(row=0, column=0, padx=10, pady=10)
-        self.button_train_openval = tk.Button(self.training_tab, text="Set Validation Folder", command=None)
+
+        self.button_train_openval = tk.Button(self.training_tab, text="Set Validation Folder", command=self.func_train_openval)
         self.button_train_openval.grid(row=0, column=1, padx=10, pady=10)
-        self.button_train_run = tk.Button(self.training_tab, text="Run Training", command=None)
+
+        self.button_train_run = tk.Button(self.training_tab, text="Run Training", command=self.func_train_run)
         self.button_train_run.grid(row=0, column=2, padx=10, pady=10)
 
 
@@ -289,6 +311,15 @@ class StomataGUI:
         self.main_tab_control.select(0)
         # self.set_focus_to_tab(None)
 
+    # TODO: FINSH THESE scround
+    def func_train_opentest(self):
+        pass
+    def func_train_openval(self):
+        pass
+    def func_train_run(self):
+        pass
+
+    
     def directedPan(self, event=None, dd = [0, 0]):
         self.update_from_pan(vector = dd)
     
@@ -606,6 +637,7 @@ class StomataGUI:
         with open(self.configFilePath, 'w') as file:
             for k in self.config_properties:
                 file.write(f"{k}={self.config_properties[k]}\n")
+        print(self.config_properties)
     
     # Write annotation notes to CSV file
     def update_csv_notes(self):
@@ -613,7 +645,7 @@ class StomataGUI:
         self.df_coords
         self.df_coords.to_csv(write_path)
 
-    # Lets you associate three files (BASE, ANNOT, CSV) together so you can load them with a single click. Does nothing right now.
+    # Intended functionality: lets you associate three files (BASE, ANNOT, CSV) together so you can load them with a single click. Does nothing right now.
     def set_paired_files(self):
         #TODO
         pass

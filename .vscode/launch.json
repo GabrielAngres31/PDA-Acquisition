@@ -10,6 +10,13 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "TKinter GUI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "tinstall_standalone_v1/tkinter_GUI.py",
+            "console": "integratedTerminal"
         }
     ]
 }
