@@ -6,12 +6,9 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.sparse import SparseEfficiencyWarning
-from skimage.filters import threshold_otsu
 from skimage.io import imread
-from skimage.measure import label, regionprops
+from skimage.measure import label
 from skimage.metrics import contingency_table
-from skimage.morphology import closing, square
-from skimage.segmentation import clear_border
 
 warnings.simplefilter(
     "ignore", SparseEfficiencyWarning
@@ -91,7 +88,7 @@ def main(args: argparse.Namespace) -> bool:
 
     try:
         intersections = contingency_table(nd_tru, nd_inf)  # [N,M]
-    except:
+    except Exception:
         if nd_inf.shape != nd_tru.shape:  # Diagnostic for image mismatch.
             print(f"INF: {nd_inf.shape}")
             print(args.guess_image)
@@ -129,7 +126,7 @@ def main(args: argparse.Namespace) -> bool:
     if args.show_image:
         plt.show()
     plt.savefig(
-        f"outputfolder/{os.path.basename(args.guess_image)}_{args.texttag}.png"
+        f"output_folder/{os.path.basename(args.guess_image)}_{args.texttag}.png"
     )  # TODO: save folder as argument
 
     if args.output_folder_table:

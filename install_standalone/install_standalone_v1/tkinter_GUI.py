@@ -6,7 +6,6 @@ import subprocess
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-import image_audit_canvas
 import numpy as np
 import pandas as pd
 from PIL import Image, ImageTk
@@ -47,6 +46,13 @@ class StomataGUI:
         with open(self.configFilePath, newline="") as csvfile:
             reader = csv.reader(csvfile, skipinitialspace=True)
             self.config_properties = {a: b for a, b in reader}
+
+        # with open(self.configFilePath, "r") as file:
+        #     lines = file.readlines()
+        #     self.config_properties = {
+        #         a: b
+        #         for a, b in map(lambda x: map(lambda y: y.strip(), x.split(",")), lines)
+        #     }
 
         print(file_to_dir)
 
@@ -136,7 +142,7 @@ class StomataGUI:
         self.editmenu.add_command(
             label="Edit Annotation...", command=self.open_window_edit
         )
-        self.root.bind("r", self.open_window_edit)
+        self.root.bind("E", self.open_window_edit)
         self.editmenu.add_command(
             label="Confirm Annotation", command=self.confirm_annot
         )
@@ -148,20 +154,13 @@ class StomataGUI:
         # print(self.root.bind())
 
         ### Manager Menu Options
-
-        ## To be added in a future update
-        # self.manamenu.add_command(label="Paired Files (WIP)", command=donothing)
-        # self.manamenu.add_separator()
-        ##
-
+        self.manamenu.add_command(label="Paired Files (WIP)", command=donothing)
+        self.manamenu.add_separator()
         self.manamenu.add_command(label="Set Recents", command=self.set_recents)
-
-        ## To be added in a future update
-        # self.manamenu.add_command(
-        #     label="Set Paired Files (WIP)", command=self.set_paired_files
-        # )
-        # self.manamenu.add_separator()
-        ##
+        self.manamenu.add_command(
+            label="Set Paired Files (WIP)", command=self.set_paired_files
+        )
+        self.manamenu.add_separator()
         self.manamenu.add_command(label="Clean In-place", command=self.clean_inplace)
 
         # Hardcoded window sidelength
@@ -222,46 +221,46 @@ class StomataGUI:
         ### Setup Inference Tab
 
         # Set up Buttons
+        self.button_set_test = tk.Button(
+            self.inference_tab, text="Test Split", command=self.set_test_split
+        )
+        self.button_set_test.grid(row=0, column=0, padx=10, pady=10)
+
+        self.button_set_val = tk.Button(
+            self.inference_tab, text="Val Split", command=self.set_val_split
+        )
+        self.button_set_val.grid(row=0, column=1, padx=10, pady=10)
 
         self.button_run_inference = tk.Button(
             self.inference_tab, text="Run Inference", command=self.run_inference
         )
-        self.button_run_inference.grid(row=0, column=0, padx=10, pady=10)
+        self.button_run_inference.grid(row=0, column=2, padx=10, pady=10)
 
         self.button_clean_annotation = tk.Button(
             self.inference_tab, text="Clean Annotation", command=self.clean_annotation
         )
-        self.button_clean_annotation.grid(row=1, column=0, padx=10, pady=10)
+        self.button_clean_annotation.grid(row=2, column=0, padx=10, pady=10)
 
         self.button_recalculate_clumps = tk.Button(
             self.inference_tab,
             text="Recalculate Clumps",
             command=self.recalculate_clumps,
         )
-        self.button_recalculate_clumps.grid(row=2, column=0, padx=10, pady=10)
+        self.button_recalculate_clumps.grid(row=2, column=1, padx=10, pady=10)
 
         ### Setup Training Tab
-        self.button_set_test = tk.Button(
-            self.training_tab, text="Test Split", command=self.set_test_split
+
+        self.button_train_opentest = tk.Button(
+            self.training_tab, text="Set Test Folder", command=self.func_train_opentest
         )
-        self.button_set_test.grid(row=0, column=0, padx=10, pady=10)
+        self.button_train_opentest.grid(row=0, column=0, padx=10, pady=10)
 
-        self.button_set_val = tk.Button(
-            self.training_tab, text="Val Split", command=self.set_val_split
+        self.button_train_openval = tk.Button(
+            self.training_tab,
+            text="Set Validation Folder",
+            command=self.func_train_openval,
         )
-        self.button_set_val.grid(row=0, column=1, padx=10, pady=10)
-
-        # self.button_train_opentest = tk.Button(
-        #     self.training_tab, text="Set Test Split", command=self.set_test_split
-        # )
-        # self.button_train_opentest.grid(row=0, column=0, padx=10, pady=10)
-
-        # self.button_train_openval = tk.Button(
-        #     self.training_tab,
-        #     text="Set Validation Split",
-        #     command=self.set_val_split,
-        # )
-        # self.button_train_openval.grid(row=0, column=1, padx=10, pady=10)
+        self.button_train_openval.grid(row=0, column=1, padx=10, pady=10)
 
         self.button_train_run = tk.Button(
             self.training_tab, text="Run Training", command=self.func_train_run
@@ -433,11 +432,11 @@ class StomataGUI:
         # self.set_focus_to_tab(None)
 
     # TODO: FINSH THESE scround
-    # def func_train_opentest(self):
-    #     pass
+    def func_train_opentest(self):
+        pass
 
-    # def func_train_openval(self):
-    #     pass
+    def func_train_openval(self):
+        pass
 
     def func_train_run(self):
         pass
@@ -615,10 +614,10 @@ class StomataGUI:
                 assert os.path.exists(self.config_properties["recent_ANNOT"])
                 # Runs the clumpfinder and features on the ANNOT image.
                 print(
-                    f'python.exe clumps_table.py --input_path="{self.config_properties["recent_ANNOT"]}" --output_folder="{outdir_newclumps}/"'
+                    f'python.exe clumps_table_SUF.py --input_path="{self.config_properties["recent_ANNOT"]}" --output_folder="{outdir_newclumps}/"'
                 )
                 subprocess.run(
-                    f'python.exe clumps_table.py --input_path="{self.config_properties["recent_ANNOT"]}" --output_folder="{outdir_newclumps}/"',
+                    f'python.exe clumps_table_SUF.py --input_path="{self.config_properties["recent_ANNOT"]}" --output_folder="{outdir_newclumps}/"',
                     shell=True,
                 )  # , capture_output=True)
                 # Establish the filepath of the CLUMPS file - REGENERATE.
@@ -831,9 +830,9 @@ class StomataGUI:
         self.df_coords.to_csv(write_path)
 
     # Intended functionality: lets you associate three files (BASE, ANNOT, CSV) together so you can load them with a single click. Does nothing right now.
-    # def set_paired_files(self):
-    #     # TODO
-    #     pass
+    def set_paired_files(self):
+        # TODO
+        pass
 
     def clean_inplace(self):  # CURRENTLY DOES NOT WORK!
         annotpath = self.config_properties["recent_ANNOT"]
@@ -849,7 +848,7 @@ class StomataGUI:
             # return cln_tbl
         # Check for currently loaded annot file
         # Check value range is two values 0 and 255 or 0 and 1 - confirm!!!
-        ### If not, apply cleaning per clean_image.py
+        ### If not, apply cleaning per clean_image_SUF.py
         print(f"Number of unique values is != 2: [ {len(set(img.getdata()))} ]")
 
     def mark_note(self, note_text):
@@ -899,7 +898,7 @@ class StomataGUI:
 
     def open_window_edit(self, event=None):
         window_size = 64
-        pixel_size = 6
+        # pixel_size = 6
         global crop_coords
         xpart, ypart = self.xc() + self.panDelta[0], self.yc() + self.panDelta[1]
         crop_coords = (
@@ -923,21 +922,11 @@ class StomataGUI:
 
         save_annot.convert("L").save("annotation_helper_files/save_annot_file.png")
         # Pass the paths as an arg to the subprocess command
-        edit_root = tk.Toplevel(self.root)
-        canvas = image_audit_canvas.PixelCanvas(
-            edit_root,
-            window_size,
-            window_size,
-            base_section_path="annotation_helper_files/save_base_file.png",
-            annot_section_path="annotation_helper_files/save_annot_file.png",
-            pixel_size=pixel_size,
-        )
+        # edit_root = tk.Toplevel(self.root)
+        # canvas = image_audit_canvas.PixelCanvas(edit_root, window_size, window_size, base_section_path="annotation_helper_files/save_base_file.png", annot_section_path="annotation_helper_files/save_annot_file.png", pixel_size=pixel_size)
 
-        canvas.protocol("WM_DELETE_WINDOW", canvas.on_closing)
-        subprocess.run(
-            "python image_audit_canvas.py --base_path=annotation_helper_files/save_base_file.png --annot_path=annotation_helper_files/save_annot_file.jpg",
-            shell=True,
-        )
+        # canvas.protocol("WM_DELETE_WINDOW", canvas.on_closing)
+        # subprocess.run("python image_audit_canvas.py --base_path=annotation_helper_files/save_base_file.png --annot_path=annotation_helper_files/save_annot_file.jpg", shell=True)
 
     def confirm_annot(self):
         try:
@@ -980,8 +969,8 @@ class StomataGUI:
         if file_path:
             return file_path
 
-    # def verify_split_files(self):
-    #     pass
+    def verify_split_files(self):
+        pass
 
     def run_inference(self):
         pth_path = filedialog.askopenfilename(
@@ -1010,7 +999,7 @@ class StomataGUI:
         clean_annot_outpath = f"{self.config_properties['dir_ANNOT']}/CLEANED_{os.path.basename(self.config_properties['recent_ANNOT'])}.png"
 
         subprocess.run(
-            f"python imagecleaner.py --image_in={self.config_properties['recent_ANNOT']} --mode=full_filter --remove_sticks --savepath={clean_annot_outpath}"
+            f"python imagecleaner_AI_test_sticks.py --image_in={self.config_properties['recent_ANNOT']} --mode=full_filter --remove_sticks --savepath={clean_annot_outpath}"
         )
 
         # TODO: Dialogue/toggle to set annotation as new annot path for existing setup
@@ -1019,7 +1008,7 @@ class StomataGUI:
 
     def recalculate_clumps(self):
         subprocess.run(
-            f"python clumps_table.py --input_path={self.config_properties['recent_ANNOT']} --output_folder={self.config_properties['dir_CSV']}"
+            f"python clumps_table_SUF.py --input_path={self.config_properties['recent_ANNOT']} --output_folder={self.config_properties['dir_CSV']}"
         )
 
     def on_closing(self):
@@ -1040,7 +1029,7 @@ class StomataGUI:
         self.root.destroy()  # Close the window
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  #
     root = tk.Tk()
     app = StomataGUI(root)
     root.mainloop()
