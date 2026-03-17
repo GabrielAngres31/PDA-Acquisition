@@ -1,5 +1,7 @@
 # RESULT_generate_all.py
 
+# TODO: Evaluate what this code does and clean it up
+
 import csv
 import glob
 import shutil

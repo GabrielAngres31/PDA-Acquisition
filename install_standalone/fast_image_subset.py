@@ -1,12 +1,14 @@
 # fast_image_subset
 
-import cv2
-import numpy as np
+import csv
 import glob
 import os
-import csv
 import shutil
+
+import cv2
+import numpy as np
 import tqdm
+
 # needle_path = "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/publication_compare/TRAINING_source/remove_ALL_smalls/BASE_smalls/3dpg_001.png"
 # haystk_path = "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/only_pored/source_images/Uncompleted/WT_7_COT_01_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_7dpg_102221-0002.tif"
 
@@ -24,7 +26,7 @@ import tqdm
 #         print(haystk_searchstart)
 
 #         rows, cols = haystk.shape
-        
+
 
 #         for row in range(rows):
 #             for col in range(cols):
@@ -36,7 +38,7 @@ import tqdm
 #                     if not z:
 #                         print(f"potential match for {os.path.basename(needle_path)} found @ ({row}, {col})")
 
-
+"""
 
 strangefiles = ["240x_1787y__MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_5dpg_120121_3_1_abaxial_merged_rotated-0002.tif",
                 "266x_1393y__rotated_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_5dpg_101321_5_1_adaxial_merged.tif",
@@ -290,3 +292,39 @@ with open("C:/Users/Gabriel/Downloads/samples_process_07302025/pubsplit_trn_08-2
 #  WT_7_COT_08_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_7dpg_102221-0002.tif
 #  WT_7_COT_09_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_7dpg_102221-0002.tif
 #  WT_7_COT_10_MAX_BRXL2pBRXL2-YFP_ML1pmCherry-RCI2A_7dpg_102221-0002.tif
+
+"""
+file_list_wes = [
+    "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition-Clone2/install_standalone_v2/publication_files/image_data/BASE_smalls/7dpg_09.png"
+    "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition-Clone2/install_standalone_v2/publication_files/image_data/BASE_smalls/3dpg_003.png"
+    "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition-Clone2/install_standalone_v2/publication_files/image_data/BASE_smalls/3dpg_006.png"
+    "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition-Clone2/install_standalone_v2/publication_files/image_data/BASE_smalls/3dpg_009.png"
+    "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition-Clone2/install_standalone_v2/publication_files/image_data/BASE_smalls/7dpg_03.png"
+    "C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition-Clone2/install_standalone_v2/publication_files/image_data/BASE_smalls/7dpg_06.png"
+]
+
+for needle_path in file_list_wes:
+    for haystk_path in glob.glob(
+        "C:/Users/Gabriel/Downloads/samples_process_07302025/sort_REMAINDER/*.tif"
+    ):
+        search_img = cv2.imread(needle_path, cv2.IMREAD_GRAYSCALE)
+        template_img = cv2.imread(haystk_path, cv2.IMREAD_GRAYSCALE)
+        w, h = template_img.shape[1], template_img.shape[0]
+        try:
+            result = cv2.matchTemplate(search_img, template_img, cv2.TM_CCOEFF_NORMED)
+        except Exception:
+            # print(f"Image might be too large: {needle_path}")
+            continue
+        threshold = 0.8
+
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+        if max_val >= threshold:
+            # shutil.move(
+            #     haystk_path,
+            #     "C:/Users/Gabriel/Downloads/samples_process_07302025/sort_USED/",
+            # )
+            print(
+                f"Detected for {os.path.basename(needle_path)} within {os.path.basename(haystk_path)}"
+            )
+            break
+    # print(f"No Match Found for {os.path.basename(needle_path)}")

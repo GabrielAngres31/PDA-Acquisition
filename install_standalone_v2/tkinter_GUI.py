@@ -6,10 +6,10 @@ import subprocess
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-import image_audit_canvas
-import numpy as np
 import pandas as pd
 from PIL import Image, ImageTk
+
+import image_audit_canvas
 
 
 class StomataGUI:
@@ -18,10 +18,10 @@ class StomataGUI:
         # Load Config options
         ### Read config file
         ### Loads: Recent BASE, ANNOT, and CSV files
-        assert os.path.exists("install_standalone_v1/stomata_gui_config.csv"), (
+        assert os.path.exists("stomata_gui_config.csv"), (
             "ERROR: configFilePath does not exist as set!"
         )
-        self.configFilePath = "install_standalone_v1/stomata_gui_config.csv"
+        self.configFilePath = "stomata_gui_config.csv"
 
         file_to_dir = dict(
             zip(
@@ -43,7 +43,6 @@ class StomataGUI:
                 ],
             )
         )
-
         with open(self.configFilePath, newline="") as csvfile:
             reader = csv.reader(csvfile, skipinitialspace=True)
             self.config_properties = {a: b for a, b in reader}
@@ -145,23 +144,10 @@ class StomataGUI:
         self.root.bind("<Alt-L>", lambda event: self.confirm_notes(event=event))
         self.editmenu.add_command(label="Clear Note", command=self.clear_notes)
 
-        # print(self.root.bind())
-
         ### Manager Menu Options
-
-        ## To be added in a future update
-        # self.manamenu.add_command(label="Paired Files (WIP)", command=donothing)
-        # self.manamenu.add_separator()
-        ##
 
         self.manamenu.add_command(label="Set Recents", command=self.set_recents)
 
-        ## To be added in a future update
-        # self.manamenu.add_command(
-        #     label="Set Paired Files (WIP)", command=self.set_paired_files
-        # )
-        # self.manamenu.add_separator()
-        ##
         self.manamenu.add_command(label="Clean In-place", command=self.clean_inplace)
 
         # Hardcoded window sidelength
@@ -250,18 +236,6 @@ class StomataGUI:
             self.training_tab, text="Val Split", command=self.set_val_split
         )
         self.button_set_val.grid(row=0, column=1, padx=10, pady=10)
-
-        # self.button_train_opentest = tk.Button(
-        #     self.training_tab, text="Set Test Split", command=self.set_test_split
-        # )
-        # self.button_train_opentest.grid(row=0, column=0, padx=10, pady=10)
-
-        # self.button_train_openval = tk.Button(
-        #     self.training_tab,
-        #     text="Set Validation Split",
-        #     command=self.set_val_split,
-        # )
-        # self.button_train_openval.grid(row=0, column=1, padx=10, pady=10)
 
         self.button_train_run = tk.Button(
             self.training_tab, text="Run Training", command=self.func_train_run
@@ -428,16 +402,7 @@ class StomataGUI:
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-        # self.set_focus_to_tab(None, 0)
         self.main_tab_control.select(0)
-        # self.set_focus_to_tab(None)
-
-    # TODO: FINSH THESE scround
-    # def func_train_opentest(self):
-    #     pass
-
-    # def func_train_openval(self):
-    #     pass
 
     def func_train_run(self):
         pass
@@ -451,7 +416,10 @@ class StomataGUI:
     def set_focus_to_tab(self, event=None):
         """
         Sets focus to a tab in response to an event.
+        Currently does nothing.
         """
+
+        pass
         # ind = self.main_tab_control.index(self.main_tab_control.select())
         # ind = self.main_tab_control.index(self.main_tab_control.select())
         # print("None")
@@ -556,8 +524,8 @@ class StomataGUI:
         )
         if file_path:
             self.import_ANNOT(file_path)
-            # Putting this here to prevent losing all your work on an accidental file switch
-            # THIS DOESN'T WORK!!!!
+            # NOTE: You may lose your work if you switch files before saving your annotation work.
+            # Right now, there is NO CONFIRMATION DIALOGUE to prevent this from happening.
             self.image_annot.save(
                 os.path.abspath(rf"{self.config_properties['recent_ANNOT']}")
             )
@@ -608,7 +576,7 @@ class StomataGUI:
                 title="Save location for new clumps file",
                 initialdir=self.config_properties["dir_CSV"],
             )
-            # if not outpath: outpath = self.config_properties['dir_csv']+'/outfile_base.csv'
+
             if check:
                 print("Generating clumps file")
                 # Cheak that the path is valid
@@ -684,7 +652,6 @@ class StomataGUI:
                 df_coords["bbox-2"][self.bbox_number.get() - 1],
             ]
             self.current_labels.config(text=self.notes_list[self.bbox_number.get() - 1])
-            # print(self.bbox_number.get())
         else:
             messagebox.showwarning("Warning", "Bounding box number is out of range!")
 
@@ -696,15 +663,11 @@ class StomataGUI:
             print(f"Imported Image {image_type} to {-self.x0()}, {-self.y0()}")
         except Exception:
             print(f"Could not import image. Check your filepath: {file_path}")
-        # print(len(set(img.getdata())))
-        # return(len(set(img.getdata())))
 
     def update_from_pan(self, event=None, vector=[0, 0]):
         self.panDelta[0] += vector[0]
         self.panDelta[1] += vector[1]
         if vector != [0, 0]:
-            # print(vector)
-            # print(self.panDelta)
             self.isPanning = True
             self.update_image(self.canvas_base, self.image_base, "BASE")
             self.update_image(self.canvas_annot, self.image_annot, "ANNOT")
@@ -718,21 +681,17 @@ class StomataGUI:
             self.image_annot = img
 
         self.photo = ImageTk.PhotoImage(img)
-        # img.show()
         canvas.delete("all")
         if self.panDelta == [0, 0]:
             canvas.create_image(self.xD(), self.yD(), anchor=tk.NW, image=self.photo)
         else:
-            # print("SHIFTING")
             canvas.create_image(
                 self.xD() + self.panDelta[0],
                 self.yD() + self.panDelta[1],
                 anchor=tk.NW,
                 image=self.photo,
             )
-        # print(self.xc(), self.yc())
         canvas.image = self.photo
-        # print(f"Updated Images to {-self.x0()}, {-self.y0()}")
 
     # Change the computed overlay
     def update_overlay(self):
@@ -798,6 +757,8 @@ class StomataGUI:
             self.update_images_by_bbox()
 
     # Move to an arbitrary clump (user input) (CURRENTLY UNUSED)
+    #   Currently, you can still do this by entering a clump number
+    #   and then pressing q and w to force a refresh.
     def change_value(self, event):
         placeholder = self.bbox_number.get()
         if (
@@ -830,27 +791,28 @@ class StomataGUI:
         self.df_coords
         self.df_coords.to_csv(write_path)
 
-    # Intended functionality: lets you associate three files (BASE, ANNOT, CSV) together so you can load them with a single click. Does nothing right now.
-    # def set_paired_files(self):
-    #     # TODO
-    #     pass
+    ### Unused code: ability to clean images in-place.
+    ###     Currently, you have to clean the image before loading it directly.
 
     def clean_inplace(self):  # CURRENTLY DOES NOT WORK!
-        annotpath = self.config_properties["recent_ANNOT"]
-        img = np.asarray(Image.open(annotpath))
-        # print(type(img))
-        if np.unique(img).size != 2:
-            # cln_img = cl.clean_image(img, 'clumps', 'otsu', return_im = True)
-            # cln_tbl = cf.quantify_clumps_skimage(cln_img, saveas=f"annotation_helper_files/{os.path.splitext(os.path.basename())[0]}.csv") # Run the Clumpfinder!!!
-            # self.config_properties['recent_CSV'] = f"annotation_helper_files/{os.path.splitext(os.path.basename())[0]}.csv"
-            self.import_csv(
-                f"annotation_helper_files/{os.path.splitext(os.path.basename())[0]}.csv"
-            )
-            # return cln_tbl
-        # Check for currently loaded annot file
-        # Check value range is two values 0 and 255 or 0 and 1 - confirm!!!
-        ### If not, apply cleaning per clean_image.py
-        print(f"Number of unique values is != 2: [ {len(set(img.getdata()))} ]")
+        pass
+
+    #     annotpath = self.config_properties["recent_ANNOT"]
+    #     img = np.asarray(Image.open(annotpath))
+    #     # print(type(img))
+    #     if np.unique(img).size != 2:
+    #         # cln_img = cl.clean_image(img, 'clumps', 'otsu', return_im = True)
+    #         # cln_tbl = cf.quantify_clumps_skimage(cln_img, saveas=f"annotation_helper_files/{os.path.splitext(os.path.basename())[0]}.csv") # Run the Clumpfinder!!!
+    #         # self.config_properties['recent_CSV'] = f"annotation_helper_files/{os.path.splitext(os.path.basename())[0]}.csv"
+    #         self.import_csv(
+    #             f"annotation_helper_files/{os.path.splitext(os.path.basename())[0]}.csv"
+    #         )
+    #         # return cln_tbl
+
+    #     # Check for currently loaded annot file
+    #     # Check value range is two values 0 and 255 or 0 and 1 - confirm!!!
+    #     ### If not, apply cleaning per clean_image.py
+    #     print(f"Number of unique values is != 2: [ {len(set(img.getdata()))} ]")
 
     def mark_note(self, note_text):
         index = self.bbox_number.get() - 1
@@ -868,34 +830,23 @@ class StomataGUI:
                 "Something went wrong while trying to __SET the label__! Hopefully nothing got broken..."
             )
 
-        # TODO: write to self.notes_list
-        # On window close, write self.notes_list to the file!
-
     def clear_notes(self, event=None):
         index = self.bbox_number.get() - 1
         try:
             if self.notes_list[index] != "NONE":
-                # print(self.notes_list[index])
                 self.notes_list[index] = "NONE"
-            # if self.advance_on_label.get():
-            #     self.increment_bbox()
         except Exception:
             print(
                 "Something went wrong while trying to __CLEAR the label__! Hopefully nothing got broken..."
             )
 
     def note_summary_stats(self):
-        # for item in list(set(self.notes_list)):
-        #     print(list(set(self.notes_list)))
-        #     print(item)
-        #     print(self.notes_list.count(item))
         unique_items = {}
         for item in self.notes_list:
             if item in unique_items:
                 unique_items[item] += 1
             else:
                 unique_items[item] = 1
-        # print(unique_items)
 
     def open_window_edit(self, event=None):
         window_size = 64
@@ -908,23 +859,25 @@ class StomataGUI:
             -(xpart - window_size // 2),
             -(ypart - window_size // 2),
         )
-        # print(crop_coords)
+
+        # Get the two images
         save_base = self.image_base.crop(crop_coords)
         save_annot = self.image_annot.crop(crop_coords)
 
-        # Get the two images
-
+        # Set up coord data
         self.confirm_annot_num = self.bbox_number
         self.confirm_annot_bbox_coords = self.bbox_coords
         self.confirm_annot_corner = [-self.xc(), -self.yc()]
 
         # Save the two images to that folder with defined names
         save_base.convert("L").save("annotation_helper_files/save_base_file.png")
-
         save_annot.convert("L").save("annotation_helper_files/save_annot_file.png")
+
         # Pass the paths as an arg to the subprocess command
         edit_root = tk.Toplevel(self.root)
-        canvas = image_audit_canvas.PixelCanvas(
+
+        # canvas is declared, but the unused variable warning is silenced.
+        _canvas = image_audit_canvas.PixelCanvas(
             edit_root,
             window_size,
             window_size,
@@ -933,32 +886,27 @@ class StomataGUI:
             pixel_size=pixel_size,
         )
 
-        canvas.protocol("WM_DELETE_WINDOW", canvas.on_closing)
-        subprocess.run(
-            "python image_audit_canvas.py --base_path=annotation_helper_files/save_base_file.png --annot_path=annotation_helper_files/save_annot_file.jpg",
-            shell=True,
-        )
+        # Unused code
+        #   May be necessary later if the separate window needs to be run as a subprocess
+        #   at some point in the future
+
+        # subprocess.run(
+        #     # "python image_audit_canvas.py --base_path=annotation_helper_files/save_base_file.png --annot_path=annotation_helper_files/save_annot_file.jpg",
+        #     "python image_audit_canvas.py --base_path=annotation_helper_files/save_base_file.png --annot_path=annotation_helper_files/save_annot_file.png",
+        #     shell=True,
+        # )
 
     def confirm_annot(self):
         try:
             global crop_coords
             img_repaste = Image.open("annotation_helper_files/save_annot_file.png")
-            # img_repaste.show()
             img_repaste = img_repaste.convert("L")
-            # print(img_repaste.mode)
-            # img_to_save = self.image_annot.copy()
-            # img_to_save.paste(img_repaste, box=(crop_coords[0], crop_coords[1]))
-            # self.image_annot.mode = "L"
             self.image_annot = self.image_annot.convert("L")
             self.image_annot.paste(img_repaste, (crop_coords[0], crop_coords[1]))
-            # Image.Image.paste(img_repaste, (crop_coords[0], crop_coords[1], crop_coords[0]+64, crop_coords[1]+64), self.image_annot)
-            # print([crop_coords[0], crop_coords[1]])
-            # self.image_annot.show()3
         except NameError:
             pass
 
     def confirm_notes(self, event=None):
-        # self.image_annot.save(self.config_properties["recent_ANNOT"])
         self.df_coords["Notes"] = self.notes_list
         self.update_csv_notes()
         path = self.config_properties["recent_ANNOT"]
@@ -979,9 +927,6 @@ class StomataGUI:
         )
         if file_path:
             return file_path
-
-    # def verify_split_files(self):
-    #     pass
 
     def run_inference(self):
         pth_path = filedialog.askopenfilename(
@@ -1013,10 +958,6 @@ class StomataGUI:
             f"python imagecleaner.py --image_in={self.config_properties['recent_ANNOT']} --mode=full_filter --remove_sticks --savepath={clean_annot_outpath}"
         )
 
-        # TODO: Dialogue/toggle to set annotation as new annot path for existing setup
-
-        # self.config_properties['recent_ANNOT'] = clean_annot_outpath
-
     def recalculate_clumps(self):
         subprocess.run(
             f"python clumps_table.py --input_path={self.config_properties['recent_ANNOT']} --output_folder={self.config_properties['dir_CSV']}"
@@ -1035,8 +976,7 @@ class StomataGUI:
         self.image_annot.save(
             os.path.abspath(rf"{self.config_properties['recent_ANNOT']}")
         )
-        # print("Just ran the save image command")
-        # self.image_annot.show()
+        # Close the window
         self.root.destroy()  # Close the window
 
 
@@ -1044,8 +984,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = StomataGUI(root)
     root.mainloop()
-
-
-# WHERE IS YOUR LABEL :gun:
-
-# AUTOMATIC CLUMPFINDING ON ANNOT LOAD

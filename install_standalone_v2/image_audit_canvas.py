@@ -12,6 +12,8 @@ from PIL import Image, ImageTk
 # from bresenham import bresenham
 # from system_hotkey import SystemHotkey
 
+print("TESTING")
+
 
 # TODO: TEMPORARY UNTIL I CAN GET TYPING TO WORK IN PYTHON 3.12
 # type EventCoord = dict["x":int, "y":int]
@@ -655,7 +657,7 @@ def main(args: argparse.Namespace) -> bool:
         annot_section_path=args.annot_path,
     )
     canvas.master.focus_set()
-    print(canvas.master.focus_get())
+    # print(canvas.master.focus_get())
     root.mainloop()
 
     return True

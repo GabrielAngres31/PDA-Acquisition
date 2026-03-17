@@ -9,19 +9,10 @@ import src.training_utils
 def main(args: argparse.Namespace) -> bool:
     """Training entry point"""
     trainfiles = args.trainingfolder
-    # trainfiles = src.data.load_splitfile(args.trainingfolder)
-    # trainfiles = src.data.cache_file_pairs(
-    #     trainfiles, args.cachedir, args.patchsize, args.overlap
-    # )
     validationfiles = None
 
     if args.validationfolder is not None:
         validationfiles = (args.validationfolder,)
-    # if args.validationfiles is not None:
-    #     validationfiles = src.data.load_splitfile(args.validationfolder)
-    #     validationfiles = src.data.cache_file_pairs(
-    #         validationfiles, args.cachedir, args.patchsize, args.overlap, clear=False
-    #     )
 
     model = torchvision.models.mobilenet_v3_large(weights="DEFAULT")
     assert isinstance(trainfiles, tp.Iterable), "WOOPS"
@@ -33,7 +24,6 @@ def main(args: argparse.Namespace) -> bool:
         args.batchsize,
         args.pos_weight,
         args.checkpointdir,
-        # args.model_ID,
         args.outputcsv,
         validationfiles,
     )
@@ -60,12 +50,6 @@ def get_argparser() -> argparse.ArgumentParser:
         default="./checkpoints/mbn/",
         help="Where to store trained models",
     )
-    # parser.add_argument(
-    #     'model_ID',
-    #     type = str,
-    #     default = "",
-    #     help = 'Identifier to put before the date in the model name',
-    # )
     parser.add_argument(
         "--outputcsv",
         type=str,

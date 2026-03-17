@@ -9,7 +9,6 @@ import src.unet
 def main(args: argparse.Namespace) -> bool:
     print("Beginning Training")
     """Training entry point"""
-    # print(args.trainingsplit)
     trainfiles = src.data.load_splitfile(args.trainingsplit)
     trainfiles = src.data.cache_file_pairs(
         trainfiles, args.cachedir, args.patchsize, args.overlap
@@ -31,7 +30,6 @@ def main(args: argparse.Namespace) -> bool:
         args.batchsize,
         args.pos_weight,
         args.checkpointdir,
-        # args.model_ID,
         args.outputcsv,
         validationfiles,
     )

@@ -17,10 +17,10 @@ class StomataGUI:
         # Load Config options
         ### Read config file
         ### Loads: Recent BASE, ANNOT, and CSV files
-        assert os.path.exists("install_standalone_v1/stomata_gui_config.csv"), (
+        assert os.path.exists("publication_files/stomata_gui_config.csv"), (
             "ERROR: configFilePath does not exist as set!"
         )
-        self.configFilePath = "install_standalone_v1/stomata_gui_config.csv"
+        self.configFilePath = "publication_files/stomata_gui_config.csv"
 
         file_to_dir = dict(
             zip(
@@ -221,15 +221,6 @@ class StomataGUI:
         ### Setup Inference Tab
 
         # Set up Buttons
-        self.button_set_test = tk.Button(
-            self.inference_tab, text="Test Split", command=self.set_test_split
-        )
-        self.button_set_test.grid(row=0, column=0, padx=10, pady=10)
-
-        self.button_set_val = tk.Button(
-            self.inference_tab, text="Val Split", command=self.set_val_split
-        )
-        self.button_set_val.grid(row=0, column=1, padx=10, pady=10)
 
         self.button_run_inference = tk.Button(
             self.inference_tab, text="Run Inference", command=self.run_inference
@@ -249,18 +240,15 @@ class StomataGUI:
         self.button_recalculate_clumps.grid(row=2, column=1, padx=10, pady=10)
 
         ### Setup Training Tab
-
-        self.button_train_opentest = tk.Button(
-            self.training_tab, text="Set Test Folder", command=self.func_train_opentest
+        self.button_set_test = tk.Button(
+            self.training_tab, text="Test Split", command=self.set_test_split
         )
-        self.button_train_opentest.grid(row=0, column=0, padx=10, pady=10)
+        self.button_set_test.grid(row=0, column=0, padx=10, pady=10)
 
-        self.button_train_openval = tk.Button(
-            self.training_tab,
-            text="Set Validation Folder",
-            command=self.func_train_openval,
+        self.button_set_val = tk.Button(
+            self.training_tab, text="Val Split", command=self.set_val_split
         )
-        self.button_train_openval.grid(row=0, column=1, padx=10, pady=10)
+        self.button_set_val.grid(row=0, column=1, padx=10, pady=10)
 
         self.button_train_run = tk.Button(
             self.training_tab, text="Run Training", command=self.func_train_run

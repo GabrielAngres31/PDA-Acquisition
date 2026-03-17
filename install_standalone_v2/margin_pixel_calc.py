@@ -27,17 +27,11 @@ def main(args: argparse.Namespace) -> bool:
                     except IndexError:
                         continue
     unique_marginpixels = list(set(marginpixels))
-    # print("Number of margin pixels:", len(unique_marginpixels))
-    # print(len(marginpixels))
-    # print(len(unique_marginpixels))
-    # print(pixel)
-    # print(x, ",", y)
 
     blurpixels = []
     for u in unique_marginpixels:
         ux = u[0]
         uy = u[1]
-        # [blurpixels.append(r) for r in [(ux, uy), (ux, uy - 1), (ux, uy + 1), (ux - 1, uy), (ux + 1, uy), (ux - 2, uy), (ux + 2, uy), (ux, uy - 2), (ux, uy + 2), (ux - 1, uy - 1), (ux - 1, uy + 1), (ux + 1, uy - 1), (ux + 1, uy + 1)]]
         [
             blurpixels.append(r)
             for r in [
