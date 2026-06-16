@@ -5,10 +5,10 @@ import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
+import skimage.metrics
 from scipy.sparse import SparseEfficiencyWarning
 from skimage.io import imread
 from skimage.measure import label
-from skimage.metrics import contingency_table
 
 warnings.simplefilter("ignore", SparseEfficiencyWarning)
 
@@ -53,7 +53,7 @@ def main(args: argparse.Namespace) -> bool:
 
     # Check dimensions match, then create contingency table
     try:
-        intersections = contingency_table(nd_tru, nd_inf)
+        intersections = skimage.metrics.contingency_table(nd_tru, nd_inf)
     except Exception:
         if nd_inf.shape != nd_tru.shape:
             print(f"Dimension Mismatch! INF: {nd_inf.shape} TRU: {nd_tru.shape}")
@@ -129,6 +129,24 @@ def main(args: argparse.Namespace) -> bool:
 
     obj_precision = tp_objects / (len(pred_labels) + 1e-10)
     obj_recall = tp_objects / (len(gt_labels) + 1e-10)
+
+    # if args.to_table:
+    #     with open(f"table_{args.texttag}.csv", "w", newline="") as file:
+    #         writer = csv.writer(file)
+    #         writer.writerow(
+    #             [
+    #                 "filename",
+    #                 "precision",
+    #                 "recall",
+    #                 "avg_IoU",
+    #                 "avg_dice",
+    #                 "total_error",
+    #                 "obj_ct",
+    #                 "obj_prec",
+    #                 "obj_recall"
+    #             ]
+
+    #         )
 
     # Number outs to terminal
     print(f"--- Results for: {os.path.basename(args.guess_image)} ---")
