@@ -50,6 +50,14 @@ def get_argparser() -> argparse.ArgumentParser:
         help="Set this to True to remove stick-like projections from rounded features.",
     )
     parser.add_argument(
+        "--brightness_threshold",
+        default=188,
+    )
+    parser.add_argument(
+        "--remove_large_threshold",
+        default=3750,
+    )
+    parser.add_argument(
         "--savepath", type=str, help="Filepath to save generated image to."
     )
     return parser
@@ -58,22 +66,29 @@ def get_argparser() -> argparse.ArgumentParser:
 def main(args: argparse.Namespace) -> bool:
 
     guess_in_image = imread(args.image_in)
+    threshold = args.brightness_threshold
+    cutoff = args.remove_large_threshold
 
     if guess_in_image.ndim == 3:
         guess_in_image = guess_in_image[:, :, 0]
 
-    def process_image_largeobjects(img, threshold=188, cutoff=3750):
+    def process_image_largeobjects(img, threshold=threshold, cutoff=cutoff):
         """
         Loads an image, thresholds it to binary, and removes objects that have a greater concave or rectangular area than convex area.
+        Hand-tuned arguments are based on what appeared to be most uniformly effective with the sample data provided.
+
 
         Args:
-            image_filepath (str): The path to the input image.
-            threshold_constant (int): The threshold value (0-255). Pixels above this
-                                    become 255, others become 0. Default set to hand-tuned value of 10.
-            min_object_size_cutoff (int): The maximum size (in pixels) for an object
+            img (str): The path to the input image.
+            threshold (int): The threshold value (0-255). Pixels above this
+                                    become 255, others become 0. Default set to hand-tuned value of 188.
+                                    Adjust higher for brighter images, and lower for darker images, until the desire quality is achieved.
+            cutoff (int): The maximum size (in pixels) for an object
                                           to be KEPT. Objects *larger* than this
                                           will be removed (set to black).
                                           Default set to hand-tuned value of 3750.
+                                          If you have objects you wish to retain that are larger than this size, you can set the value higher.
+                                          If you have smaller maximum-size objects, feel free to lower this threshold to ~1.2x the observed size of the largest object.
         Returns:
             numpy.ndarray: The processed image.
         """

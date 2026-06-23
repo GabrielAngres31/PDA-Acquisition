@@ -39,13 +39,14 @@ python inference.py --model=install_standalone/model/2025-02-12_19h-14m-25s/last
 python inference_mbn.py --model="install_standalone/checkpoints/mbn/2025-07-30_12h-05m-34s/last.e029.pth" --input_folder=C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/training_folder_clumpcatcher/val/single
 
 python training_mbn.py --trainingfolder="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/training_folder_clumpcatcher/train/" --validationfolder="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/training_folder_clumpcatcher/val/"  --outputcsv="testtable_retest.csv"
+
+python freestanding_val.py --model=checkpoints/comp_nosmalls_2025-05-21_12h-13m-25s/last.e029.pth --validationsplit=C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/nosmallsplitval_05-2025.csv
 ```
 
 ### Image Cleaning and Manipulation
 ```bash
 # Image Cleaner
 #   Clean an image on a threshold ( [0-1) ) with Otsu, or on only an Otsu threshold
-# TODO: Determine if clean_image.py or imagecleaner.py is the most recent/useful one
 python clean_image.py --input_path="C:\Users\Gabriel\Documents\GitHub\PDA-Acquisition\only_pored\ANNOT\basl-2_5_COT_04_rotated_MAX_basl-2_5dpg_110321_2_2_abaxial_merged_ANNOT.png" --filter_type="otsu" --save_image_as="basl-2_5_04_128_ANNOT"
 
 # Stomata Splitter
@@ -53,6 +54,9 @@ python clean_image.py --input_path="C:\Users\Gabriel\Documents\GitHub\PDA-Acquis
 # TODO: commandify the splitter, remove magic numbers
 python stomatasplitter.py
 
+
+# NOTE:
+# image_audit_canvas.py is not meant to be directly run, but is called by tkinter_GUI.py.
 ```
 
 ### Statistics
@@ -63,12 +67,21 @@ python clumps_table.py --input_path="cleaned_images_default/basl-2_5_04_128_ANNO
 
 # Contingency Calculator
 #   
-
-python contingency.py --ground_truth="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/mbn_scrapbox_folder/new_img_annot/CLN__cotE05.png" --guess_image="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/inference/BASE_cotE05_BLEANED.png" --show_image=True --output_folder_table=. --texttag="PUBFIND"
+python contingency_plus.py --ground_truth="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/mbn_scrapbox_folder/new_img_annot/CLN__cotE05.png" --guess_image="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/inference/BASE_cotE05_BLEANED.png" --show_image=True --output_folder_table=. --texttag="PUBFIND"
 
 # Contrast Mapper
 #   
 python contrastmap.py --base_img="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/mbn_scrapbox_folder/new_img_annot/CLN__cotE05.png" --compare_img="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/inference/BASE__cotE05_BLASTED.png" --threshold=0 --output_path="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/publication_compare/contingency/images/cot6_64" --show_image=True
 
-# TODO: Find out what margin_pixel_calc.py does
+# Margin Pixel Calculator
+# 
+python margin_pixel_calc.py --input_path=C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/publication_compare/hitsandmisses/annot/cot6_ANNOT.png --compare_path=c:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/publication_compare/hitsandmisses/scan/cot6.png
+```
+
+
+# OTHER
+```bash
+
+# Stomata_splitter.py was run by itself and requires grabfile.csv.
+# This file is not necessary to run any analyses but is kept for reproducibility.
 ```
