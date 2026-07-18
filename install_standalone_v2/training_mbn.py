@@ -12,10 +12,10 @@ def main(args: argparse.Namespace) -> bool:
     validationfiles = None
 
     if args.validationfolder is not None:
-        validationfiles = (args.validationfolder,)
+        validationfiles = args.validationfolder
 
     model = torchvision.models.mobilenet_v3_large(weights="DEFAULT")
-    assert isinstance(trainfiles, tp.Iterable), "WOOPS"
+    assert isinstance(trainfiles, tp.Iterable), "That's not a tp.Iterable!"
     model = src.training_utils.run_training_mbn(
         model,
         trainfiles,

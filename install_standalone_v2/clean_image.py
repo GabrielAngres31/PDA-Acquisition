@@ -97,7 +97,7 @@ def clean_image(
     if saveas:
         # Save the cleaned image if saveas path is provided
         src.data.save_image(
-            f"cleaned_images_default/{saveas}.png", final_image.astype(np.float32)
+            f"output_folder/{saveas}.png", final_image.astype(np.float32)
         )
     if return_im:
         return final_image  # Return the cleaned image if return_im is True

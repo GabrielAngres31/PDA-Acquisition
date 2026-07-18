@@ -45,6 +45,7 @@ def run_patchwise_inference(
     else:
         iterator = input_patches
     # Pregenerate a list of pixels along the border to check for "relevance". If none of these pixels are sufficiently bright, the inference loop skips that frame and moves to the next one.
+    # Because stomata are generally not free-floating, this method will most likely not miss any stomata.
     indices_check = [
         n
         for x in range(0, patchsize, 16)
@@ -65,7 +66,7 @@ def run_patchwise_inference(
             # RESULTS MAY VARY!
             check = not any([x_patch[0][a, b] > 0.25 for (a, b) in indices_check])
             if check:
-                # Write -10 to patch, which upon applying thr sigmoid function (1/[1+exp(-x)]) will evaluate to 0.0003 (<< 1/256 = ~0.004)
+                # Write -10 to patch, which upon applying the sigmoid function (1/[1+exp(-x)]) will evaluate to 0.0003 (<< 1/256 = ~0.004)
                 # Which will be converted to a #000000 or BLACK pixel on subsequent normalization to [0, 255] monochrome.
                 y_patch = torch.full((1, 1, 256, 256), -10)
                 output_patches.append(y_patch)

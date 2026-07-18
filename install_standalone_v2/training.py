@@ -22,7 +22,7 @@ def main(args: argparse.Namespace) -> bool:
         )
     print("Acquiring Model...")
     model = src.unet.UNet()
-    model = src.training_utils.run_training(
+    model = src.training_utils.run_traaining(
         model,
         trainfiles,
         args.epochs,

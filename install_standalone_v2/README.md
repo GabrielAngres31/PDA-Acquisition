@@ -32,23 +32,31 @@ python tkinter_GUI.py
 ```bash
 # TODO: Training/inference for segmentation and mbn/paircaller
 
-python training.py --trainingsplit="nosmallsplitval_05-2025.csv" --patchsize=128 --overlap=16 --outputcsv="mini_nonoise_p128_o16" --epochs=30
+ # CHECKED!
+python training.py --trainingsplit="publication_files/splits/nosmallsplitval_06-2025.csv" --patchsize=128 --overlap=16 --outputcsv="/demo_split_128-16_07172026" --epochs=1
 
-python inference.py --model=install_standalone/model/2025-02-12_19h-14m-25s/last.e029.pth --input="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/SCD_training_data/source_images/BASE/cotE12.tif" --overlap=128 --outputname="__PUB-WT5COTE12.png" --outputdir="Documents/" --skip_empty=True --progress=True
+ # CHECKED!
+python inference.py --model="checkpoints/2026-07-17_13h-25m-52s/last.e000.pth" --input="publication_files/image_data/BASE_smalls/cotE10.tif" --overlap=128 --outputname="__DEMO-COTE10.png" --outputdir="install_standalone_v2/DEMO_OUT/" --skip_empty=True --progress=True   
 
-python inference_mbn.py --model="install_standalone/checkpoints/mbn/2025-07-30_12h-05m-34s/last.e029.pth" --input_folder=C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/training_folder_clumpcatcher/val/single
+ # CHECKED!
+python training_mbn.py --trainingfolder="training_folder_clumpcatcher/train" --validationfolder="training_folder_clumpcatcher/val"  --outputcsv="DEMO_testtable.csv" --epochs=2 --checkpointdir="checkpoints/mbn/"
 
-python training_mbn.py --trainingfolder="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/training_folder_clumpcatcher/train/" --validationfolder="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/training_folder_clumpcatcher/val/"  --outputcsv="testtable_retest.csv"
+ # CHECKED!
+python inference_mbn.py --model="checkpoints/mbn/2026-07-17_14h-27m-35s/last.e001.pth" --input_folder=training_folder_clumpcatcher/val/single
 
-python freestanding_val.py --model=checkpoints/comp_nosmalls_2025-05-21_12h-13m-25s/last.e029.pth --validationsplit=C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/install_standalone/nosmallsplitval_05-2025.csv
+ # CHECKED!
+python freestanding_val.py --model=checkpoints/model/2025-02-12_19h-14m-25s/last.e029.pth --validationsplit="publication_files/splits/nosmallsplitval_06-2025.csv"
 ```
 
 ### Image Cleaning and Manipulation
 ```bash
+
+ # CHECKED!
 # Image Cleaner
 #   Clean an image on a threshold ( [0-1) ) with Otsu, or on only an Otsu threshold
-python clean_image.py --input_path="C:\Users\Gabriel\Documents\GitHub\PDA-Acquisition\only_pored\ANNOT\basl-2_5_COT_04_rotated_MAX_basl-2_5dpg_110321_2_2_abaxial_merged_ANNOT.png" --filter_type="otsu" --save_image_as="basl-2_5_04_128_ANNOT"
+python clean_image.py --input_path="publication_files/image_data/ANNOT_smalls/basl-2_5_COT_04_rotated_MAX_basl-2_5dpg_110321_2_2_abaxial_merged_ANNOT.png" --filter_type="otsu" --save_image_as="DEMO_cleanimage"
 
+# VERIFYING
 # Stomata Splitter
 #   generate centered images of stomata based on a cleaned annotation for pair-calling training or inference.
 # TODO: commandify the splitter, remove magic numbers
@@ -85,3 +93,8 @@ python margin_pixel_calc.py --input_path=C:/Users/Gabriel/Documents/GitHub/PDA-A
 # Stomata_splitter.py was run by itself and requires grabfile.csv.
 # This file is not necessary to run any analyses but is kept for reproducibility.
 ```
+
+
+
+# Example Workflow
+
