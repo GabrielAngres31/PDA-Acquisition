@@ -75,7 +75,7 @@ def main(args: argparse.Namespace) -> bool:
     half_crop = args.crop_size // 2
     output_dir = args.output_dir
 
-    # Starting seed counters to ensure deterministic 80/20 train/val sequencing
+    # Starting seed counters to ensure deterministic train/val sequencing
     # A value of (split_ratio - 1) makes the first item land on index % split_ratio != 0 (train)
     start_counter = args.split_ratio - 1
     s = start_counter  # Single counter
