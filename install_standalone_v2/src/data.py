@@ -1,3 +1,4 @@
+import csv
 import os
 import shutil
 import typing as tp
@@ -11,26 +12,53 @@ FilePair = tp.Tuple[str, str]
 FilePairs = tp.List[FilePair]
 
 
-def load_splitfile(splitfile: str) -> FilePairs:
-    """Read a .csv file containing paths to input images and annnotations."""
-    text = open(splitfile, "r").read()
-    lines = text.split("\n")
-    pairs = []
-    i = 0
-    DEBUG_LINE = "test value"
-    for line in lines:
-        paths = line.split(",")
-        assert len(paths) == 2, (
-            f"Unexpected file format: {line}: Line {i}, Previous Line {DEBUG_LINE}"
-        )
+# def load_splitfile(splitfile: str) -> FilePairs:
+#     """Read a .csv file containing paths to input images and annnotations."""
+#     text = open(splitfile, "r").read()
+#     lines = text.split("\n")
+#     pairs = []
+#     i = 0
+#     DEBUG_LINE = "test value"
+#     for line in lines:
+#         paths = line.split(",")
+#         assert len(paths) == 2, (
+#             f"Unexpected file format: {line}: Line {i}, Previous Line {DEBUG_LINE}"
+#         )
 
-        inputpath, annotationpath = [p.strip() for p in paths]
-        assert os.path.exists(inputpath), f'Could not find "{inputpath}"'
-        # print(inputpath)
-        assert os.path.exists(annotationpath), f'Could not find "{annotationpath}"'
-        DEBUG_LINE = line
-        pairs.append((inputpath, annotationpath))
-        i += 1
+#         inputpath, annotationpath = [p.strip() for p in paths]
+#         assert os.path.exists(inputpath), f'Could not find "{inputpath}"'
+#         # print(inputpath)
+#         assert os.path.exists(annotationpath), f'Could not find "{annotationpath}"'
+#         DEBUG_LINE = line
+#         pairs.append((inputpath, annotationpath))
+#         i += 1
+#     return pairs
+
+
+def load_splitfile(splitfile: str) -> FilePairs:
+    """Read a .csv file containing paths to input images and annotations."""
+    pairs = []
+
+    with open(splitfile, mode="r", newline="", encoding="utf-8") as f:
+        reader = csv.reader(f)
+        prev_line = "test value"
+
+        for i, row in enumerate(reader):
+            # Skip empty lines
+            if not row:
+                continue
+
+            assert len(row) == 2, (
+                f"Unexpected file format: {row}: Line {i}, Previous Line {prev_line}"
+            )
+
+            inputpath, annotationpath = [p.strip() for p in row]
+            assert os.path.exists(inputpath), f'Could not find "{inputpath}"'
+            assert os.path.exists(annotationpath), f'Could not find "{annotationpath}"'
+
+            pairs.append((inputpath, annotationpath))
+            prev_line = row
+
     return pairs
 
 
@@ -80,7 +108,9 @@ def cache_file_pairs(
     for inputpath, annotationpath in pairs:
         inputdata = load_image(inputpath, "L")
         annotationdata = load_annotation(annotationpath)
-        assert inputdata.shape == annotationdata.shape
+        assert inputdata.shape == annotationdata.shape, (
+            f"raw image shape {inputdata.shape} is not equal to annotation shape {annotationdata.shape}. Paths were {inputpath} and {annotationpath}"
+        )
 
         inputpatches = slice_into_patches_with_overlap(inputdata, patchsize, overlap)
         annotationpatches = slice_into_patches_with_overlap(
