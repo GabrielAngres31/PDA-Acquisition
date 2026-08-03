@@ -67,6 +67,14 @@ def generate_compare(former_img, latter_img, threshold, concordance_highlight):
     # A positive value represents a feature MORE present in the first image than the second. This will be shown in ORANGE.
     # A negative value represents a feature LESS present in the first image than in the second. This will be shown in BLUE.
     print(concordance_highlight)
+    if former_img.shape != latter_img.shape:
+        print(
+            f"Dimension mismatch warning between former {former_img.shape} and latter {latter_img.shape}. Attempting to correct."
+        )
+        if len(former_img.shape) == 3:
+            former_img = former_img[:, :, 0]
+        if len(latter_img.shape) == 3:
+            latter_img = latter_img[:, :, 0]
     if concordance_highlight:
         delta_RGB_diff = RGBgen_from_vecdiff(
             former_img.astype(np.int16), latter_img.astype(np.int16), threshold
@@ -96,7 +104,10 @@ def get_argparser() -> argparse.ArgumentParser:
         metavar="[0-255]",
         help="Absolute value threshold below which everything is given the shaded threshold value. Set to 0 to show all absolute differences. Set to 255 to highlight all pixels that do not exactly match, at maximum brightness. Set to an intermediate value to arbitratily visualize small differences.",
     )
-    parser.add_argument("--output_path", type=str, help="Output file to save image.")
+    parser.add_argument(
+        "--output_path", type=str, help="Output file folder to save image."
+    )
+    parser.add_argument("--output_name", type=str, help="Output name for image.")
     parser.add_argument(
         "--show_image",
         type=bool,
@@ -123,7 +134,7 @@ def main(args: argparse.Namespace) -> bool:
         generate_compare(base, compare, args.threshold, args.concordance_highlight)
     )
     if args.output_path:
-        img_out.save(args.output_path + ".png")
+        img_out.save(args.output_path + args.output_name + ".png")
     if args.show_image:
         img_out.show()
 

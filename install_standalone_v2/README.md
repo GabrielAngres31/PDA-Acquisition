@@ -165,11 +165,12 @@ python contingency_plus.py --ground_truth="publication_files/image_data/ANNOT_sm
   --base_img                Path to base image.
   --compare_img             Path to comparison image.
   --threshold               Absolute value threshold below which everything is given the shaded threshold value. Set to 0 to show all absolute differences. Set to 255 to highlight all pixels that do not exactly match, at maximum brightness. Set to an intermediate value to arbitratily visualize small differences.
-  --output_path             Output file to save image.
+  --output_path             Output file folder to save image.
+  --output_name             Output name for image.
   --show_image              Whether to display the image using Image imshow().
   --concordance_highlight   Whether to recolor areas of perfect concordance as pink.
 """
-python contrastmap.py --base_img="publication_files/image_data/ANNOT_smalls/cotE10_ANNOT.png" --compare_img="DEMO_OUT/cotE10.tif__DEMO-COTE10.png.output.png" --threshold=0 --output_path="DEMO_OUT/DEMO_contrast.png" --show_image=True
+python contrastmap.py --base_img="publication_files/image_data/ANNOT_smalls/cotE10_ANNOT.png" --compare_img="DEMO_OUT/cotE10.tif__DEMO-COTE10.png.output.png" --threshold=0 --output_path="DEMO_OUT/" --output_name="DEMO_contrast" --show_image=True
 
 
 # Margin Pixel Calculator

@@ -64,7 +64,7 @@ def run_patchwise_inference(
             # Check if any of the pixels in the pregenerated indices list are "bright" enough to be relevant.
             # This value is hand-tuned - minimum and maximum ranges for tensor values are not normalized to [0,255] so I picked what appeared to work in the general case.
             # RESULTS MAY VARY!
-            check = not any([x_patch[0][a, b] > 0.25 for (a, b) in indices_check])
+            check = not any(x_patch[0][a, b] > 0.25 for (a, b) in indices_check)
             if check:
                 # Write -10 to patch, which upon applying the sigmoid function (1/[1+exp(-x)]) will evaluate to 0.0003 (<< 1/256 = ~0.004)
                 # Which will be converted to a #000000 or BLACK pixel on subsequent normalization to [0, 255] monochrome.
