@@ -18,10 +18,10 @@ class StomataGUI:
         # Load Config options
         ### Read config file
         ### Loads: Recent BASE, ANNOT, and CSV files
-        assert os.path.exists("stomata_gui_config.csv"), (
+        self.configFilePath = "IAC_hardstore/stomata_gui_config.csv"
+        assert os.path.exists(self.configFilePath), (
             "ERROR: configFilePath does not exist as set!"
         )
-        self.configFilePath = "stomata_gui_config.csv"
 
         file_to_dir = dict(
             zip(
@@ -791,28 +791,11 @@ class StomataGUI:
         self.df_coords
         self.df_coords.to_csv(write_path)
 
-    ### Unused code: ability to clean images in-place.
+    ### Unimplemented function code: ability to clean images in-place.
     ###     Currently, you have to clean the image before loading it directly.
 
-    def clean_inplace(self):  # CURRENTLY DOES NOT WORK!
+    def clean_inplace(self):
         pass
-
-    #     annotpath = self.config_properties["recent_ANNOT"]
-    #     img = np.asarray(Image.open(annotpath))
-    #     # print(type(img))
-    #     if np.unique(img).size != 2:
-    #         # cln_img = cl.clean_image(img, 'clumps', 'otsu', return_im = True)
-    #         # cln_tbl = cf.quantify_clumps_skimage(cln_img, saveas=f"annotation_helper_files/{os.path.splitext(os.path.basename())[0]}.csv") # Run the Clumpfinder!!!
-    #         # self.config_properties['recent_CSV'] = f"annotation_helper_files/{os.path.splitext(os.path.basename())[0]}.csv"
-    #         self.import_csv(
-    #             f"annotation_helper_files/{os.path.splitext(os.path.basename())[0]}.csv"
-    #         )
-    #         # return cln_tbl
-
-    #     # Check for currently loaded annot file
-    #     # Check value range is two values 0 and 255 or 0 and 1 - confirm!!!
-    #     ### If not, apply cleaning per clean_image.py
-    #     print(f"Number of unique values is != 2: [ {len(set(img.getdata()))} ]")
 
     def mark_note(self, note_text):
         index = self.bbox_number.get() - 1
@@ -870,8 +853,8 @@ class StomataGUI:
         self.confirm_annot_corner = [-self.xc(), -self.yc()]
 
         # Save the two images to that folder with defined names
-        save_base.convert("L").save("annotation_helper_files/save_base_file.png")
-        save_annot.convert("L").save("annotation_helper_files/save_annot_file.png")
+        save_base.convert("L").save("IAC_hardstore/save_base_file.png")
+        save_annot.convert("L").save("IAC_hardstore/save_annot_file.png")
 
         # Pass the paths as an arg to the subprocess command
         edit_root = tk.Toplevel(self.root)
@@ -881,8 +864,8 @@ class StomataGUI:
             edit_root,
             window_size,
             window_size,
-            base_section_path="annotation_helper_files/save_base_file.png",
-            annot_section_path="annotation_helper_files/save_annot_file.png",
+            base_section_path="IAC_hardstore/save_base_file.png",
+            annot_section_path="IAC_hardstore/save_annot_file.png",
             pixel_size=pixel_size,
         )
 
@@ -899,7 +882,7 @@ class StomataGUI:
     def confirm_annot(self):
         try:
             global crop_coords
-            img_repaste = Image.open("annotation_helper_files/save_annot_file.png")
+            img_repaste = Image.open("IAC_hardstore/save_annot_file.png")
             img_repaste = img_repaste.convert("L")
             self.image_annot = self.image_annot.convert("L")
             self.image_annot.paste(img_repaste, (crop_coords[0], crop_coords[1]))

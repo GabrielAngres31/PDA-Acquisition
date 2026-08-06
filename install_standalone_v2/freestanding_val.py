@@ -92,12 +92,7 @@ def get_argparser() -> argparse.ArgumentParser:
 if __name__ == "__main__":
     args = get_argparser().parse_args()
 
-    # start_time = time.time()
     ok = main(args)
-    # end_time = time.time()
-
-    # execution_time = end_time - start_time
-    # print("Execution time:", execution_time)
 
     if ok:
         pass

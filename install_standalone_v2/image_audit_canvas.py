@@ -614,7 +614,7 @@ class PixelCanvas:
         self.on_closing(self)
 
     def on_closing(self):
-        compare = Image.open("annotation_helper_files/changed_annot_file.png")
+        compare = Image.open("IAC_hardstore/changed_annot_file.png")
         res = messagebox.askyesnocancel("Exit Application", "Commit changes to image?")
         ## CANCEL
         if res is None:
@@ -622,7 +622,7 @@ class PixelCanvas:
         ## YES
         elif res:
             out = Image.fromarray(self.annot_section_array, mode="L")
-            out.save("annotation_helper_files/save_annot_file.png")
+            out.save("IAC_hardstore/save_annot_file.png")
             if compare == out:
                 pass
         ## NO (implicit, doesn't save image)
@@ -634,13 +634,13 @@ def get_argparser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--base_path",
         type=str,
-        default="annotation_helper_files/save_base_file.png",
+        default="IAC_hardstore/save_base_file.png",
         help="Image section for Base.",
     )
     parser.add_argument(
         "--annot_path",
         type=str,
-        default="annotation_helper_files/save_annot_file.png",  # FOR SOME REASON, THIS DOESN'T WORK WITH PNG IMAGES. FIX!!!
+        default="IAC_hardstore/save_annot_file.png",  # FOR SOME REASON, THIS DOESN'T WORK WITH PNG IMAGES. FIX!!!
         help="Image section for Annot.",
     )
 
