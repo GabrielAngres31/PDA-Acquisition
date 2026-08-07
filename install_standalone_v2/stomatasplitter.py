@@ -24,7 +24,7 @@ print(grab_df.head())
 destroy = True
 
 if destroy:
-    for dirpath, dirnames, filenames in os.walk("training_folder_clumpcatcher"):
+    for dirpath, dirnames, filenames in os.walk("PUB_training_folder_clumpcatcher"):
         for filename in filenames:
             file_path = os.path.join(dirpath, filename)
             try:
@@ -69,7 +69,7 @@ for row in grab_df.iterrows():
 
         clump = base.crop((xl, yu, xr, yd))
         clump.save(
-            f"training_folder_clumpcatcher/{saveclass(c if numdict[clmvals['Notes']] else s)}/{savetag}/{os.path.splitext(os.path.basename(vals['base']))[0]}_{clm[0]}_{xc:04d}x_{yc:04d}y.png"
+            f"PUB_training_folder_clumpcatcher/{saveclass(c if numdict[clmvals['Notes']] else s)}/{savetag}/{os.path.splitext(os.path.basename(vals['base']))[0]}_{clm[0]}_{xc:04d}x_{yc:04d}y.png"
         )
 
         s += numdict[clmvals["Notes"]]
@@ -77,11 +77,11 @@ for row in grab_df.iterrows():
 
 
 # Additional loop with the same logic as above called on some additional file sets/csvs to augment the training data after the initial training rounds.
-for cl in glob.glob("additional_clump_images/clumps/*.csv"):
+for cl in glob.glob("PUB_additional_clump_images/clumps/*.csv"):
     clfl = pd.read_csv(cl)
     q = 4
     img = Image.open(
-        f"additional_clump_images/base/{os.path.splitext(os.path.basename(cl))[0]}.tif"
+        f"PUB_additional_clump_images/base/{os.path.splitext(os.path.basename(cl))[0]}.tif"
     )
     for p in clfl.iterrows():
         v = p[1]
@@ -92,6 +92,6 @@ for cl in glob.glob("additional_clump_images/clumps/*.csv"):
         xl, xr, yu, yd = xc - 36, xc + 36, yc - 36, yc + 36
         glump = img.crop((xl, yu, xr, yd))
         glump.save(
-            f"training_folder_clumpcatcher/{('train' if q % 5 else 'val')}/cluster/{os.path.splitext(os.path.basename(cl))[0]}_{cl[0]}_{xc:04d}x_{yc:04d}y.png"
+            f"PUB_training_folder_clumpcatcher/{('train' if q % 5 else 'val')}/cluster/{os.path.splitext(os.path.basename(cl))[0]}_{cl[0]}_{xc:04d}x_{yc:04d}y.png"
         )
         q += 1

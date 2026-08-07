@@ -134,7 +134,7 @@ def main(args: argparse.Namespace) -> bool:
         generate_compare(base, compare, args.threshold, args.concordance_highlight)
     )
     if args.output_path:
-        img_out.save(args.output_path + args.output_name + ".png")
+        img_out.save(args.output_path + "/" + args.output_name + ".png")
     if args.show_image:
         img_out.show()
 

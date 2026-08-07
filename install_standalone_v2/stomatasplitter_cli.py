@@ -28,14 +28,14 @@ def get_argparser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output_dir",
         type=str,
-        default="training_folder_clumpcatcher",
+        default="PUB_training_folder_clumpcatcher",
         help="Directory to save extracted crops (default: training_folder_clumpcatcher)",
     )
     parser.add_argument(
         "--additional_dir",
         type=str,
-        default="additional_clump_images",
-        help="Directory containing augmented data (default: additional_clump_images)",
+        default="PUB_additional_clump_images",
+        help="Directory containing augmented data (default: PUB_additional_clump_images)",
     )
     parser.add_argument(
         "--crop_size",

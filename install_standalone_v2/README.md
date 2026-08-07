@@ -48,7 +48,7 @@ python tkinter_GUI.py
   --batchsize           Number of samples in a batch per training step
   --pos_weight          Extra training weight on the positive class
 """
-python training.py --trainingsplit "publication_files/splits/nosmallsplitval_06-2025.csv" --patchsize 128 --overlap 16 --outputcsv "/demo_split_128-16_07172026" --epochs 1
+python training.py --trainingsplit "publication_files/splits/nosmallsplitval_06-2025.csv" --patchsize 128 --overlap 16 --outputcsv "/demo_split_128-16_test" --epochs 1
 
 """
   --model               Path to saved model
@@ -63,8 +63,7 @@ python training.py --trainingsplit "publication_files/splits/nosmallsplitval_06-
   --weights_only        
   --skip_empty          Whether the sliding window skips frames that are "empty" (border pixel average >1/255)
 """
-python inference.py --model="checkpoints/model/2025-02-12_19h-14m-25s/last.e029.pth" --input="publication_files/image_data/BASE_smalls/cotE10.tif" --overlap=128 --outputname="__DEMO-COTE10.png" --outputdir="install_standalone_v2/DEMO_OUT/" --skip_empty=True --progress=True   
-
+python inference.py --model="checkpoints/model/2025-02-12_19h-14m-25s/last.e029.pth" --input="publication_files/image_data/BASE_smalls/cotE10.tif" --overlap=128 --outputname="__DEMO-COTE10.png" --outputdir="install_standalone_v2/output_folder/" --skip_empty=True --progress=True   
 """
   --trainingfolder      Path to folder containing class-labeled images to be used for training
   --validationfolder    Path to folder containing class-labeled images to be used for validation
@@ -75,7 +74,7 @@ python inference.py --model="checkpoints/model/2025-02-12_19h-14m-25s/last.e029.
   --batchsize           Number of samples in a batch per training step
   --pos_weight          Extra training weight on the positive class
 """
-python training_mbn.py --trainingfolder="training_folder_clumpcatcher/train" --validationfolder="training_folder_clumpcatcher/val"  --outputcsv="DEMO_testtable.csv" --epochs=2 --checkpointdir="checkpoints/mbn/"
+python training_mbn.py --trainingfolder="PUB_training_folder_clumpcatcher/train" --validationfolder="PUB_training_folder_clumpcatcher/val"  --outputcsv="DEMO_testtable.csv" --epochs=2 --checkpointdir="checkpoints/mbn/"
 
 
 """  
@@ -85,7 +84,7 @@ python training_mbn.py --trainingfolder="training_folder_clumpcatcher/train" --v
   --outputdir           Path to outputfolder
   --outputname          Optional suffix before file type
 """
-python inference_mbn.py --model="checkpoints/mbn/2026-07-17_14h-27m-35s/last.e001.pth" --input_folder=training_folder_clumpcatcher/val/single
+python inference_mbn.py --model="checkpoints/mbn/2026-07-17_14h-27m-35s/last.e001.pth" --input_folder=PUB_training_folder_clumpcatcher/val/single
 
 
 
@@ -122,13 +121,13 @@ python clean_image.py --input_path="publication_files/image_data/ANNOT_smalls/ba
 #   Data is an input for single/cluster calling.
 """
   --grab_list           Path to the CSV list of files to parse                          (default: grabfile.csv)
-  --output_dir          Directory to save extracted crops                               (default: training_folder_clumpcatcher)
-  --additional_dir      Directory containing augmented data                             (default: additional_clump_images)
+  --output_dir          Directory to save extracted crops                               (default: PUB_training_folder_clumpcatcher)
+  --additional_dir      Directory containing augmented data                             (default: PUB_additional_clump_images)
   --crop_size           Total width/height of the square crop                           (default: 72)
   --split_ratio         Every Nth image goes to validation to achieve an N-1/1 split    (default: 5)
   --keep_existing       Set this flag to prevent clearing the output folder before running
 """
-python stomatasplitter_cli.py --grab_list="grabfile.csv" --output_dir="DEMO_clumpcatch" 
+python stomatasplitter_cli.py --grab_list="grabfile.csv" --output_dir="output_folder/DEMO_clumpcatch" 
 
 
 # NOTE:
@@ -146,7 +145,7 @@ python stomatasplitter_cli.py --grab_list="grabfile.csv" --output_dir="DEMO_clum
   --properties          Desired properties to calculate for each clump.
   --output_folder       Which folder to store the output table in.
 """
-python clumps_table.py --input_path="publication_files/image_data/ANNOT_smalls/cotE10_ANNOT.png" --output_folder="DEMO_OUT"
+python clumps_table.py --input_path="publication_files/image_data/ANNOT_smalls/cotE10_ANNOT.png" --output_folder="output_folder"
 
 
 # Contingency Calculator
@@ -157,7 +156,7 @@ python clumps_table.py --input_path="publication_files/image_data/ANNOT_smalls/c
   --texttag             Label for output histogram
   --output_folder_table Output folder
 """
-python contingency_plus.py --ground_truth="publication_files/image_data/ANNOT_smalls/cotE10_ANNOT.png" --guess_image="output_folder/DEMO_E10_Cleaned.png" --show_image --output_folder_table="DEMO_OUT" --texttag="DEMO_CONTINGENT"
+python contingency_plus.py --ground_truth="publication_files/image_data/ANNOT_smalls/cotE10_ANNOT.png" --guess_image="output_folder/DEMO_E10_Cleaned.png" --show_image --output_folder_table="output_folder" --texttag="DEMO_CONTINGENT"
 
 
 # Contrast Mapper
@@ -170,7 +169,7 @@ python contingency_plus.py --ground_truth="publication_files/image_data/ANNOT_sm
   --show_image              Whether to display the image using Image imshow().
   --concordance_highlight   Whether to recolor areas of perfect concordance as pink.
 """
-python contrastmap.py --base_img="publication_files/image_data/ANNOT_smalls/cotE10_ANNOT.png" --compare_img="DEMO_OUT/cotE10.tif__DEMO-COTE10.png.output.png" --threshold=0 --output_path="DEMO_OUT/" --output_name="DEMO_contrast" --show_image=True
+python contrastmap.py --base_img="publication_files/image_data/ANNOT_smalls/cotE10_ANNOT.png" --compare_img="DEMO_OUT/cotE10.tif__DEMO-COTE10.png.output.png" --threshold=0 --output_path="output_folder" --output_name="DEMO_contrast" --show_image=True
 
 
 # Margin Pixel Calculator
@@ -178,7 +177,7 @@ python contrastmap.py --base_img="publication_files/image_data/ANNOT_smalls/cotE
   --input_path           Image to profile margin pixels for.
   --compare_path         Image to compare against.
 """
-python margin_pixel_calc.py --input_path="publication_files/image_data/ANNOT_smalls/cotE10_ANNOT.png" --compare_path="DEMO_OUT/cotE10.tif__DEMO-COTE10.png.output.png"
+python margin_pixel_calc.py --input_path="publication_files/image_data/ANNOT_smalls/cotE10_ANNOT.png" --compare_path="output_folder/cotE10.tif__DEMO-COTE10.png.output.png"
 ```
 
 

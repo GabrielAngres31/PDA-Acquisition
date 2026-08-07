@@ -65,7 +65,7 @@ def get_argparser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--cachedir",
         type=str,
-        default="./cache_standalone_val/",
+        default="./PUB_cache_standalone_val/",
         help="Where to store image patches",
     )
     parser.add_argument(
