@@ -8,7 +8,7 @@ Navigate to the project root directory and set up the isolated Python environmen
 
 ```bash
 # Change directory
-cd "C:/Users/[USER]/Downloads/install_standalone_v2"
+cd "C:/Users/[USER]/GitHub/PDA-Acquisition-Clone2/install_standalone_v2"
 
 # Create new python virtual environment
 python -m venv venv                              
@@ -129,7 +129,7 @@ python clean_image.py --input_path="publication_files/image_data/ANNOT_smalls/ba
 """
 python stomatasplitter_cli.py --grab_list="grabfile.csv" --output_dir="output_folder/DEMO_clumpcatch" 
 
-
+  ` 
 # NOTE:
 # image_audit_canvas.py is not meant to be directly run, but is called by tkinter_GUI.py.
 ```

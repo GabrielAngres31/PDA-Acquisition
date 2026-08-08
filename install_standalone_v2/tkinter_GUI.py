@@ -914,7 +914,7 @@ class StomataGUI:
     def run_inference(self):
         pth_path = filedialog.askopenfilename(
             filetypes=[("PTH Files", "*.PTH")],
-            initialdir="C:/Users/Gabriel/Documents/GitHub/PDA-Acquisition/checkpoints",
+            initialdir=self.config_properties["dir_checkpoints"],
         )
         try:
             assert pth_path
