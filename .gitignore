@@ -18,3 +18,4 @@ venv
 *.ald
 *.ijm
 *scrapbox.py
+!/install_standalone_vs/requirements.txt
