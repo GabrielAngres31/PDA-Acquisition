@@ -18,9 +18,9 @@ class StomataGUI:
         # Load Config options
         ### Read config file
         ### Loads: Recent BASE, ANNOT, and CSV files
-        self.configFilePath = "IAC_hardstore/stomata_gui_config.csv"
+        self.configFilePath = "./IAC_hardstore/stomata_gui_config.csv"
         assert os.path.exists(self.configFilePath), (
-            "ERROR: configFilePath does not exist as set!"
+            "ERROR: configFilePath f'{self.configFilePath}' does not exist as set! Please check that the named folder and the file are present in your directory."
         )
 
         file_to_dir = dict(
