@@ -1,0 +1,13 @@
+recent_BASE,publication_files/image_data/BASE_smalls/3dpg_001.png
+dir_BASE,publication_files/image_data/BASE_smalls
+recent_ANNOT,publication_files/image_data/ANNOT_smalls/3dpg_001_ANNOT.png
+dir_ANNOT,publication_files/image_data/ANNOT_smalls
+recent_CSV,publication_files/clumps_data/main/3dpg_001_ANNOT.csv
+dir_CSV,publication_files/clumps_data/main
+dir_test_split,splits
+dir_val_split,splits
+dir_checkpoints,publication_files/models/
+test_split,splits/pores_only_test_12-2024.csv
+val_split,splits/pores_only_val_12-2024.csv
+model_file,publication_files/models/main/2025-02-12_19h-14m-25s/last.e029.pth
+model_dir,publication_files/models/main/2025-02-12_19h-14m-25s

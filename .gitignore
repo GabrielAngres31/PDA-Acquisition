@@ -19,3 +19,4 @@ venv
 *.ijm
 *scrapbox.py
 !/install_standalone_v2/requirements.txt
+!/install_standalone_v2/IAC_hardstore/stomata_gui_config.csv
